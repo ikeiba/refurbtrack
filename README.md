@@ -3,23 +3,15 @@
 Estructura carpeta:
 
 proyecto_scraper/
-│
-├── backend/                  # TU BACKEND (Django)
-│   ├── manage.py
-│   ├── backend/              # Configuración global (settings.py, urls.py)
-│   ├── api/                  # Nueva App para tu API (serializers, views)
-│   └── products/             # Tus modelos (Producto, PriceHistory)
-│
-├── frontend/                 # TU FRONTEND (React + Vite)
-│   ├── package.json
-│   ├── src/
-│   │   ├── components/       # Gráficas, Tablas
-│   │   ├── services/         # Llamadas a la API (axios/fetch)
-│   │   └── App.jsx
-│   └── ...
-│
-├── scraper/                  # TU SCRAPER (Scrapy)
-│   ├── scrapy.cfg
-│   └── ...
+├── frontend/               # React
+├── scraper/                # Scrapy
+└── backend/                # Django
+│    ├── manage.py           # Ejecutor de comandos
+│    ├── config/             # Configuración Global (settings, urls)
+│    └── api/                # Tu App: Lógica y Modelos
+│        ├── models.py       # Definición de Tablas
+│        ├── views.py        # Lógica (CRUD)
+│        ├── serializers.py  # Traductor a JSON (Crear manual)
+│        └── urls.py         # Rutas de la API (Crear manual)
 │
 └── docker-compose.yml        # Levanta Backend, Frontend (dev) y BDD
