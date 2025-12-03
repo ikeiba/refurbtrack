@@ -15,3 +15,10 @@ proyecto_scraper/
 │        └── urls.py         # Rutas de la API (Crear manual)
 │
 └── docker-compose.yml        # Levanta Backend, Frontend (dev) y BDD
+
+
+Comandos para el backend:
+    python manage.py runserver
+    python manage.py makemigrations
+    python manage.py migrate
+    python manage.py importar_variantes.py
