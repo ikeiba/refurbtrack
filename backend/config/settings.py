@@ -40,11 +40,13 @@ INSTALLED_APPS = [
     # TUS APPS Y LIBRERÍAS
     'rest_framework',  # <--- Necesario para la API
     'api',             # <--- Tu nueva app
+    'corsheaders',   # <--- AÑADIR ESTO
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # <--- AÑADIR ESTO
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -123,3 +125,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Añadido por mi (CORS)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173", # Puerto estándar de Vite/React
+    "http://127.0.0.1:5173",
+]
+
+# # Añadido por mi (Imprime los emails en la consola en lugar de enviarlos)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

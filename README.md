@@ -22,3 +22,6 @@ Comandos para el backend:
     python manage.py makemigrations
     python manage.py migrate
     python manage.py importar_variantes.py
+
+Comandos para el scraper:
+    scrapy crawl backmarket
