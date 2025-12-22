@@ -41,7 +41,7 @@ django.setup()
 # WARNING: Advertencias (Aquí saldrán tus avisos de "Panic Middleware")
 # INFO: Información general (Ocultamos esto)
 # DEBUG: Todo el detalle técnico (Ocultamos esto: redirects, retries, etc.)
-LOG_LEVEL = 'WARNING'
+# LOG_LEVEL = 'WARNING'
 
 BOT_NAME = "scraper"
 

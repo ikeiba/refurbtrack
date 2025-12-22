@@ -110,7 +110,7 @@ class Panic429Middleware(RetryMiddleware):
             spider.logger.warning("💤 Durmiendo 60 segundos para enfriar IP...")
             
             # 1. Dormimos para descansar la IP
-            time.sleep(60)
+            time.sleep(5)
             
             spider.logger.info("🧹 BORRANDO RASTRO (COOKIES) Y REINTENTANDO...")
 

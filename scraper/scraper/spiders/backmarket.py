@@ -17,7 +17,7 @@ class BackMarketSpider(scrapy.Spider):
         
         # VELOCIDAD CONSTANTE (Sin AutoThrottle, nosotros mandamos)
         'CONCURRENT_REQUESTS': 1,      # VITAL: Solo 1 a la vez
-        'DOWNLOAD_DELAY': 3,           # Espera normal entre peticiones sanas
+        'DOWNLOAD_DELAY': 5,           # Espera normal entre peticiones sanas
         'RANDOMIZE_DOWNLOAD_DELAY': True,
 
         # Nuestro middleware se encargará de los reintentos y esperas largas
@@ -55,7 +55,7 @@ class BackMarketSpider(scrapy.Spider):
                 headers = {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language': 'es-ES,es;q=0.9',
-                    #'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15',
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15',
                     'Upgrade-Insecure-Requests': '1',
                 }
 
@@ -84,7 +84,7 @@ class BackMarketSpider(scrapy.Spider):
         
         # Check extra por si nos mandan al challenge con código 200
         if "testchallengepage" in response.url:
-            self.logger.warning(f"⛔ CHALLENGE DETECTADO ({response.meta['browser_used']}). Reintentando...")
+            self.logger.warning(f"⛔ CHALLENGE DETECTADO. Reintentando...")
             # Aquí podríamos forzar un reintento manual, pero dejemos que AutoThrottle ajuste
             return
 
