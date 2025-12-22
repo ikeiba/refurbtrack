@@ -36,9 +36,12 @@ django.setup()
 # ... Debajo sigue la configuración normal de Scrapy ...
 
 # --- LIMPIEZA DE LOGS ---
-# Solo mostrará advertencias (WARNING) y errores (ERROR).
-# Oculta INFO y DEBUG (las redirecciones y el inicio).
-#LOG_LEVEL = 'WARNING'
+# CRITICAL: Solo errores fatales
+# ERROR: Errores que rompen algo
+# WARNING: Advertencias (Aquí saldrán tus avisos de "Panic Middleware")
+# INFO: Información general (Ocultamos esto)
+# DEBUG: Todo el detalle técnico (Ocultamos esto: redirects, retries, etc.)
+LOG_LEVEL = 'WARNING'
 
 BOT_NAME = "scraper"
 

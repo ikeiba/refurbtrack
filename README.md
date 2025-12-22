@@ -25,3 +25,9 @@ Comandos para el backend:
 
 Comandos para el scraper:
     scrapy crawl backmarket
+
+
+Usuario:
+    iker
+Contraseña:
+    Be...

@@ -17,7 +17,7 @@ class BackMarketSpider(scrapy.Spider):
         
         # VELOCIDAD CONSTANTE (Sin AutoThrottle, nosotros mandamos)
         'CONCURRENT_REQUESTS': 1,      # VITAL: Solo 1 a la vez
-        'DOWNLOAD_DELAY': 5,           # Espera normal entre peticiones sanas
+        'DOWNLOAD_DELAY': 3,           # Espera normal entre peticiones sanas
         'RANDOMIZE_DOWNLOAD_DELAY': True,
 
         # Nuestro middleware se encargará de los reintentos y esperas largas
@@ -31,9 +31,10 @@ class BackMarketSpider(scrapy.Spider):
         self.logger.warning(f"🚀 INICIANDO SCRAPER INTELIGENTE PARA {variants.count()} PRODUCTOS...")
 
         conditions = [
-            {'code': '10', 'label': 1, 'name': 'Correcto'},
-            {'code': '11', 'label': 2, 'name': 'Muy bueno'},
-            {'code': '12', 'label': 3, 'name': 'Excelente'},
+            {'code': '9', 'label': 0, 'name': 'premium'},
+            {'code': '10', 'label': 1, 'name': 'excelente'},
+            {'code': '11', 'label': 2, 'name': 'muy bueno'},
+            {'code': '12', 'label': 3, 'name': 'correcto'},
         ]
         
         # Lista de navegadores para rotar si fallamos
@@ -48,13 +49,13 @@ class BackMarketSpider(scrapy.Spider):
 
                 # URLs a visitar (Standard y Nueva Batería)
                 urls_to_scrape = [(f"{base_url}?l={cond['code']}", False)]
-                if cond['label'] in [2, 3]:
+                if cond['label'] in [1,2, 3]:
                     urls_to_scrape.append((f"{base_url}?l={cond['code']}&offerType=7", True))
 
                 headers = {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language': 'es-ES,es;q=0.9',
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15',
+                    #'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15',
                     'Upgrade-Insecure-Requests': '1',
                 }
 

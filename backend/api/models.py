@@ -46,9 +46,10 @@ class Variant(models.Model):
 
 class PriceHistory(models.Model):
     class Condition(models.IntegerChoices):
-        FAIR = 1, 'Fair (Correcto)'
+        FAIR = 3, 'Fair (Correcto)'
         GOOD = 2, 'Good (Buen estado)'
-        EXCELLENT = 3, 'Excellent (Excelente)'
+        EXCELLENT = 1, 'Excellent (Excelente)'
+        PREMIUM = 0, 'Premium (Como nuevo)'
 
     class Country(models.TextChoices):
         SPAIN = 'ES', 'España'

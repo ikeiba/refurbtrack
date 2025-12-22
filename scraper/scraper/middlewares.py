@@ -102,20 +102,36 @@ class ScraperDownloaderMiddleware:
     def spider_opened(self, spider):
         spider.logger.info("Spider opened: %s" % spider.name)
 
+
 class Panic429Middleware(RetryMiddleware):
     def process_response(self, request, response, spider):
         if response.status == 429:
-            spider.logger.warning("🚨 429 DETECTADO: ACTIVANDO PROTOCOLO DE PÁNICO 🚨")
-            spider.logger.warning("💤 Durmiendo 120 segundos para enfriar la IP...")
+            spider.logger.warning("🚨 429 DETECTADO: TU COOKIE ESTÁ QUEMADA 🚨")
+            spider.logger.warning("💤 Durmiendo 60 segundos para enfriar IP...")
             
-            # ESTO CONGELA EL SCRAPER ENTERO (Todos los hilos)
-            # Como usamos CONCURRENT_REQUESTS=1, no afecta a otros procesos.
-            time.sleep(300) 
+            # 1. Dormimos para descansar la IP
+            time.sleep(60)
             
-            spider.logger.info("🟢 Reanudando operaciones...")
-            
-            # Ahora forzamos el reintento usando la lógica estándar
+            spider.logger.info("🧹 BORRANDO RASTRO (COOKIES) Y REINTENTANDO...")
+
+            # 2. Preparamos el reintento
             reason = response_status_message(response.status)
-            return self._retry(request, reason, spider) or response
+            retry_request = self._retry(request, reason, spider)
+            
+            if retry_request:
+                # --- AQUÍ ESTÁ LA MAGIA ---
+                # Le decimos a Scrapy: "No envíes las cookies antiguas en este reintento"
+                retry_request.cookies = {} 
+                
+                # Forzamos un 'cookiejar' nuevo (un bote de cookies vacío)
+                # Usamos el timestamp para asegurar que es un ID único
+                retry_request.meta['cookiejar'] = str(time.time())
+                
+                # Opcional: Si usas impersonate, a veces ayuda cambiar la identidad también
+                # retry_request.meta['impersonate'] = 'chrome110' (o rotar)
+                
+                return retry_request
+            
+            return response
         
         return response
