@@ -50,3 +50,52 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'type', 'variant_count']
+
+
+# NUEVO: Serializer para las Tarjetas del Catálogo
+class ProductCardSerializer(serializers.ModelSerializer):
+    """
+    Serializer optimizado para el grid de productos.
+    Aplana la jerarquía: Variant -> Product -> PriceHistory
+    """
+    # 1. Aplanamos datos del Padre (Product)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_type = serializers.CharField(source='product.type', read_only=True)
+    
+    # 2. Campos calculados para el historial de precios (Hijos)
+    current_price = serializers.SerializerMethodField()
+    condition = serializers.SerializerMethodField()
+    last_updated = serializers.SerializerMethodField()
+    
+    # 3. Datos propios de la Variante
+    # (Ya incluidos en 'fields' abajo: storage, color, uuid)
+
+    class Meta:
+        model = Variant
+        fields = [
+            'id', 'uuid', 
+            'product_name', 'product_type', 
+            'storage', 'color', 
+            'current_price', 'condition', 'last_updated'
+        ]
+
+    def get_current_price(self, obj):
+        # El prefetch_related en la vista ya habrá traído los precios.
+        # Usamos 'all()' en lugar de 'filter()' para aprovechar la caché de prefetch.
+        prices = list(obj.prices.all())
+        if prices:
+            # Asumimos que están ordenados por fecha descendente (ver models.py o views.py)
+            return prices[0].price
+        return None
+
+    def get_condition(self, obj):
+        prices = list(obj.prices.all())
+        if prices:
+            return prices[0].get_condition_display()
+        return None
+
+    def get_last_updated(self, obj):
+        prices = list(obj.prices.all())
+        if prices:
+            return prices[0].timestamp
+        return None

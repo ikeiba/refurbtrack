@@ -31,3 +31,6 @@ Usuario:
     iker
 Contraseña:
     Be...
+
+
+npm run dev

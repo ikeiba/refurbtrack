@@ -44,9 +44,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # <--- AÑADIR ESTO PRIMERO
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware', # <--- AÑADIR ESTO
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -128,8 +128,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Añadido por mi (CORS)
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Puerto estándar de Vite/React
-    "http://127.0.0.1:5173",
+    "http://localhost:3000", # Puerto estándar de Next.js (Vite/React es 5173)
+    "http://127.0.0.1:3000",
 ]
 
 # # Añadido por mi (Imprime los emails en la consola en lugar de enviarlos)

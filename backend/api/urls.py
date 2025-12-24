@@ -1,14 +1,17 @@
-# api/urls.py
+# backend/api/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProductViewSet
+# Importamos la nueva vista
+from .views import ProductViewSet, VariantViewSet
 
-# El router crea automáticamente las URLs de la API
 router = DefaultRouter()
 
-# Registramos la ruta 'products'. 
-# Esto habilitará: http://.../api/products/
+# Rutas existentes
 router.register(r'products', ProductViewSet)
+
+# NUEVA RUTA:
+# Esto crea: http://127.0.0.1:8000/api/catalog/
+router.register(r'catalog', VariantViewSet, basename='catalog')
 
 urlpatterns = [
     path('', include(router.urls)),
