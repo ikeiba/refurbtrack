@@ -21,7 +21,8 @@ Comandos para el backend:
     python manage.py runserver
     python manage.py makemigrations
     python manage.py migrate
-    python manage.py importar_variantes.py
+    python manage.py importar_variantes
+    python manage.py createsuperuser
 
 Comandos para el scraper:
     scrapy crawl backmarket
@@ -34,3 +35,5 @@ Contraseña:
 
 
 npm run dev
+
+Con esperas de 5, 3 y 1 segundos, ha llegado hasta las 104 peticiones

@@ -10,12 +10,12 @@ class Command(BaseCommand):
         # --- AQUÍ EMPIEZA TU CÓDIGO PEGADO ---
         
         # Nota: He adaptado el nombre 'phone' a 'Smartphone' para que cuadre con tu Modelo
-        self.insert_product(name="iphone11", type="Smartphone")
+        self.insert_product(name="iPhone 11", type="Smartphone")
         
         # Copia aquí el bloque de tu código. 
         # Django ejecutará la lógica que he definido más abajo.
         
-        id = self.get_product_by_name(name="iphone11")[0]
+        id = self.get_product_by_name(name="iPhone 11")[0]
         self.insert_variant(product_id=id, uuid="0106bb6f-3975-4794-b9a0-7d920669484c", storage="64",  color="Black")
         self.insert_variant(product_id=id, uuid="701179ec-a741-4ab7-bdf8-5a08bb59dd90", storage="64",  color="Red")
         self.insert_variant(product_id=id, uuid="7ef0a33a-f74f-49e9-aa3d-6611d4d43ead", storage="64",  color="Yellow")
@@ -35,8 +35,8 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="9b8f4e2c-76b6-4087-80b5-16f698fb491c", storage="256", color="Purple")
         self.insert_variant(product_id=id, uuid="1dbbb866-d798-4cb9-b72e-ac0cee641d0b", storage="256", color="White")
 
-        self.insert_product(name="iphone11pro", type="Smartphone")
-        id = self.get_product_by_name(name="iphone11pro")[0]
+        self.insert_product(name="iPhone 11 Pro", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 11 Pro")[0]
         self.insert_variant(product_id=id, uuid="8a9d4ab9-46f9-406b-8a10-c18a719cda81", storage="64",  color="Grey")
         self.insert_variant(product_id=id, uuid="b35cbbcd-fce1-4dc2-92da-00296472aaf4", storage="64",  color="Green")
         self.insert_variant(product_id=id, uuid="4142377d-80f1-4670-8f4e-fab0b6fdffd4", storage="64",  color="Gold")
@@ -50,9 +50,8 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="89274113-77c6-4edf-ac0f-85b448657099", storage="512", color="Gold")
         self.insert_variant(product_id=id, uuid="88499b97-60bc-49c7-8bf1-b51462b17070", storage="512", color="Plat")
 
-        
-        self.insert_product(name="iphone12",    type="Smartphone")
-        id = self.get_product_by_name(name="iphone12")[0]
+        self.insert_product(name="iPhone 12",    type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 12")[0]
         self.insert_variant(product_id=id, uuid="ec0b1d0d-251d-456e-bcd6-978be85e25d6", storage="64",  color="Black")
         self.insert_variant(product_id=id, uuid="af874b95-0a58-4efa-b0f4-cd020fed146b", storage="64",  color="Red")
         self.insert_variant(product_id=id, uuid="0d7bc01c-3a57-4f7e-944d-966992390e97", storage="64",  color="Blue")
@@ -72,8 +71,8 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="bdef7717-ff58-431a-a8e2-3afcc93409e6", storage="256", color="Purple")
         self.insert_variant(product_id=id, uuid="f01d43e2-4f17-4fde-8415-96884e206679", storage="256", color="White")
 
-        self.insert_product(name="iphone12pro", type="Smartphone")
-        id = self.get_product_by_name(name="iphone12pro")[0]
+        self.insert_product(name="iPhone 12 Pro", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 12 Pro")[0]
         self.insert_variant(product_id=id, uuid="6cc9b52b-c002-4963-9655-cb567edd13a3", storage="128", color="Blue")
         self.insert_variant(product_id=id, uuid="cd7a1df1-fe4a-4a2f-889c-38d05be64126", storage="128", color="Graphite")
         self.insert_variant(product_id=id, uuid="6819199d-d531-4fc0-a1ee-6e63d1088b2f", storage="128", color="Gold")
@@ -87,8 +86,8 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="56bc27b8-3299-4836-9c77-15694bbd55c1", storage="512", color="Gold")
         self.insert_variant(product_id=id, uuid="5bbdb839-fe7e-481e-b747-538a588b4636", storage="512", color="Plat")
 
-        self.insert_product(name="iphone13",    type="Smartphone")
-        id = self.get_product_by_name(name="iphone13")[0]
+        self.insert_product(name="iPhone 13",    type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 13")[0]
         self.insert_variant(product_id=id, uuid="ef5660d2-6883-4b81-b47d-86e5720687ef", storage="128", color="Midnight")
         self.insert_variant(product_id=id, uuid="e621dc7f-2574-42f4-8e7d-220dcc6cc851", storage="128", color="Red")
         self.insert_variant(product_id=id, uuid="e4d4b68e-9dec-438d-be52-d348924bfe62", storage="128", color="Blue")
@@ -108,8 +107,8 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="81ab240b-44af-4bb1-a59a-1321ffdd74ba", storage="512", color="White")
         self.insert_variant(product_id=id, uuid="45d1d91f-70d4-4ffc-bb26-6a28b558d4f6", storage="512", color="Pink")
 
-        self.insert_product(name="iphone13pro", type="Smartphone")
-        id = self.get_product_by_name(name="iphone13pro")[0]
+        self.insert_product(name="iPhone 13 Pro", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 13 Pro")[0]
         self.insert_variant(product_id=id, uuid="35d85a1e-6fa2-4331-ad51-a6e4c2a61a9e", storage="128", color="Green")
         self.insert_variant(product_id=id, uuid="f597a490-5e4c-450c-88a8-14be4d46f9c1", storage="128", color="Blue")
         self.insert_variant(product_id=id, uuid="943afa80-1922-43de-a7d9-8c1b4294a727", storage="128", color="Graphite")
@@ -131,8 +130,8 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="d5167769-a85a-415d-a5eb-0fa019416271", storage="1000", color="Gold")
         self.insert_variant(product_id=id, uuid="54a9246d-4935-429f-91cb-ac31531c9960", storage="1000", color="Silver")
 
-        self.insert_product(name="iphone14",    type="Smartphone")
-        id = self.get_product_by_name(name="iphone14")[0]
+        self.insert_product(name="iPhone 14",    type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 14")[0]
         self.insert_variant(product_id=id, uuid="400b5725-cbcb-4b97-a7b8-0a2c1d4098ef", storage="128", color="Midnight")
         self.insert_variant(product_id=id, uuid="d61d0800-a563-4e5c-a1e6-652f44de4d4f", storage="128", color="Red")
         self.insert_variant(product_id=id, uuid="93301d87-c54c-4239-897b-f2bd6cd0c505", storage="128", color="Yellow")
@@ -152,8 +151,8 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="0dccb531-f1ee-4570-98e9-07ac2f2cdb8b", storage="512", color="Purple")
         self.insert_variant(product_id=id, uuid="3298e9bc-9f8f-46b3-8e55-33c05c1f9cff", storage="512", color="White")
 
-        self.insert_product(name="iphone14pro", type="Smartphone")
-        id = self.get_product_by_name(name="iphone14pro")[0]
+        self.insert_product(name="iPhone 14 Pro", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 14 Pro")[0]
         self.insert_variant(product_id=id, uuid="aff0b232-be15-4e88-b486-6648394ee7c1", storage="128", color="Black")
         self.insert_variant(product_id=id, uuid="fa0b419c-f920-4e16-837f-d17e44d94475", storage="128", color="Purple")
         self.insert_variant(product_id=id, uuid="d43d4d9f-c195-4e07-a17a-55f169fa5d43", storage="128", color="Gold")
@@ -170,6 +169,80 @@ class Command(BaseCommand):
         self.insert_variant(product_id=id, uuid="10c62c1d-a868-4fdb-8737-7af10bbe238d", storage="1000", color="Purple")
         self.insert_variant(product_id=id, uuid="caf90fc4-92bc-4bf4-a964-a50f1456dd18", storage="1000", color="Gold")
         self.insert_variant(product_id=id, uuid="516f1ace-8b02-4cc3-a3a6-15f59dc78e0e", storage="1000", color="Silver")
+
+        self.insert_product(name="iPhone 15", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 15")[0]
+        self.insert_variant(product_id=id, uuid="8debb43b-94ef-4ec4-8589-9520e9eaa983", storage="128", color="Black")
+        self.insert_variant(product_id=id, uuid="f2f876e3-b34b-43df-b28b-34f116b556cc", storage="128", color="Yellow")
+        self.insert_variant(product_id=id, uuid="a8517119-6ed0-4c6f-8799-22f95658bc19", storage="128", color="Blue")
+        self.insert_variant(product_id=id, uuid="5d26a585-f68b-42ea-901d-446485986ed6", storage="128", color="Green")
+        self.insert_variant(product_id=id, uuid="b8d85dd9-b4d2-49c5-8727-834860a70d1f", storage="128", color="Pink")
+        self.insert_variant(product_id=id, uuid="666afa89-6a49-4101-b7c7-d6414d531095", storage="256", color="Black")
+        self.insert_variant(product_id=id, uuid="d29b5878-1c10-4120-a7ef-10f9f16791b7", storage="256", color="Yellow")
+        self.insert_variant(product_id=id, uuid="af438cc5-8bf3-478a-ab25-14c2851023c4", storage="256", color="Blue")
+        self.insert_variant(product_id=id, uuid="059d41f3-80d0-4809-9869-f72a7318bfd1", storage="256", color="Green")
+        self.insert_variant(product_id=id, uuid="24cf08e8-6000-4f43-8ba2-795f8aacbb8f", storage="256", color="Pink")
+        self.insert_variant(product_id=id, uuid="43ea1607-c880-46cf-8faa-fae4210330c2", storage="512", color="Black")
+        self.insert_variant(product_id=id, uuid="5b49a93d-cd17-4a11-9895-e08539243927", storage="512", color="Yellow")
+        self.insert_variant(product_id=id, uuid="72f34bb2-feb0-4f64-82c0-d3340d15a676", storage="512", color="Blue")
+        self.insert_variant(product_id=id, uuid="db13648c-d35f-49d7-85b2-2e1eb00cdaf2", storage="512", color="Green")
+        self.insert_variant(product_id=id, uuid="5436526c-2180-4b13-a225-1b6c48970729", storage="512", color="Pink")
+
+        self.insert_product(name="iPhone 15 Pro", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 15 Pro")[0]
+        self.insert_variant(product_id=id, uuid="d0fc796e-24da-4ad9-a365-139706087545", storage="128", color="Black")
+        self.insert_variant(product_id=id, uuid="68d59aaf-8b23-4006-aab0-cef9627f535d", storage="128", color="Blue")
+        self.insert_variant(product_id=id, uuid="071cf952-6493-43e7-a89b-14dd3eee922f", storage="128", color="Natural")
+        self.insert_variant(product_id=id, uuid="2b309ac0-b5ac-4596-b754-2a122cf9ea07", storage="128", color="White")
+        self.insert_variant(product_id=id, uuid="8dee5bc8-aabb-4c8b-8739-2b7db28ea365", storage="256", color="Black")
+        self.insert_variant(product_id=id, uuid="ba2f5148-af10-4095-9ec8-78cb5f27e73a", storage="256", color="Blue")
+        self.insert_variant(product_id=id, uuid="d49278ee-73c0-4066-8d0e-efd9fa0c54cc", storage="256", color="Natural")
+        self.insert_variant(product_id=id, uuid="a0c1a947-f250-444d-b39c-8511a5bb6f81", storage="256", color="White")
+        self.insert_variant(product_id=id, uuid="db7396fb-7403-415c-8190-87fa1ac14043", storage="512", color="Black")
+        self.insert_variant(product_id=id, uuid="a3688c7d-447d-4c7a-b230-b5d2b0a130d5", storage="512", color="Blue")
+        self.insert_variant(product_id=id, uuid="abac5232-a29a-45a0-acb7-ab915d88a804", storage="512", color="Natural")
+        self.insert_variant(product_id=id, uuid="8ad45579-374a-4003-99cf-2b13687d019c", storage="512", color="White")
+        self.insert_variant(product_id=id, uuid="a2a4ca1b-2731-4b3f-9c29-2c0e6ac4084a", storage="1000", color="Black")
+        self.insert_variant(product_id=id, uuid="0efd00f8-2aec-4bab-834e-6e031d58321a", storage="1000", color="Blue")
+        self.insert_variant(product_id=id, uuid="0578ee4f-c5e0-4ac5-9359-9a7244971a67", storage="1000", color="Natural")
+        self.insert_variant(product_id=id, uuid="fbd677c3-251b-4739-b9ae-d0857453472d", storage="1000", color="White")
+
+        self.insert_product(name="iPhone 16", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 16")[0]
+        self.insert_variant(product_id=id, uuid="ffa54805-4d46-4fa5-9e55-589604fff2ae", storage="128", color="Black")
+        self.insert_variant(product_id=id, uuid="7f5bdd13-8f4b-49ee-a94a-8b578deb328d", storage="128", color="Teal")
+        self.insert_variant(product_id=id, uuid="ad6dc074-aa15-4f0a-bc2f-a4211fee9aec", storage="128", color="Ultramarine")
+        self.insert_variant(product_id=id, uuid="4f4d578f-db15-44ac-b355-dc802c683750", storage="128", color="Pink")
+        self.insert_variant(product_id=id, uuid="ec59a99a-dd17-468a-b5aa-fbbddd1c87b5", storage="128", color="White")
+        self.insert_variant(product_id=id, uuid="e55d41fb-2b9b-4a57-83a9-5c557cb04fbc", storage="256", color="Black")
+        self.insert_variant(product_id=id, uuid="1dc58f73-0074-40b6-be47-2312bb4b8a85", storage="256", color="Teal")
+        self.insert_variant(product_id=id, uuid="ddb9ed29-5ce4-4e36-a920-a122578ad617", storage="256", color="Ultramarine")
+        self.insert_variant(product_id=id, uuid="0ef61aea-3229-410a-9fa3-f0f992bf7b5f", storage="256", color="Pink")
+        self.insert_variant(product_id=id, uuid="aeca3f0b-6654-441d-9efc-1214b08e8c3a", storage="256", color="White")
+        self.insert_variant(product_id=id, uuid="-", storage="512", color="Black")
+        self.insert_variant(product_id=id, uuid="5c25e285-47cf-483e-9e05-f36f5d9e4eef", storage="512", color="Teal")
+        self.insert_variant(product_id=id, uuid="e646435a-0dbc-4def-8150-bcae4471dcb3", storage="512", color="Ultramarine")
+        self.insert_variant(product_id=id, uuid="2e721825-ad6c-41a5-bc2b-47c8a2b139d0", storage="512", color="Pink")
+        self.insert_variant(product_id=id, uuid="d73b7a48-d424-40f4-86ce-8e7975e90fa5", storage="512", color="White")
+
+        self.insert_product(name="iPhone 16 Pro", type="Smartphone")
+        id = self.get_product_by_name(name="iPhone 16 Pro")[0]
+        self.insert_variant(product_id=id, uuid="b78d3007-9148-4569-b0bd-f7ddcfb19a1a", storage="128", color="Black")
+        self.insert_variant(product_id=id, uuid="2a3aadbd-dea6-404b-903a-32e941b3a9d6", storage="128", color="Desert")
+        self.insert_variant(product_id=id, uuid="1754b880-9fb5-4429-bf14-875b5fc1013b", storage="128", color="Natural")
+        self.insert_variant(product_id=id, uuid="942d401f-d010-4392-89dc-7faaffce19d5", storage="128", color="White")
+        self.insert_variant(product_id=id, uuid="c223b8ba-39cf-40e4-b6d5-1e1182dfd3ef", storage="256", color="Black")
+        self.insert_variant(product_id=id, uuid="3f59ddca-1e3e-4c89-807f-87a1da634ef0", storage="256", color="Desert")
+        self.insert_variant(product_id=id, uuid="16169559-2171-4b78-afc3-68bccb852247", storage="256", color="Natural")
+        self.insert_variant(product_id=id, uuid="ec58cfe8-8a6e-488e-9d5d-3c64333c795a", storage="256", color="White")
+        self.insert_variant(product_id=id, uuid="a2409e68-e910-4885-bc0a-4c98efed0d80", storage="512", color="Black")
+        self.insert_variant(product_id=id, uuid="3638ca0c-675a-4790-8884-4bc7dcac075b", storage="512", color="Desert")
+        self.insert_variant(product_id=id, uuid="dc49e1a4-5cf6-4821-861b-1084db76d3ae", storage="512", color="Natural")
+        self.insert_variant(product_id=id, uuid="3a6725f5-b69a-4f33-aaf3-eb8fdea0a83e", storage="512", color="White")
+        self.insert_variant(product_id=id, uuid="f96b5011-f502-4321-9970-6e4be928205e", storage="1000", color="Black")
+        self.insert_variant(product_id=id, uuid="bfe72827-c80e-465a-8c27-6579af0c5dd7", storage="1000", color="Desert")
+        self.insert_variant(product_id=id, uuid="1cbea442-dcaf-419f-b25d-1f90e5910d6f", storage="1000", color="Natural")
+        self.insert_variant(product_id=id, uuid="e25ece40-59d5-4d51-9c46-44941f179c00", storage="1000", color="White")
 
         # --- AQUÍ TERMINA TU CÓDIGO PEGADO ---
 
