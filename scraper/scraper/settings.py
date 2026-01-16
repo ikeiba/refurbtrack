@@ -86,7 +86,7 @@ DOWNLOADER_MIDDLEWARES = {
 # ============================================================================
 
 ITEM_PIPELINES = {
-    "scraper.pipelines.DjangoSavePipeline": 300,
+    # "scraper.pipelines.DjangoSavePipeline": 300,
 }
 
 # ============================================================================

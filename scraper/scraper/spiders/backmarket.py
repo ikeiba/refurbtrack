@@ -1,7 +1,7 @@
 from time import time
 from datetime import datetime, timedelta
 import scrapy
-from api.models import Variant
+from api.models import Spec, Offer, PriceHistory # Importamos los nuevos modelos
 import json
 import random
 from scrapy.exceptions import IgnoreRequest
@@ -15,6 +15,14 @@ class BackMarketSpider(scrapy.Spider):
         self.errores = 0
         self.exitosos = 0
         self.start_time = None
+
+    # Mapeo: Texto de la DB -> Código URL de BackMarket
+    CONDITION_MAP = {
+        'Premium': '9',
+        'Excellent': '10',
+        'Good': '11',
+        'Fair': '12',
+    }
 
     custom_settings = {
         'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor',
@@ -47,26 +55,25 @@ class BackMarketSpider(scrapy.Spider):
         self.start_time = time()
         self.logger.warning(f"⏰ Inicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-        variants = Variant.objects.select_related('product').all()
+        # 1. Obtener las Specs (antiguas Variants)
+        # Usamos select_related para traer el producto y evitar consultas extra
+        specs = Spec.objects.select_related('product')
 
         # 2. FILTRADO DINÁMICO:
         # Si pasamos el argumento 'product_id' al lanzar el spider, filtramos por él.
         # Scrapy asigna los argumentos -a como atributos de la clase (strings).
         if hasattr(self, 'product_id'):
-            self.logger.info(f"🎯 Modo 'Shard': Scrapeando solo Product ID {self.product_id}")
-            variants = variants.filter(product__id=self.product_id)
+            self.logger.info(f"🎯 Modo 'Shard': ID {self.product_id}")
+            specs = specs.filter(product__id=self.product_id)
 
-        # Filtrar variantes con UUID válido (eliminar el "-" y otros inválidos)
-        variants = variants.exclude(uuid="-").exclude(uuid="")
+        # 3. Filtrar UUIDs inválidos
+        specs = specs.exclude(back_market_uuid="-").exclude(back_market_uuid="")
 
-        self.logger.warning(f"🚀 INICIANDO SCRAPER PARA {variants.count()} PRODUCTOS...")
-
-        conditions = [
-            {'code': '9', 'label': 0, 'name': 'premium'},
-            {'code': '10', 'label': 1, 'name': 'excelente'},
-            {'code': '11', 'label': 2, 'name': 'muy bueno'},
-            {'code': '12', 'label': 3, 'name': 'correcto'},
-        ]
+        # Pre-cargar las ofertas para no hacer 1 consulta por cada loop
+        # Esto es optimización Django pura
+        specs = specs.prefetch_related('offers')
+        
+        self.logger.warning(f"🚀 INICIANDO SCRAPER PARA {specs.count()} PRODUCTOS...")
         
         # Más variedad de navegadores
         browsers = [
@@ -75,51 +82,66 @@ class BackMarketSpider(scrapy.Spider):
             'safari15_5', 'safari16'
         ]
 
-        for variant in variants:
-            base_url = f"https://www.backmarket.es/es-es/p/-/{variant.uuid}"
+        for spec in specs:
+            base_url = f"https://www.backmarket.es/es-es/p/-/{spec.back_market_uuid}"
             
-            for cond in conditions:
+            # Iteramos sobre las OFERTAS VACÍAS que ya creamos en la DB
+            for offer in spec.offers.all():
                 # URLs a visitar (Standard y Nueva Batería)
-                urls_to_scrape = [(f"{base_url}?l={cond['code']}", False)]
-                if cond['label'] in [1, 2, 3]:
-                    urls_to_scrape.append((f"{base_url}?l={cond['code']}&offerType=7", True))
 
-                for url, is_new_battery in urls_to_scrape:
-                    # Elegir navegador aleatorio para cada request
-                    chosen_browser = random.choice(browsers)
+                # A. Obtenemos el código de condición (ej: 'Fair' -> '12')
+                cond_code = self.CONDITION_MAP.get(offer.condition)
+                if not cond_code:
+                    continue # Si hay algún estado raro, lo saltamos
+
+
+                # B. Construimos la URL exacta para esa oferta
+                # URL Base + Condición
+                final_url = f"{base_url}?l={cond_code}"
+                
+                # Si es batería nueva, añadimos el parámetro
+                if offer.battery_new:
+                    final_url += "&offerType=7"
+
+                
+                # Elegir navegador aleatorio para cada request
+                chosen_browser = random.choice(browsers)
                     
-                    # Headers más realistas
-                    headers = {
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'es-ES,es;q=0.9',
-                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15',
-                        'Upgrade-Insecure-Requests': '1',
-                    }
+                # Headers más realistas
+                headers = {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'es-ES,es;q=0.9',
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15',
+                    'Upgrade-Insecure-Requests': '1',
+                }
 
-                    yield scrapy.Request(
-                        url=url,
-                        callback=self.parse,
-                        errback=self.errback_handler,
-                        headers=headers,
-                        dont_filter=False,  # Permitir que Scrapy filtre duplicados
-                        meta={
-                            'impersonate': "safari15_5",
-                            'variant_uuid': variant.uuid,
-                            'product_name': variant.product.name,
-                            'storage': variant.storage,
-                            'color': variant.color,
-                            'condition_label': cond['label'],
-                            'condition_name': cond['name'],
-                            'battery': is_new_battery,
-                            'country': 'ES',
-                            'max_retry_times': 5,  # Específico para este request
-                            # Añadir info para debugging
-                            'original_browser': chosen_browser,
-                        }
-                    )
+                yield scrapy.Request(
+                    url=final_url,
+                    callback=self.parse,
+                    errback=self.errback_handler,
+                    headers=headers,
+                    dont_filter=False,  # Permitir que Scrapy filtre duplicados
+                    meta={
+                        'impersonate': "safari15_5",
+                        'offer_id': offer.id,      # <--- LA CLAVE DEL NUEVO SISTEMA
+                        'spec_str': str(spec),     # Solo para logs
+                        'max_retry_times': 5,
+                        'original_browser': chosen_browser,
+                    }
+                )
 
     def parse(self, response):
         self.contador += 1
+        offer_id = response.meta.get('offer_id')
+
+        # 1. RECUPERAR DATOS DE LA DB (Vital para el nuevo esquema)
+        # Traemos el Offer y sus padres (Spec y Product) para tener datos para los logs
+        try:
+            offer = Offer.objects.select_related('spec', 'spec__product').get(id=offer_id)
+        except Offer.DoesNotExist:
+            self.logger.error(f"❌ Oferta ID {offer_id} no encontrada en DB (posiblemente borrada durante el scrape).")
+            self.errores += 1
+            return None
         
         # Verificar si nos redirigieron a un challenge
         if "testchallengepage" in response.url or "challenge" in response.url.lower():
@@ -134,19 +156,31 @@ class BackMarketSpider(scrapy.Spider):
             self.errores += 1
             return None
         
-        # VALIDACIÓN 2: Verificar que el parámetro 'l' sea el correcto (evitar redirecciones)
-        expected_l = str(9 + response.meta['condition_label'])
-        if 'l=' in response.url:
-            actual_l = response.url.split('l=')[1].split('&')[0]
-            if actual_l != expected_l:
-                self.logger.warning(
-                    f"⚠️ Redirección detectada. Esperado l={expected_l}, obtenido l={actual_l} | "
-                    f"{response.meta['product_name']} | {response.meta['condition_name']}"
-                )
-                self.errores += 1
-                return None
+        # C. VALIDACIÓN 'l=': Verificar que no nos han redirigido a otra condición
+        # Mapeo inverso: DB Condition -> BackMarket Code
+        # (Asegúrate de que esto coincide con lo que definimos en start_requests)
+        condition_code_map = {
+            'Fair': '12',
+            'Good': '11',
+            'Excellent': '10',
+            'Premium': '9'
+        }
+        expected_l = condition_code_map.get(offer.condition)
+        
+        if 'l=' in response.url and expected_l:
+            try:
+                actual_l = response.url.split('l=')[1].split('&')[0]
+                if actual_l != expected_l:
+                    self.logger.warning(
+                        f"⚠️ Redirección de condición detectada. "
+                        f"Esperado l={expected_l} ({offer.condition}), obtenido l={actual_l} | "
+                        f"{offer.spec.product.name}"
+                    )
+                    self.errores += 1
+                    return None
+            except IndexError:
+                pass # Si la URL es rara, lo dejamos pasar
 
-        variant_uuid = response.meta['variant_uuid']
         final_price = None
 
         try:
@@ -192,42 +226,46 @@ class BackMarketSpider(scrapy.Spider):
                     except ValueError as e:
                         self.logger.error(f"Error parseando precio '{price_text}': {e}")
 
+            # --- RESULTADO Y GUARDADO ---
+            # Variables para log (extraídas del objeto offer)
+            batt_label = "🔋 NUEVA" if offer.battery_new else "Std"
+            cond_name = offer.get_condition_display() # Ej: "Correcto" en vez de "Fair"
+            
+            # Calcular tasa de éxito
+            success_rate = (self.exitosos / self.contador * 100) if self.contador > 0 else 0
+            
             # Si encontramos precio válido, yield del item
             if final_price and final_price > 0:
-                batt_label = "🔋 NUEVA" if response.meta['battery'] else "Std"
                 
                 # Estadísticas
                 self.exitosos += 1
-                success_rate = (self.exitosos / self.contador * 100) if self.contador > 0 else 0
+                success_rate = (self.exitosos / self.contador * 100)
                 
+                # LOG DE ÉXITO (Formato idéntico al tuyo)
                 print(
                     f"[{self.contador}] 💰 {final_price}€ | "
-                    f"{response.meta['product_name']} | "
-                    f"{response.meta['condition_name']} | {batt_label} | "
-                    f"{response.meta['storage']} | {response.meta['color']} | "
+                    f"{offer.spec.product.name} | "
+                    f"{cond_name} | {batt_label} | "
+                    f"{offer.spec.storage} | {offer.spec.color} | "
                     f"✅ {success_rate:.1f}%"
                 )
 
-                yield {
-                    'uuid': variant_uuid,
-                    'price': final_price,
-                    'condition': response.meta['condition_label'],
-                    'battery': response.meta['battery'],
-                    'country': 'ES',
-                    'product_name': response.meta['product_name'],
-                    'storage': response.meta['storage'],
-                    'color': response.meta['color']
-                }
+                # GUARDADO EN DB (¡Aquí ocurre la magia!)
+                # Esto inserta el precio y dispara signals.py para actualizar Offer, Spec y Product
+                PriceHistory.objects.create(
+                    offer=offer,
+                    price=final_price
+                )
+
             else:
-                # No se encontró precio
+                # LOG DE FALLO (Sin precio)
                 self.logger.warning(
                     f"⚠️ No se encontró precio en {response.url[:80]} | "
-                    f"[{self.contador}] 💰 {final_price}€ | "
-                    f"{response.meta['product_name']} | "
-                    f"{response.meta['condition_name']} | "
-                    #f"{batt_label} | "
-                    f"{response.meta['storage']} | {response.meta['color']} | "
-                    f"✅ {success_rate:.1f}%"
+                    f"[{self.contador}] -- € | "
+                    f"{offer.spec.product.name} | "
+                    f"{cond_name} | {batt_label} | "
+                    f"{offer.spec.storage} | {offer.spec.color} | "
+                    f"❌ {success_rate:.1f}%"
                 )
                 self.errores += 1
 
