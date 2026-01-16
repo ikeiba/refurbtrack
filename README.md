@@ -1,6 +1,6 @@
 # proyecto_scraper
 
-Estructura carpeta:
+### ESTRUCTURA CARPETAS
 
 proyecto_scraper/
 ├── frontend/               # React
@@ -17,23 +17,21 @@ proyecto_scraper/
 └── docker-compose.yml        # Levanta Backend, Frontend (dev) y BDD
 
 
-Comandos para el backend:
+## COMANDOS:
+
+### Comandos para el backend:
     python manage.py runserver
     python manage.py makemigrations
     python manage.py migrate
     python manage.py importar_variantes
     python manage.py createsuperuser
+    usuario: iker // contraseña: 1234
 
-Comandos para el scraper:
+### Comandos para el scraper:
     scrapy crawl backmarket
+    python launcher.py
 
+### Comandos para el frontend:
+    npm run dev
 
-Usuario:
-    iker
-Contraseña:
-    Be...
-
-
-npm run dev
-
-Con esperas de 5, 3 y 1 segundos, ha llegado hasta las 104 peticiones
+En total, hay 1093 combinaciones unicas para price history (producto, variante, estado, bateria)

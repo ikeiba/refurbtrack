@@ -1,0 +1,59 @@
+{
+    "version": "2.0.0",
+    "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": false
+    },
+    "tasks": [
+        {
+            "label": "Scraper",
+            "type": "shell",
+            // Usamos cmd /k para ejecutar los activadores y mantener la terminal viva
+            "command": "cmd.exe",
+            "args": [
+                "/k",
+                "C:/Users/iker/anaconda3/Scripts/activate && conda activate proyecto_scraper && cd scraper"
+            ],
+            "presentation": {
+                "group": "terminals",
+                "panel": "new"
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "Backend",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/k",
+                "C:/Users/iker/anaconda3/Scripts/activate && conda activate proyecto_scraper && cd backend"
+            ],
+            "presentation": {
+                "group": "terminals",
+                "panel": "new"
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "Frontend",
+            "type": "shell",
+            // Aquí no activamos conda, dejamos una terminal normal lista
+            "command": "cmd.exe", 
+            "args": ["/k", "cd frontend"],
+            "presentation": {
+                "group": "terminals",
+                "panel": "new"
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        }
+    ]
+}

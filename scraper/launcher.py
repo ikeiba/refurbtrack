@@ -33,42 +33,45 @@ from api.models import Product, Variant # OJO: Asegúrate de importar el modelo 
 # (Si usas Product o Variant depende de tu modelo, ajusta según necesites)
 
 def run_spiders_concurrently():
-    # Obtenemos todos los IDs de productos que queremos scrapear
-    product_ids = Product.objects.values_list('id', flat=True)
-    
-    processes = []
-    MAX_CONCURRENT_PROCESSES = 12  # ¡CUIDADO AQUÍ! Lee la advertencia abajo.
-
-    print(f"📦 Se encontraron {len(product_ids)} productos para procesar.")
-
-    for pid in product_ids:
-        # Comando: scrapy crawl backmarket -a product_id=123
-        cmd = [
-            'scrapy', 'crawl', 'backmarket',
-            '-a', f'product_id={pid}'
-        ]
+    while True:
+        # Obtenemos todos los IDs de productos que queremos scrapear
+        product_ids = Product.objects.values_list('id', flat=True)
         
-        print(f"🚀 Lanzando spider para producto {pid}...")
-        
-        # Lanzamos el proceso de forma independiente (no bloqueante)
-        p = subprocess.Popen(cmd)
-        processes.append(p)
+        processes = []
+        MAX_CONCURRENT_PROCESSES = 12  # ¡CUIDADO AQUÍ! Lee la advertencia abajo.
 
-        # Control de concurrencia simple
-        if len(processes) >= MAX_CONCURRENT_PROCESSES:
-            print("⏳ Esperando a que se libere un slot de proceso...")
-            # Esperamos a que termine al menos uno
-            processes[0].wait()
-            processes.pop(0)
-        
-        # Pequeña pausa para no saturar el inicio
-        time.sleep(2)
+        print(f"📦 Se encontraron {len(product_ids)} productos para procesar.")
 
-    # Esperar a que terminen los restantes
-    for p in processes:
-        p.wait()
+        for pid in product_ids:
+            # Comando: scrapy crawl backmarket -a product_id=123
+            cmd = [
+                'scrapy', 'crawl', 'backmarket',
+                '-a', f'product_id={pid}'
+            ]
+            
+            print(f"🚀 Lanzando spider para producto {pid}...")
+            
+            # Lanzamos el proceso de forma independiente (no bloqueante)
+            p = subprocess.Popen(cmd)
+            processes.append(p)
 
-    print("✅ Todos los procesos han terminado.")
+            # Control de concurrencia simple
+            if len(processes) >= MAX_CONCURRENT_PROCESSES:
+                print("⏳ Esperando a que se libere un slot de proceso...")
+                # Esperamos a que termine al menos uno
+                processes[0].wait()
+                processes.pop(0)
+            
+            # Pequeña pausa para no saturar el inicio
+            time.sleep(2)
+
+        # Esperar a que terminen los restantes
+        for p in processes:
+            p.wait()
+
+        print("✅ Todos los procesos han terminado.")
+
+        time.sleep(45 * 60)  # Esperar 45 minutos antes de la siguiente ronda
 
 if __name__ == '__main__':
     run_spiders_concurrently()

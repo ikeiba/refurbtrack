@@ -1,32 +1,74 @@
-# backend/api/views.py
-
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
+from rest_framework.response import Response
 from django.db.models import Prefetch
+from django.utils import timezone
+from datetime import timedelta
 
-# Asegúrate de importar tus modelos y el nuevo serializer
-from .models import Product, Variant, PriceHistory
-from .serializers import ProductListSerializer, ProductDetailSerializer, ProductCardSerializer
+from .models import Product, Spec, Offer, PriceHistory
+from .serializers import (
+    ProductListSerializer, 
+    ProductDetailSerializer, 
+    PriceHistorySerializer
+)
 
-class ProductViewSet(viewsets.ModelViewSet):
+# --- 1. VIEWSET PRINCIPAL (Catálogo) ---
+class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Maneja el listado de productos (Home) y el detalle (Configurador).
+    """
+    # Queryset base (se sobrescribe abajo para optimizar)
     queryset = Product.objects.all()
+
     def get_serializer_class(self):
+        """
+        ¡Polimorfismo! 
+        Usamos un serializer ligero para listar y uno pesado para el detalle.
+        """
         if self.action == 'retrieve':
             return ProductDetailSerializer
         return ProductListSerializer
 
-# NUEVO: ViewSet para el Catálogo
-class VariantViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Endpoint principal para el frontend. 
-    Devuelve variantes con precios, optimizado para evitar N+1 queries.
-    """
-    serializer_class = ProductCardSerializer
-    
     def get_queryset(self):
-        # Query optimizada:
-        # 1. select_related('product'): Trae el "Padre" en la misma query SQL.
-        # 2. prefetch_related(...): Trae los precios en una segunda query separada pero eficiente,
-        #    ordenados por fecha para que our serializer siempre coja el último primero.
-        return Variant.objects.select_related('product').prefetch_related(
-            Prefetch('prices', queryset=PriceHistory.objects.order_by('-timestamp'))
-        )
+        """
+        Optimización de Consultas (Solving N+1 Problem).
+        """
+        queryset = Product.objects.all()
+
+        if self.action == 'retrieve':
+            # Si estamos viendo el detalle, necesitamos traer TODO el árbol de golpe.
+            # Usamos 'prefetch_related' para hacer joins eficientes en SQL:
+            # Trae las Specs Y TAMBIÉN sus Offers hijas en una sola operación optimizada.
+            queryset = queryset.prefetch_related(
+                'specs',
+                'specs__offers'
+            )
+        
+        return queryset
+
+# --- 2. VISTA DE HISTÓRICO (Gráfica) ---
+class OfferHistoryView(generics.ListAPIView):
+    """
+    Endpoint específico para la gráfica de precios.
+    URL esperada: /api/offers/{id}/history/?days=30
+    """
+    serializer_class = PriceHistorySerializer
+
+    def get_queryset(self):
+        # 1. Capturamos el ID de la oferta desde la URL
+        offer_id = self.kwargs['pk']
+        
+        # 2. Capturamos el parámetro ?days=30 (opcional)
+        days = self.request.query_params.get('days', None)
+
+        # 3. Filtramos
+        queryset = PriceHistory.objects.filter(offer_id=offer_id)
+
+        if days:
+            try:
+                days_int = int(days)
+                start_date = timezone.now() - timedelta(days=days_int)
+                queryset = queryset.filter(timestamp__gte=start_date)
+            except ValueError:
+                pass # Si pasan basura en ?days, ignoramos el filtro
+
+        return queryset

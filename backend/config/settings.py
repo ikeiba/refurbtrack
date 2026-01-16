@@ -134,3 +134,4 @@ CORS_ALLOWED_ORIGINS = [
 
 # # Añadido por mi (Imprime los emails en la consola en lugar de enviarlos)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST_USER = 'test@example.com'

@@ -1,3 +1,5 @@
+from time import time
+from datetime import datetime, timedelta
 import scrapy
 from api.models import Variant
 import json
@@ -12,6 +14,7 @@ class BackMarketSpider(scrapy.Spider):
         self.contador = 0
         self.errores = 0
         self.exitosos = 0
+        self.start_time = None
 
     custom_settings = {
         'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor',
@@ -24,7 +27,7 @@ class BackMarketSpider(scrapy.Spider):
         
         # VELOCIDAD CONSTANTE
         'CONCURRENT_REQUESTS': 1,
-        'DOWNLOAD_DELAY': 5,  # Más conservador
+        'DOWNLOAD_DELAY': 7.5,  # Más conservador
         'RANDOMIZE_DOWNLOAD_DELAY': True,
         
         # Configuración de reintentos
@@ -40,8 +43,11 @@ class BackMarketSpider(scrapy.Spider):
     }
 
     def start_requests(self):
+        # Registrar tiempo de inicio
+        self.start_time = time()
+        self.logger.warning(f"⏰ Inicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
         variants = Variant.objects.select_related('product').all()
-        self.logger.warning(f"🚀 INICIANDO SCRAPER PARA {variants.count()} PRODUCTOS...")
 
         # 2. FILTRADO DINÁMICO:
         # Si pasamos el argumento 'product_id' al lanzar el spider, filtramos por él.
@@ -49,6 +55,11 @@ class BackMarketSpider(scrapy.Spider):
         if hasattr(self, 'product_id'):
             self.logger.info(f"🎯 Modo 'Shard': Scrapeando solo Product ID {self.product_id}")
             variants = variants.filter(product__id=self.product_id)
+
+        # Filtrar variantes con UUID válido (eliminar el "-" y otros inválidos)
+        variants = variants.exclude(uuid="-").exclude(uuid="")
+
+        self.logger.warning(f"🚀 INICIANDO SCRAPER PARA {variants.count()} PRODUCTOS...")
 
         conditions = [
             {'code': '9', 'label': 0, 'name': 'premium'},
@@ -122,6 +133,18 @@ class BackMarketSpider(scrapy.Spider):
             self.logger.warning(f"⚠️ Respuesta sospechosamente corta ({len(response.text)} bytes)")
             self.errores += 1
             return None
+        
+        # VALIDACIÓN 2: Verificar que el parámetro 'l' sea el correcto (evitar redirecciones)
+        expected_l = str(9 + response.meta['condition_label'])
+        if 'l=' in response.url:
+            actual_l = response.url.split('l=')[1].split('&')[0]
+            if actual_l != expected_l:
+                self.logger.warning(
+                    f"⚠️ Redirección detectada. Esperado l={expected_l}, obtenido l={actual_l} | "
+                    f"{response.meta['product_name']} | {response.meta['condition_name']}"
+                )
+                self.errores += 1
+                return None
 
         variant_uuid = response.meta['variant_uuid']
         final_price = None
@@ -199,7 +222,12 @@ class BackMarketSpider(scrapy.Spider):
                 # No se encontró precio
                 self.logger.warning(
                     f"⚠️ No se encontró precio en {response.url[:80]} | "
-                    f"{response.meta['product_name']} | {response.meta['condition_name']}"
+                    f"[{self.contador}] 💰 {final_price}€ | "
+                    f"{response.meta['product_name']} | "
+                    f"{response.meta['condition_name']} | "
+                    #f"{batt_label} | "
+                    f"{response.meta['storage']} | {response.meta['color']} | "
+                    f"✅ {success_rate:.1f}%"
                 )
                 self.errores += 1
 
@@ -227,12 +255,25 @@ class BackMarketSpider(scrapy.Spider):
 
     def closed(self, reason):
         """Se ejecuta cuando el spider termina"""
+        # Calcular tiempo total
+        if self.start_time:
+            total_time = time() - self.start_time
+            hours, remainder = divmod(total_time, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            time_str = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+        else:
+            time_str = "N/A"
+        
         self.logger.warning("=" * 60)
         self.logger.warning(f"🏁 SPIDER FINALIZADO: {reason}")
+        self.logger.warning(f"⏰ Fin: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        self.logger.warning(f"⏱️  Tiempo total: {time_str}")
         self.logger.warning(f"📊 Total procesados: {self.contador}")
         self.logger.warning(f"✅ Exitosos: {self.exitosos}")
         self.logger.warning(f"❌ Errores: {self.errores}")
         if self.contador > 0:
             success_rate = (self.exitosos / self.contador * 100)
             self.logger.warning(f"📈 Tasa de éxito: {success_rate:.2f}%")
+            avg_time_per_request = total_time / self.contador if self.start_time else 0
+            self.logger.warning(f"⚡ Tiempo promedio por request: {avg_time_per_request:.2f}s")
         self.logger.warning("=" * 60)

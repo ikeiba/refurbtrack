@@ -133,7 +133,7 @@ class Panic429Middleware(RetryMiddleware):
                 browsers = [
                     'chrome110', 'chrome116', 'chrome120', 'chrome123',
                     'edge99', 'edge101', 
-                    'safari15_5', 'safari16'
+                    'safari15_5'
                 ]
                 current_browser = request.meta.get('impersonate', '')
                 available = [b for b in browsers if b != current_browser]

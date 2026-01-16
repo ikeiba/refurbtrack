@@ -3,8 +3,7 @@ from django.db import models
 
 class Subscriber(models.Model):
     """
-    Antigua tabla 'User'. Solo guarda emails para enviar alertas.
-    No requiere contraseña ni login.
+    Usuarios suscritos a alertas (solo email).
     """
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -12,85 +11,161 @@ class Subscriber(models.Model):
     def __str__(self):
         return self.email
 
+# --- NIVEL 1: LA FAMILIA DE PRODUCTOS (Para la Home) ---
 class Product(models.Model):
-    # Opciones para el tipo de producto
+    """
+    Solo define la 'Familia' (Ej: iPhone 13, Smartphone, 280€).
+    """
     class ProductType(models.TextChoices):
-        SMARTPHONE = 'Smartphone', 'Smartphone'
+        SMARTPHONE = 'Smartphone', 'Móvil'
         TABLET = 'Tablet', 'Tablet'
-        LAPTOP = 'Laptop', 'Laptop'
+        LAPTOP = 'Laptop', 'Portátil'
         SMARTWATCH = 'Smartwatch', 'Smartwatch'
         CONSOLE = 'Console', 'Consola'
         OTHER = 'Other', 'Otro'
 
     name = models.CharField(max_length=255)
-    # Usamos choices aquí. Si el scraper encuentra algo nuevo, lo mapeas a 'OTHER' o actualizas la lista.
-    type = models.CharField(
-        max_length=50, 
-        choices=ProductType.choices, 
-        default=ProductType.OTHER
-    ) 
+    type = models.CharField(max_length=50, choices=ProductType.choices, default=ProductType.OTHER)
+    image = models.ImageField(upload_to='products/', null=True, blank=True)
+
+    # CACHÉ NIVEL 1: El precio más bajo absoluto de toda la familia.
+    min_price_cached = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) # Sirve para pintar la tarjeta de la Home: "iPhone 13 - Desde 300€"
+    # NUEVO: ¿Cuándo se detectó este precio mínimo?
+    last_updated = models.DateTimeField(null=True, blank=True)
+
+    # 2. RÉCORD HISTÓRICO (El precio más bajo jamás visto)
+    lowest_ever_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    lowest_ever_date = models.DateTimeField(null=True, blank=True)
+
 
     def __str__(self):
         return self.name
 
-class Variant(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    uuid = models.CharField(max_length=100, unique=True)
-    # Dejamos storage/color como texto libre porque hay infinitas variaciones 
-    # (ej: "256GB", "1TB", "Cosmic Gray", "Starlight")
-    storage = models.CharField(max_length=50, blank=True, null=True)
-    color = models.CharField(max_length=50, blank=True, null=True)
+# --- NIVEL 2: LA ESPECIFICACIÓN TÉCNICA (Para el Configurador) ---
+class Spec(models.Model):
+    """
+    Aquí es donde el usuario elige características en la página de detalle (Ej: 'iPhone 13, 128, Azul, 12345aeiou, 300€').
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specs')
+    
+    # ID único de Back Market (o tu fuente) para identificar esta config exacta
+    back_market_uuid = models.CharField(max_length=100, unique=True)
+    
+    storage = models.CharField(max_length=50)
+    color = models.CharField(max_length=50)
+
+    # CACHÉ NIVEL 2: El precio más bajo para ESTA combinación concreta.
+    min_price_cached = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) # Sirve para pintar los botones del configurador: "[ Azul (Desde 320€) ]"
+    last_updated = models.DateTimeField(null=True, blank=True)
+
+    # 2. RÉCORD HISTÓRICO
+    lowest_ever_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    lowest_ever_date = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        # Evitamos duplicados: No puede haber dos 'iPhone 13 128GB Azul'
+        unique_together = ('product', 'storage', 'color')
 
     def __str__(self):
         return f"{self.product.name} ({self.storage} - {self.color})"
 
+# --- NIVEL 3: LA OFERTA COMERCIAL (El Mercado Real) ---
+class Offer(models.Model):
+    """
+    Una opción de compra real. (Ej: 'iPhone 13 128GB Azul - Estado Bueno - Batería Nueva - ES - current_price, last_updated, min_price_30d, max_price_30d, deal_score').
+    """
+    class Condition(models.TextChoices):
+        FAIR = 'Fair', 'Correcto'
+        GOOD = 'Good', 'Buen estado'
+        EXCELLENT = 'Excellent', 'Excelente'
+        PREMIUM = 'Premium', 'Premium'
+
+    spec = models.ForeignKey(Spec, on_delete=models.CASCADE, related_name='offers')
+    
+    condition = models.CharField(max_length=20, choices=Condition.choices)
+    battery_new = models.BooleanField(default=False) # False=Standard, True=New
+    country = models.CharField(max_length=5, default='ES') 
+
+    # CACHÉ NIVEL 3: Datos listos para pintar en la lista de ofertas sin calcular nada
+    current_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    last_updated = models.DateTimeField(null=True, blank=True)
+    
+    # Métricas para etiquetas de marketing ("Chollo", "Precio Alto")
+    min_price_30d = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    # NUEVO: Fecha del mínimo mensual
+    min_price_30d_date = models.DateTimeField(null=True, blank=True)
+    max_price_30d = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    # NUEVO: Fecha del máximo mensual
+    max_price_30d_date = models.DateTimeField(null=True, blank=True)
+    deal_score = models.IntegerField(default=50) # 0-100
+
+    # RÉCORDS HISTÓRICOS (Absolutos) - ¡NUEVO!
+    all_time_min_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    all_time_min_date = models.DateTimeField(null=True, blank=True)
+    
+    all_time_max_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    all_time_max_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        # Solo una oferta activa por cada combinación de Estado+Batería+País para esa Spec
+        unique_together = ('spec', 'condition', 'battery_new', 'country')
+        indexes = [
+            models.Index(fields=['current_price']), # Para ordenar por precio rápido
+            models.Index(fields=['deal_score']),    # Para filtrar "Chollos"
+        ]
+
+    def __str__(self):
+        return f"Oferta: {self.spec} ({self.condition}) - {self.current_price}€"
+
+# --- HISTÓRICO DE PRECIOS (Log Puro) ---
 class PriceHistory(models.Model):
-    class Condition(models.IntegerChoices):
-        FAIR = 3, 'Fair (Correcto)'
-        GOOD = 2, 'Good (Buen estado)'
-        EXCELLENT = 1, 'Excellent (Excelente)'
-        PREMIUM = 0, 'Premium (Como nuevo)'
-
-    class Country(models.TextChoices):
-        SPAIN = 'ES', 'España'
-        FRANCE = 'FR', 'Francia'
-        GERMANY = 'DE', 'Alemania'
-        ITALY = 'IT', 'Italia'
-        UK = 'UK', 'Reino Unido'
-        USA = 'US', 'Estados Unidos'
-        # Añade más según necesites
-
-    variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name='prices')
-    battery = models.BooleanField(default=False) # False=Standard, True=New Battery
-    
-    condition = models.IntegerField(choices=Condition.choices, null=True, blank=True)
-    country = models.CharField(max_length=5, choices=Country.choices)
-    
-    timestamp = models.DateTimeField(auto_now_add=True)
+    """
+    Historial inmutable. Solo se usa para dibujar la gráfica, no para listas (Ej: 'offer, price, timestamp').
+    """
+    offer = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name='history')
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-timestamp']
 
+
+# --- ALERTAS FLEXIBLES (Corregido) ---
 class Alert(models.Model):
-    # Relación con el Suscriptor (Email), no con el User de Django
+    """
+    Sistema de alertas flexible.
+    Se vincula al PRODUCTO (Familia), no a la Spec.
+    Los campos JSON permiten selección múltiple o vacía (Cualquiera).
+    """
     subscriber = models.ForeignKey(Subscriber, on_delete=models.CASCADE, related_name='alerts')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     
-    # Filtros flexibles (Tal como pediste)
-    # Usamos las mismas opciones (Choices) que definimos arriba para consistencia
-    country = models.CharField(max_length=5, choices=PriceHistory.Country.choices, blank=True, null=True)
-    condition = models.IntegerField(choices=PriceHistory.Condition.choices, null=True, blank=True)
+    # País obligatorio (String simple porque dijiste que era obligatorio uno)
+    country = models.CharField(max_length=5, default='ES')
     
-    color = models.CharField(max_length=50, blank=True, null=True)
-    storage = models.CharField(max_length=50, blank=True, null=True)
-    battery = models.BooleanField(null=True, blank=True) 
-    
+    # Precio Umbral (Obligatorio)
     price_threshold = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # --- CAMPOS FLEXIBLES (JSON para selección múltiple) ---
+    # Si la lista está vacía [] significa "ME DA IGUAL (Cualquiera)"
+    # Si tiene datos ["Red", "Blue"] significa "UNO DE ESTOS"
     
+    target_conditions = models.JSONField(default=list, blank=True) 
+    # Ej: ["Good", "Excellent"]
+    
+    target_storages = models.JSONField(default=list, blank=True) 
+    # Ej: ["128", "256"]
+    
+    target_colors = models.JSONField(default=list, blank=True)   
+    # Ej: ["Midnight", "Blue"]
+
+    battery_new = models.BooleanField(null=True, blank=True) 
+    # True=Nueva, False=Estandar, Null=Me da igual
+
+    # Estado de la notificación
     notified = models.BooleanField(default=False)
-    repeat = models.BooleanField(default=False) # ¿Quieres que avise cada vez que baje o solo una vez?
+    repeat = models.BooleanField(default=False)
     last_notified = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Alerta {self.subscriber.email}: {self.product.name} < {self.price_threshold}"
+        return f"Alerta {self.product.name} < {self.price_threshold}€ ({self.subscriber.email})"
