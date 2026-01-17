@@ -1,3 +1,4 @@
+from decimal import Decimal
 from time import time
 from datetime import datetime, timedelta
 import scrapy
@@ -50,7 +51,7 @@ class BackMarketSpider(scrapy.Spider):
         'DUPEFILTER_DEBUG': False,
     }
 
-    def start_requests(self):
+    async def start(self):
         # Registrar tiempo de inicio
         self.start_time = time()
         self.logger.warning(f"⏰ Inicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -254,13 +255,13 @@ class BackMarketSpider(scrapy.Spider):
                 # Esto inserta el precio y dispara signals.py para actualizar Offer, Spec y Product
                 PriceHistory.objects.create(
                     offer=offer,
-                    price=final_price
+                    price=Decimal(str(final_price))
                 )
 
             else:
                 # LOG DE FALLO (Sin precio)
                 self.logger.warning(
-                    f"⚠️ No se encontró precio en {response.url[:80]} | "
+                    f"⚠️ No se encontró precio en {response.url[:95]} | "
                     f"[{self.contador}] -- € | "
                     f"{offer.spec.product.name} | "
                     f"{cond_name} | {batt_label} | "
@@ -270,7 +271,7 @@ class BackMarketSpider(scrapy.Spider):
                 self.errores += 1
 
         except Exception as e:
-            self.logger.error(f"❌ Error parseando {response.url[:80]}: {e}")
+            self.logger.error(f"❌ Error parseando {response.url[:95]}: {e}")
             self.errores += 1
 
     def errback_handler(self, failure):
@@ -283,12 +284,12 @@ class BackMarketSpider(scrapy.Spider):
         if failure.check(IgnoreRequest):
             self.logger.warning(
                 f"🚫 Request ignorado después de muchos reintentos: "
-                f"{request.url[:80]}"
+                f"{request.url[:95]}"
             )
         else:
             self.logger.error(
                 f"❌ Error en request: {failure.value} | "
-                f"{request.url[:80]}"
+                f"{request.url[:95]}"
             )
 
     def closed(self, reason):

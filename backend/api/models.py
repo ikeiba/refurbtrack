@@ -72,11 +72,11 @@ class Spec(models.Model):
 # --- NIVEL 3: LA OFERTA COMERCIAL (El Mercado Real) ---
 class Offer(models.Model):
     """
-    Una opción de compra real. (Ej: 'iPhone 13 128GB Azul - Estado Bueno - Batería Nueva - ES - current_price, last_updated, min_price_30d, max_price_30d, deal_score').
+    Una opción de compra real. (Ej: 'iPhone 13 128GB Azul - Muy Bueno - Batería Nueva - ES - current_price, last_updated, min_price_30d, max_price_30d, deal_score').
     """
     class Condition(models.TextChoices):
         FAIR = 'Fair', 'Correcto'
-        GOOD = 'Good', 'Buen estado'
+        GOOD = 'Good', 'Muy Bueno'
         EXCELLENT = 'Excellent', 'Excelente'
         PREMIUM = 'Premium', 'Premium'
 
