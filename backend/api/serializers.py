@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Spec, Offer, PriceHistory
+from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber
 
 # --- 1. HISTÓRICO (Para la Gráfica) ---
 class PriceHistorySerializer(serializers.ModelSerializer):
@@ -75,3 +75,42 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'type', 'image', 'specs']
+
+
+# backend/api/serializers.py
+
+class AlertSerializer(serializers.ModelSerializer):
+    # 1. DECLARAMOS LOS CAMPOS QUE NO EXISTEN EN EL MODELO
+    product_id = serializers.IntegerField(write_only=True)
+    email = serializers.EmailField(write_only=True) # <--- ¡ESTO ES LO QUE FALTABA!
+
+    class Meta:
+        model = Alert
+        fields = [
+            'email',            # Ahora sí funciona porque lo declaramos arriba
+            'price_threshold', 
+            'product_id', 
+            'target_colors', 
+            'target_storages', 
+            'target_conditions', 
+            'battery_new',
+            'country'
+        ]
+
+    def create(self, validated_data):
+        # Extraemos el ID del producto y el email
+        product_id = validated_data.pop('product_id')
+        email = validated_data.pop('email') # <--- Ahora esto funcionará perfecto
+
+        product = Product.objects.get(id=product_id)
+        
+        # Gestión del suscriptor
+        subscriber, _ = Subscriber.objects.get_or_create(email=email)
+        
+        # Creamos la alerta
+        alert = Alert.objects.create(
+            subscriber=subscriber,
+            product=product,
+            **validated_data
+        )
+        return alert

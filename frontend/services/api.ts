@@ -1,13 +1,15 @@
 // frontend_light/services/api.ts
-import { ScrapedProduct } from "@/lib/types";
+import { ProductSummary, AlertData } from "@/lib/types";
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
-const API_URL = "http://127.0.0.1:8000"; 
+const API_URL = "http://127.0.0.1:8000/api"; 
 
-export async function getCatalog(): Promise<ScrapedProduct[]> {
+
+
+export const getProducts = async (): Promise<ProductSummary[]> => {
   try {
     // Llamamos al endpoint 'catalog' que creamos en Django
-    const res = await fetch(`${API_URL}/api/catalog/`, {
+    const res = await fetch(`${API_URL}/products/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -29,4 +31,36 @@ export async function getCatalog(): Promise<ScrapedProduct[]> {
     // En caso de error, devolvemos un array vacío para que la UI no explote
     return [];
   }
-}
+};
+
+// Para el Detalle (fetch pesado)
+export const getProductDetail = async (id: string) => {
+  const res = await fetch(`${API_URL}/products/${id}/`);
+  if (!res.ok) throw new Error('Error fetching product detail');
+  return res.json();
+};
+
+// Para el Historial (Gráfica)
+export const getOfferHistory = async (offerId: number) => {
+  const res = await fetch(`${API_URL}/offers/${offerId}/history/`);
+  if (!res.ok) return []; // Si falla, devolvemos array vacío
+  return res.json();
+};
+
+export const createAlert = async (data: AlertData) => {
+  const res = await fetch(`${API_URL}/alerts/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    // Lanzamos error con detalle para mostrarlo en el Toast
+    throw new Error(JSON.stringify(errorData));
+  }
+  
+  return res.json();
+};

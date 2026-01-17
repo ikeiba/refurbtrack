@@ -2,47 +2,58 @@
 
 // --- NUEVA INTERFAZ (La Verdadera) ---
 // Coincide 1:1 con ProductCardSerializer de Django
-export interface ScrapedProduct {
-  id: number;           // Django usa números para IDs por defecto
-  uuid: string;         // Nuestro identificador único de variante
-  product_name: string; // Vía 'source="product.name"'
-  product_type: string; // Vía 'source="product.type"'
-  storage: string | null;
-  color: string | null;
-  current_price: number | null; // Puede ser null si no hay histórico
-  condition: string | null;     // El texto legible (ej: "Good")
-  last_updated: string | null;  // ISO Date string
+
+
+//? ESTO ES LO QUE RECIBIMOS EN LA PAGINA DE CATALOGO
+export interface ProductSummary {
+  id: number;
+  name: string;
+  image: string | null;
+  min_price_cached: number;
 }
 
-export interface Product {
-  id: string
-  title: string
-  model: string
-  storage: string
-  color: string
-  colorHex: string
-  condition: "Fair" | "Good" | "Excellent" | "Premium"
-  newBattery: boolean
-  price: number
-  originalPrice: number
-  newRetailPrice: number
-  image: string
-  images: string[] // Added images array for carousel
-  priceHistory: { date: string; price: number }[]
-  variants: { storage: string; color: string; colorHex: string; price: number }[]
+//? ESTO ES LO QUE RECIBIMOS PARA VER EL GRÁFICO DE HISTORIAL DE PRECIOS
+export interface HistoryPoint {
+  timestamp: string;
+  price: number;
 }
 
-export interface Filters {
-  models: string[]
-  conditions: string[]
-  newBatteryOnly: boolean
-  storages: string[]
-  colors: string[]
-  priceRange: [number, number]
+//? ESTO ES LO QUE RECIBIMOS EN LA PAGINA DE DETALLE
+export interface Spec {
+  id: number;
+  back_market_uuid: string;
+  storage: string;
+  color: string;
+  min_price_cached: number | null;
+  offers: Offer[];
 }
 
-export interface Country {
-  code: string
-  name: string
-  flag: string
+//? ESTO ES CADA OFERTA DENTRO DE UNA SPEC
+export interface Offer {
+  id: number;
+  condition: string; // "Fair", "Good", "Excellent", "Premium"
+  battery_new: boolean;
+  current_price: number | null;
+  last_updated: string | null;
+}
+
+//? ESTOS SON TODAS LAS SPECS DENTRO DE UN PRODUCTO
+export interface ProductDetail extends ProductSummary {
+  specs: Spec[];
+}
+
+//? ESTO ES LO QUE ENVIAMOS AL BACKEND PARA CREAR UNA ALERTA
+export interface AlertData {
+  email: string;
+  price_threshold: number;
+  product_id: number;
+  country: string;
+  
+  // Coincide con tus JSONFields del backend
+  target_colors: string[];     // [] = Cualquiera
+  target_storages: string[];   // [] = Cualquiera
+  target_conditions: string[]; // [] = Cualquiera
+  
+  // Coincide con tu BooleanField(null=True)
+  battery_new: boolean | null; 
 }

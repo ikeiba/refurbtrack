@@ -118,12 +118,12 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
           <h2 className="mb-6 text-2xl font-semibold tracking-tight">Catálogo en Vivo (Desde Django)</h2>
         </div>
         <div className="flex">
-          <FilterSidebar
+          {/*<FilterSidebar
             filters={filters}
             onFiltersChange={setFilters}
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
-          />
+          />*/}
           <main className="flex-1 p-4 lg:p-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">{filteredProducts.length} productos encontrados</p>

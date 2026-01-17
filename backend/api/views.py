@@ -4,8 +4,9 @@ from django.db.models import Prefetch
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import Product, Spec, Offer, PriceHistory
+from .models import Alert, Product, Spec, Offer, PriceHistory
 from .serializers import (
+    AlertSerializer,
     ProductListSerializer, 
     ProductDetailSerializer, 
     PriceHistorySerializer
@@ -72,3 +73,8 @@ class OfferHistoryView(generics.ListAPIView):
                 pass # Si pasan basura en ?days, ignoramos el filtro
 
         return queryset
+    
+# backend/api/views.py
+class AlertCreateView(generics.CreateAPIView):
+    queryset = Alert.objects.all()
+    serializer_class = AlertSerializer
