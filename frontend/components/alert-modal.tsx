@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Bell, Loader2, Battery, BatteryFull } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+import { cn, getColorHex } from "@/lib/utils" // <--- Importamos getColorHex
 import { createAlert } from "@/services/api"
 import type { ProductDetail } from "@/lib/types"
 
@@ -16,7 +16,6 @@ interface AlertModalProps {
   isOpen: boolean
   onClose: () => void
   product: ProductDetail
-  // Configuración actual para pre-rellenar
   currentConfig: {
     color: string
     storage: string
@@ -30,25 +29,21 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
 
-  // --- ESTADOS DEL FORMULARIO ---
+  // --- ESTADOS ---
   const [email, setEmail] = useState("")
   const [targetPrice, setTargetPrice] = useState(currentConfig.price.toString())
 
-  // --- ESTADOS DE SELECCIÓN FLEXIBLE ---
-  // Inicializamos con la selección actual del usuario
   const [selectedStorages, setSelectedStorages] = useState<string[]>([currentConfig.storage])
   const [selectedColors, setSelectedColors] = useState<string[]>([currentConfig.color])
   const [selectedConditions, setSelectedConditions] = useState<string[]>([currentConfig.condition])
-  // Usamos strings 'new'/'standard' para la UI de batería
   const [selectedBattery, setSelectedBattery] = useState<string[]>(currentConfig.batteryNew ? ['new'] : ['standard'])
 
-  // Checkboxes "ANY" (Me da igual)
   const [anyStorage, setAnyStorage] = useState(false)
   const [anyColor, setAnyColor] = useState(false)
   const [anyCondition, setAnyCondition] = useState(false)
   const [anyBattery, setAnyBattery] = useState(false)
 
-  // Resetear formulario cuando se abre el modal o cambia la config
+  // Reset al abrir
   useEffect(() => {
     if (isOpen) {
       setTargetPrice(currentConfig.price.toString())
@@ -57,8 +52,6 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
       setSelectedConditions([currentConfig.condition])
       setSelectedBattery(currentConfig.batteryNew ? ['new'] : ['standard'])
       
-      // Por defecto desactivamos los "Any" para ser específicos, 
-      // pero el usuario puede activarlos
       setAnyStorage(false)
       setAnyColor(false)
       setAnyCondition(false)
@@ -66,7 +59,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
     }
   }, [isOpen, currentConfig])
 
-  // --- HELPERS PARA TOGGLES ---
+  // Helpers
   const toggleSelection = (list: string[], item: string, setList: (l: string[]) => void) => {
     if (list.includes(item)) {
       setList(list.filter(i => i !== item))
@@ -75,36 +68,26 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
     }
   }
 
-  // --- OBTENER OPCIONES DISPONIBLES DEL PRODUCTO ---
-  // Extraemos todas las opciones únicas que existen en las specs de este producto
   const availableStorages = Array.from(new Set(product.specs.map(s => s.storage)))
   const availableColors = Array.from(new Set(product.specs.map(s => s.color)))
-  const conditions = ["Fair", "Good", "Excellent", "Premium"] // Estándar de BackMarket
+  const conditions = ["Fair", "Good", "Excellent", "Premium"]
 
-  // --- ENVÍO DEL FORMULARIO ---
+  // Submit
   const handleSubmit = async () => {
-    if (!email || !targetPrice) {
-      toast({ title: "Faltan datos", description: "Introduce tu email y un precio.", variant: "destructive" })
+    if (!isFormValid()) {
+      toast({ title: "Faltan datos", description: "Asegúrate de que todos los campos tengan algo seleccionado.", variant: "destructive" })
       return
     }
 
     setLoading(true)
 
-    // LÓGICA DE MAPEO: UI -> BACKEND
-    // Si "Any" está marcado, enviamos lista vacía []. Si no, la lista seleccionada.
-    
-    // Mapeo especial para batería
     let batteryPayload: boolean | null = null
-    if (anyBattery) {
-        batteryPayload = null
-    } else {
+    if (!anyBattery) {
         const hasNew = selectedBattery.includes('new')
         const hasStd = selectedBattery.includes('standard')
-        
-        if (hasNew && hasStd) batteryPayload = null // Si marca las dos, es como "Any"
+        if (hasNew && hasStd) batteryPayload = null
         else if (hasNew) batteryPayload = true
         else if (hasStd) batteryPayload = false
-        // Si no marca nada, asumimos null o podríamos bloquear
     }
 
     try {
@@ -113,7 +96,6 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
         price_threshold: Number(targetPrice),
         product_id: product.id,
         country: 'ES',
-        // Backend espera listas vacías para "Cualquiera"
         target_colors: anyColor ? [] : selectedColors,
         target_storages: anyStorage ? [] : selectedStorages,
         target_conditions: anyCondition ? [] : selectedConditions,
@@ -122,90 +104,107 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
 
       toast({
         title: "¡Alerta Creada!",
-        description: `Te avisaremos en ${email} cuando baje de ${targetPrice}€`,
+        description: `Te avisaremos en ${email} cuando baje de precio.`,
         className: "bg-emerald-50 border-emerald-200 text-emerald-800"
       })
       onClose()
-      setEmail("") // Limpiar email para privacidad (o déjalo si prefieres UX)
+      setEmail("")
     } catch (error) {
       console.error(error)
-      toast({
-        title: "Error",
-        description: "No se pudo guardar la alerta.",
-        variant: "destructive"
-      })
+      toast({ title: "Error", description: "No se pudo guardar la alerta.", variant: "destructive" })
     } finally {
       setLoading(false)
     }
   }
 
-  // --- DESCRIPCIÓN DINÁMICA (Resumen) ---
-  const getSummary = () => {
+  // Helper para descripción del resumen - Incluye batería
+  const getAlertDescription = () => {
     const parts = []
-    if (anyStorage) parts.push("cualquier capacidad")
-    else parts.push(selectedStorages.join("/"))
+    parts.push(anyStorage ? "cualquier almacenamiento" : selectedStorages.join("/"))
+    parts.push(anyColor ? "cualquier color" : selectedColors.join("/"))
+    parts.push(anyCondition ? "cualquier estado" : selectedConditions.join("/"))
     
-    if (anyColor) parts.push("cualquier color")
-    
-    if (anyCondition) parts.push("cualquier estado")
-    else parts.push(selectedConditions.join("/"))
-
+    if (anyBattery) {
+      parts.push("cualquier batería")
+    } else {
+      const batteryLabels = []
+      if (selectedBattery.includes('standard')) batteryLabels.push("Estándar")
+      if (selectedBattery.includes('new')) batteryLabels.push("Nueva")
+      parts.push(batteryLabels.join("/"))
+    }
     return parts.join(" + ")
+  }
+
+  // Validar que todos los campos tengan algo seleccionado
+  const isFormValid = () => {
+    if (!email || !targetPrice) return false
+    if (!anyStorage && selectedStorages.length === 0) return false
+    if (!anyColor && selectedColors.length === 0) return false
+    if (!anyCondition && selectedConditions.length === 0) return false
+    if (!anyBattery && selectedBattery.length === 0) return false
+    return true
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Bell className="h-5 w-5 text-primary" />
-            Crear Alerta Flexible
+          <DialogTitle className="flex items-center gap-2 text-xl text-emerald-700">
+            <Bell className="h-5 w-5" />
+            Crear Alerta de Precio
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-2">
-          {/* Header del Producto */}
-          <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3 border">
-            <div className="flex-1">
-              <p className="font-bold text-lg">{product.name}</p>
-              <p className="text-sm text-muted-foreground">Configura los filtros exactos que buscas.</p>
+          
+          {/* 1. HEADER DEL PRODUCTO (Estilo v0) */}
+          <div className="flex items-center justify-between rounded-lg bg-muted/30 p-4 border border-border">
+            <div>
+              <p className="font-semibold text-lg">{product.name}</p>
+              <p className="text-sm text-muted-foreground">Configura tus preferencias abajo</p>
             </div>
             <div className="text-right">
-                <p className="text-xs text-muted-foreground">Actual</p>
+                <p className="text-xs text-muted-foreground">Precio actual</p>
                 <p className="font-bold text-lg">{currentConfig.price}€</p>
             </div>
           </div>
 
-          {/* Inputs Básicos */}
+          {/* 2. INPUTS DE EMAIL Y PRECIO */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Email */}
             <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Tu Email</Label>
                 <Input 
                     id="email" 
                     type="email" 
-                    placeholder="tu@email.com" 
+                    placeholder="hola@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
             </div>
+            {/* Precio con símbolo € absoluto */}
             <div className="space-y-2">
-                <Label htmlFor="price">Avisar si baja de (€)</Label>
-                <Input 
-                    id="price" 
-                    type="number" 
-                    value={targetPrice}
-                    onChange={(e) => setTargetPrice(e.target.value)}
-                />
+                <Label htmlFor="price">Avísame si baja de</Label>
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                    <Input 
+                        id="price" 
+                        type="number" 
+                        value={targetPrice}
+                        onChange={(e) => setTargetPrice(e.target.value)}
+                        className="pl-8 font-semibold" 
+                    />
+                </div>
             </div>
           </div>
 
-          {/* SELECCIÓN 1: ALMACENAMIENTO */}
+          {/* 3. ALMACENAMIENTO (Estilo Pill) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Almacenamiento</p>
               <div className="flex items-center gap-2">
-                <Checkbox id="any-storage" checked={anyStorage} onCheckedChange={(c) => setAnyStorage(!!c)} />
-                <Label htmlFor="any-storage" className="text-sm text-muted-foreground cursor-pointer">Me da igual</Label>
+                <Checkbox id="any-storage" checked={anyStorage} onCheckedChange={(c) => setAnyStorage(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
+                <Label htmlFor="any-storage" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
               </div>
             </div>
             {!anyStorage && (
@@ -215,10 +214,10 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                     key={storage}
                     onClick={() => toggleSelection(selectedStorages, storage, setSelectedStorages)}
                     className={cn(
-                      "rounded-full border px-3 py-1 text-sm font-medium transition-all",
+                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
                       selectedStorages.includes(storage)
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-transparent hover:bg-muted",
+                        ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                        : "border-border bg-transparent hover:border-emerald-600/50"
                     )}
                   >
                     {storage}
@@ -226,44 +225,53 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                 ))}
               </div>
             )}
+            {anyStorage && (
+              <p className="text-sm text-muted-foreground italic">Cualquier almacenamiento</p>
+            )}
           </div>
 
-          {/* SELECCIÓN 2: COLOR */}
+          {/* 4. COLOR (Estilo Círculos) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Color</p>
               <div className="flex items-center gap-2">
-                <Checkbox id="any-color" checked={anyColor} onCheckedChange={(c) => setAnyColor(!!c)} />
-                <Label htmlFor="any-color" className="text-sm text-muted-foreground cursor-pointer">Me da igual</Label>
+                <Checkbox id="any-color" checked={anyColor} onCheckedChange={(c) => setAnyColor(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
+                <Label htmlFor="any-color" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
               </div>
             </div>
             {!anyColor && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {availableColors.map((color) => (
                   <button
                     key={color}
                     onClick={() => toggleSelection(selectedColors, color, setSelectedColors)}
                     className={cn(
-                      "rounded-full border px-4 py-1 text-sm font-medium transition-all",
+                      "h-8 w-8 rounded-full border-2 transition-all hover:scale-110",
                       selectedColors.includes(color)
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-transparent hover:bg-muted",
+                        ? "border-emerald-600 ring-2 ring-emerald-600 ring-offset-2 ring-offset-background"
+                        : "border-border opacity-60 hover:opacity-100"
                     )}
-                  >
-                    {color}
-                  </button>
+                    style={{ backgroundColor: getColorHex(color) }}
+                    title={color}
+                  />
                 ))}
               </div>
             )}
+            {anyColor && (
+              <p className="text-sm text-muted-foreground italic">Cualquier color</p>
+            )}
+            {!anyColor && selectedColors.length > 0 && (
+                <p className="text-xs text-muted-foreground">Seleccionado: {selectedColors.join(", ")}</p>
+            )}
           </div>
 
-          {/* SELECCIÓN 3: ESTADO */}
+          {/* 5. ESTADO (Estilo Pill) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Estado</p>
               <div className="flex items-center gap-2">
-                <Checkbox id="any-cond" checked={anyCondition} onCheckedChange={(c) => setAnyCondition(!!c)} />
-                <Label htmlFor="any-cond" className="text-sm text-muted-foreground cursor-pointer">Me da igual</Label>
+                <Checkbox id="any-cond" checked={anyCondition} onCheckedChange={(c) => setAnyCondition(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
+                <Label htmlFor="any-cond" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
               </div>
             </div>
             {!anyCondition && (
@@ -273,10 +281,10 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                     key={cond}
                     onClick={() => toggleSelection(selectedConditions, cond, setSelectedConditions)}
                     className={cn(
-                      "rounded-full border px-3 py-1 text-sm font-medium transition-all",
+                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
                       selectedConditions.includes(cond)
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-transparent hover:bg-muted",
+                        ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                        : "border-border bg-transparent hover:border-emerald-600/50"
                     )}
                   >
                     {cond}
@@ -284,15 +292,18 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                 ))}
               </div>
             )}
+            {anyCondition && (
+              <p className="text-sm text-muted-foreground italic">Cualquier estado</p>
+            )}
           </div>
 
-          {/* SELECCIÓN 4: BATERÍA */}
+          {/* 6. BATERÍA */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
+             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Batería</p>
               <div className="flex items-center gap-2">
-                <Checkbox id="any-batt" checked={anyBattery} onCheckedChange={(c) => setAnyBattery(!!c)} />
-                <Label htmlFor="any-batt" className="text-sm text-muted-foreground cursor-pointer">Me da igual</Label>
+                <Checkbox id="any-batt" checked={anyBattery} onCheckedChange={(c) => setAnyBattery(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
+                <Label htmlFor="any-batt" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
               </div>
             </div>
             {!anyBattery && (
@@ -300,10 +311,10 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                  <button
                     onClick={() => toggleSelection(selectedBattery, 'standard', setSelectedBattery)}
                     className={cn(
-                      "flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium transition-all",
+                      "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
                       selectedBattery.includes('standard')
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input hover:bg-muted",
+                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        : "border-border hover:bg-muted"
                     )}
                   >
                     <Battery className="h-4 w-4" /> Estándar
@@ -311,32 +322,41 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                   <button
                     onClick={() => toggleSelection(selectedBattery, 'new', setSelectedBattery)}
                     className={cn(
-                      "flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium transition-all",
+                      "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
                       selectedBattery.includes('new')
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input hover:bg-muted",
+                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        : "border-border hover:bg-muted"
                     )}
                   >
                     <BatteryFull className="h-4 w-4" /> Nueva (100%)
                   </button>
               </div>
             )}
+            {anyBattery && (
+              <p className="text-sm text-muted-foreground italic">Cualquier batería</p>
+            )}
           </div>
 
-          {/* RESUMEN */}
-          <div className="rounded-lg border bg-muted/40 p-4 text-sm">
-            <span className="font-semibold text-primary">Resumen: </span>
-            Avisar a <b>{email || "..."}</b> si baja de <b>{targetPrice}€</b> buscando: <br/>
-            <span className="text-muted-foreground italic">{getSummary()}</span>
+          {/* 7. RESUMEN VERDE (Estilo v0) */}
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
+             <p className="text-emerald-800 dark:text-emerald-200">
+               <span className="font-medium">Resumen:</span> Avisar a <b>{email || "..."}</b> cuando <br/>
+               <span className="font-semibold">{getAlertDescription()}</span> baje de <span className="font-bold text-base">{targetPrice}€</span>
+             </p>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={loading || !email}>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1 bg-transparent" onClick={onClose}>Cancel</Button>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={loading || !isFormValid()}
+              className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Bell className="mr-2 h-4 w-4" />
               Crear Alerta
             </Button>
-          </DialogFooter>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
