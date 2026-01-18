@@ -1,15 +1,16 @@
 from django.core.management.base import BaseCommand
 from api.models import Product, Spec, Offer
+from django.utils.text import slugify
 
 class Command(BaseCommand):
-    help = 'Carga inicial de productos, specs y genera la matriz de ofertas vacías'
+    help = 'Carga inicial de productos, specs y genera la matriz de ofertas vacías con imágenes'
 
     def handle(self, *args, **kwargs):
         self.stdout.write("Iniciando importación masiva y generación de ofertas...")
         
         # --- BLOQUE DE DATOS ---
         
-        self.insert_product(name="iPhone 11", type="Smartphone")
+        self.insert_product(name="iPhone 11", type="Smartphone", image_path="products/iphone-11-black.avif")
         id = self.get_product_by_name(name="iPhone 11")[0]
         self.insert_spec(product_id=id, uuid="0106bb6f-3975-4794-b9a0-7d920669484c", storage="64",  color="Black")
         self.insert_spec(product_id=id, uuid="701179ec-a741-4ab7-bdf8-5a08bb59dd90", storage="64",  color="Red")
@@ -30,22 +31,22 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="9b8f4e2c-76b6-4087-80b5-16f698fb491c", storage="256", color="Purple")
         self.insert_spec(product_id=id, uuid="1dbbb866-d798-4cb9-b72e-ac0cee641d0b", storage="256", color="White")
 
-        self.insert_product(name="iPhone 11 Pro", type="Smartphone")
+        self.insert_product(name="iPhone 11 Pro", type="Smartphone", image_path="products/iphone-11-pro-green.avif")
         id = self.get_product_by_name(name="iPhone 11 Pro")[0]
         self.insert_spec(product_id=id, uuid="8a9d4ab9-46f9-406b-8a10-c18a719cda81", storage="64",  color="Grey")
         self.insert_spec(product_id=id, uuid="b35cbbcd-fce1-4dc2-92da-00296472aaf4", storage="64",  color="Green")
         self.insert_spec(product_id=id, uuid="4142377d-80f1-4670-8f4e-fab0b6fdffd4", storage="64",  color="Gold")
-        self.insert_spec(product_id=id, uuid="fd9cd306-42bd-4422-a221-11a5d277c5d7", storage="64",  color="Plat")
+        self.insert_spec(product_id=id, uuid="fd9cd306-42bd-4422-a221-11a5d277c5d7", storage="64",  color="silver")
         self.insert_spec(product_id=id, uuid="934ce03d-d77d-4ec3-9316-ba84614ad715", storage="256", color="Grey")
         self.insert_spec(product_id=id, uuid="a998bc4e-a6ae-49ad-bfe0-298b68630d06", storage="256", color="Green")
         self.insert_spec(product_id=id, uuid="b79d17eb-b1b8-49c4-8307-3a053176ab23", storage="256", color="Gold")
-        self.insert_spec(product_id=id, uuid="87d1d523-ada8-4c34-98fb-e265be455f9f", storage="256", color="Plat")
+        self.insert_spec(product_id=id, uuid="87d1d523-ada8-4c34-98fb-e265be455f9f", storage="256", color="silver")
         self.insert_spec(product_id=id, uuid="5d1d323c-8fff-41c6-af82-50c23ab0e22e", storage="512", color="Grey")
         self.insert_spec(product_id=id, uuid="1819db12-cfca-4ec6-bc62-b8abd1c1dcef", storage="512", color="Green")
         self.insert_spec(product_id=id, uuid="89274113-77c6-4edf-ac0f-85b448657099", storage="512", color="Gold")
-        self.insert_spec(product_id=id, uuid="88499b97-60bc-49c7-8bf1-b51462b17070", storage="512", color="Plat")
+        self.insert_spec(product_id=id, uuid="88499b97-60bc-49c7-8bf1-b51462b17070", storage="512", color="silver")
 
-        self.insert_product(name="iPhone 12",    type="Smartphone")
+        self.insert_product(name="iPhone 12",    type="Smartphone", image_path="products/iphone-12-black.avif")
         id = self.get_product_by_name(name="iPhone 12")[0]
         self.insert_spec(product_id=id, uuid="ec0b1d0d-251d-456e-bcd6-978be85e25d6", storage="64",  color="Black")
         self.insert_spec(product_id=id, uuid="af874b95-0a58-4efa-b0f4-cd020fed146b", storage="64",  color="Red")
@@ -66,22 +67,22 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="bdef7717-ff58-431a-a8e2-3afcc93409e6", storage="256", color="Purple")
         self.insert_spec(product_id=id, uuid="f01d43e2-4f17-4fde-8415-96884e206679", storage="256", color="White")
 
-        self.insert_product(name="iPhone 12 Pro", type="Smartphone")
+        self.insert_product(name="iPhone 12 Pro", type="Smartphone", image_path="products/iphone-12-pro-gold.avif")
         id = self.get_product_by_name(name="iPhone 12 Pro")[0]
         self.insert_spec(product_id=id, uuid="6cc9b52b-c002-4963-9655-cb567edd13a3", storage="128", color="Blue")
         self.insert_spec(product_id=id, uuid="cd7a1df1-fe4a-4a2f-889c-38d05be64126", storage="128", color="Graphite")
         self.insert_spec(product_id=id, uuid="6819199d-d531-4fc0-a1ee-6e63d1088b2f", storage="128", color="Gold")
-        self.insert_spec(product_id=id, uuid="3cbf20e9-63de-4bc0-80c5-a3b5bcd5794c", storage="128", color="Plat")
+        self.insert_spec(product_id=id, uuid="3cbf20e9-63de-4bc0-80c5-a3b5bcd5794c", storage="128", color="silver")
         self.insert_spec(product_id=id, uuid="65b9f551-e429-483d-89ec-b66a453138be", storage="256", color="Blue")
         self.insert_spec(product_id=id, uuid="4b95c04e-ff61-49ce-8e61-08a3906c33a2", storage="256", color="Graphite")
         self.insert_spec(product_id=id, uuid="98562c21-3477-49b1-aece-b2e81e0dd700", storage="256", color="Gold")
-        self.insert_spec(product_id=id, uuid="fd2b3ffc-196f-48ff-a246-c7c368daf497", storage="256", color="Plat")
+        self.insert_spec(product_id=id, uuid="fd2b3ffc-196f-48ff-a246-c7c368daf497", storage="256", color="silver")
         self.insert_spec(product_id=id, uuid="7692f1a2-fd7d-4710-aec8-f07154d94eb9", storage="512", color="Blue")
         self.insert_spec(product_id=id, uuid="145124cf-d3c1-4f37-884f-38b322ff8abd", storage="512", color="Graphite")
         self.insert_spec(product_id=id, uuid="56bc27b8-3299-4836-9c77-15694bbd55c1", storage="512", color="Gold")
-        self.insert_spec(product_id=id, uuid="5bbdb839-fe7e-481e-b747-538a588b4636", storage="512", color="Plat")
+        self.insert_spec(product_id=id, uuid="5bbdb839-fe7e-481e-b747-538a588b4636", storage="512", color="silver")
 
-        self.insert_product(name="iPhone 13",    type="Smartphone")
+        self.insert_product(name="iPhone 13",    type="Smartphone", image_path="products/iphone-13-green.avif")
         id = self.get_product_by_name(name="iPhone 13")[0]
         self.insert_spec(product_id=id, uuid="ef5660d2-6883-4b81-b47d-86e5720687ef", storage="128", color="Midnight")
         self.insert_spec(product_id=id, uuid="e621dc7f-2574-42f4-8e7d-220dcc6cc851", storage="128", color="Red")
@@ -102,7 +103,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="81ab240b-44af-4bb1-a59a-1321ffdd74ba", storage="512", color="White")
         self.insert_spec(product_id=id, uuid="45d1d91f-70d4-4ffc-bb26-6a28b558d4f6", storage="512", color="Pink")
 
-        self.insert_product(name="iPhone 13 Pro", type="Smartphone")
+        self.insert_product(name="iPhone 13 Pro", type="Smartphone", image_path="products/iphone-13-pro-graphite.avif")
         id = self.get_product_by_name(name="iPhone 13 Pro")[0]
         self.insert_spec(product_id=id, uuid="35d85a1e-6fa2-4331-ad51-a6e4c2a61a9e", storage="128", color="Green")
         self.insert_spec(product_id=id, uuid="f597a490-5e4c-450c-88a8-14be4d46f9c1", storage="128", color="Blue")
@@ -125,7 +126,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="d5167769-a85a-415d-a5eb-0fa019416271", storage="1000", color="Gold")
         self.insert_spec(product_id=id, uuid="54a9246d-4935-429f-91cb-ac31531c9960", storage="1000", color="Silver")
 
-        self.insert_product(name="iPhone 14",    type="Smartphone")
+        self.insert_product(name="iPhone 14",    type="Smartphone", image_path="products/iphone-14-white.avif")
         id = self.get_product_by_name(name="iPhone 14")[0]
         self.insert_spec(product_id=id, uuid="400b5725-cbcb-4b97-a7b8-0a2c1d4098ef", storage="128", color="Midnight")
         self.insert_spec(product_id=id, uuid="d61d0800-a563-4e5c-a1e6-652f44de4d4f", storage="128", color="Red")
@@ -146,7 +147,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="0dccb531-f1ee-4570-98e9-07ac2f2cdb8b", storage="512", color="Purple")
         self.insert_spec(product_id=id, uuid="3298e9bc-9f8f-46b3-8e55-33c05c1f9cff", storage="512", color="White")
 
-        self.insert_product(name="iPhone 14 Pro", type="Smartphone")
+        self.insert_product(name="iPhone 14 Pro", type="Smartphone", image_path="products/iphone-14-pro-purple.avif")
         id = self.get_product_by_name(name="iPhone 14 Pro")[0]
         self.insert_spec(product_id=id, uuid="aff0b232-be15-4e88-b486-6648394ee7c1", storage="128", color="Black")
         self.insert_spec(product_id=id, uuid="fa0b419c-f920-4e16-837f-d17e44d94475", storage="128", color="Purple")
@@ -165,7 +166,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="caf90fc4-92bc-4bf4-a964-a50f1456dd18", storage="1000", color="Gold")
         self.insert_spec(product_id=id, uuid="516f1ace-8b02-4cc3-a3a6-15f59dc78e0e", storage="1000", color="Silver")
 
-        self.insert_product(name="iPhone 15", type="Smartphone")
+        self.insert_product(name="iPhone 15", type="Smartphone", image_path="products/iphone-15-pink.avif")
         id = self.get_product_by_name(name="iPhone 15")[0]
         self.insert_spec(product_id=id, uuid="8debb43b-94ef-4ec4-8589-9520e9eaa983", storage="128", color="Black")
         self.insert_spec(product_id=id, uuid="f2f876e3-b34b-43df-b28b-34f116b556cc", storage="128", color="Yellow")
@@ -183,7 +184,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="db13648c-d35f-49d7-85b2-2e1eb00cdaf2", storage="512", color="Green")
         self.insert_spec(product_id=id, uuid="5436526c-2180-4b13-a225-1b6c48970729", storage="512", color="Pink")
 
-        self.insert_product(name="iPhone 15 Pro", type="Smartphone")
+        self.insert_product(name="iPhone 15 Pro", type="Smartphone", image_path="products/iphone-15-pro-natural.avif")
         id = self.get_product_by_name(name="iPhone 15 Pro")[0]
         self.insert_spec(product_id=id, uuid="d0fc796e-24da-4ad9-a365-139706087545", storage="128", color="Black")
         self.insert_spec(product_id=id, uuid="68d59aaf-8b23-4006-aab0-cef9627f535d", storage="128", color="Blue")
@@ -202,7 +203,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="0578ee4f-c5e0-4ac5-9359-9a7244971a67", storage="1000", color="Natural")
         self.insert_spec(product_id=id, uuid="fbd677c3-251b-4739-b9ae-d0857453472d", storage="1000", color="White")
 
-        self.insert_product(name="iPhone 16", type="Smartphone")
+        self.insert_product(name="iPhone 16", type="Smartphone", image_path="products/iphone-16-black.avif")
         id = self.get_product_by_name(name="iPhone 16")[0]
         self.insert_spec(product_id=id, uuid="ffa54805-4d46-4fa5-9e55-589604fff2ae", storage="128", color="Black")
         self.insert_spec(product_id=id, uuid="7f5bdd13-8f4b-49ee-a94a-8b578deb328d", storage="128", color="Teal")
@@ -220,7 +221,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="2e721825-ad6c-41a5-bc2b-47c8a2b139d0", storage="512", color="Pink")
         self.insert_spec(product_id=id, uuid="d73b7a48-d424-40f4-86ce-8e7975e90fa5", storage="512", color="White")
 
-        self.insert_product(name="iPhone 16 Pro", type="Smartphone")
+        self.insert_product(name="iPhone 16 Pro", type="Smartphone", image_path="products/iphone-16-pro-desert.avif")
         id = self.get_product_by_name(name="iPhone 16 Pro")[0]
         self.insert_spec(product_id=id, uuid="b78d3007-9148-4569-b0bd-f7ddcfb19a1a", storage="128", color="Black")
         self.insert_spec(product_id=id, uuid="2a3aadbd-dea6-404b-903a-32e941b3a9d6", storage="128", color="Desert")
@@ -245,10 +246,11 @@ class Command(BaseCommand):
 
     # --- FUNCIONES ADAPTADORAS ---
     
-    def insert_product(self, name, type):
+    def insert_product(self, name, image_path, type):
         if type == "Smartphone":
-            type = "Smartphone" 
-        Product.objects.get_or_create(name=name, defaults={'type': type})
+            type = "Smartphone"
+
+        Product.objects.get_or_create(name=name, defaults={'type': type, 'image': image_path})
         self.stdout.write(f"Producto procesado: {name}")
 
     def get_product_by_name(self, name):
@@ -260,25 +262,38 @@ class Command(BaseCommand):
             return [None]
 
     def insert_spec(self, product_id, uuid, storage, color):
+        """
+        Crea la Spec, le asigna la IMAGEN AUTOMÁTICA y genera la matriz de ofertas.
+        """
         if product_id is None: return
 
         try:
             product = Product.objects.get(id=product_id)
             
-            # 1. Crear o recuperar la Spec
+            # --- 1. LÓGICA DE IMAGEN (Integrada) ---
+            # Calculamos la ruta esperada: "products/iphone-13-blue.avif"
+            product_slug = slugify(product.name)
+            color_slug = slugify(color)
+            image_path = f"products/{product_slug}-{color_slug}.avif"
+            
+            # --- 2. Crear o recuperar la Spec ---
             spec, created = Spec.objects.get_or_create(
                 back_market_uuid=uuid, 
                 defaults={
                     'product': product,
                     'storage': storage,
-                    'color': color
+                    'color': color,
+                    'image': image_path  # <--- Se guarda al crear
                 }
             )
 
-            # 2. Generar la Matriz de Ofertas (Offers)
-            # Esto crea 7 ofertas vacías por cada variante si no existen
+            # Si la spec YA existía (created=False), actualizamos la imagen por si acaso cambió
+            if not created and spec.image != image_path:
+                spec.image = image_path
+                spec.save()
+
+            # --- 3. Generar la Matriz de Ofertas (Offers) ---
             
-            # Lista de condiciones disponibles
             conditions = [
                 Offer.Condition.FAIR,
                 Offer.Condition.GOOD,
@@ -298,9 +313,8 @@ class Command(BaseCommand):
                         spec=spec,
                         condition=condition,
                         battery_new=battery_new,
-                        country='ES', # País por defecto
+                        country='ES',
                         defaults={
-                            # Los campos de precio y score se quedan en None (o su default del modelo)
                             'current_price': None,
                             'deal_score': 50
                         }

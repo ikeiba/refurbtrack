@@ -41,14 +41,16 @@ class SpecSerializer(serializers.ModelSerializer):
     Incluye la lista de ofertas activas (Standard, New Battery, etc.)
     """
     offers = OfferSerializer(many=True, read_only=True)
-
+    # TRUCO: Forzamos que la imagen sea texto plano para que no añada el dominio del backend
+    image = serializers.CharField(read_only=True)
     class Meta:
         model = Spec
         fields = [
             'id', 
             'back_market_uuid',
             'storage', 
-            'color', 
+            'color',
+            'image', # <--- AÑADIR ESTO
             'min_price_cached', 
             'offers' # Anidamos las ofertas disponibles
         ]
@@ -60,6 +62,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     """
     Equivale a tu antiguo 'ProductListSerializer' pero usando el caché.
     """
+    image = serializers.CharField(read_only=True) # <--- AÑADIR ESTO
     class Meta:
         model = Product
         fields = ['id', 'name', 'type', 'image', 'min_price_cached']
@@ -71,6 +74,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     Sustituye a tu antiguo 'ProductDetailSerializer'.
     """
     specs = SpecSerializer(many=True, read_only=True)
+    image = serializers.CharField(read_only=True) # <--- AÑADIR ESTO
 
     class Meta:
         model = Product

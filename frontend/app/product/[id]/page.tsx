@@ -93,6 +93,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const colors = Array.from(new Set(product.specs.map((s: any) => s.color))) as string[]
   const storages = Array.from(new Set(product.specs.map((s: any) => s.storage))) as string[]
+
+  // ==========================================
+  // LÓGICA DE IMAGEN CORREGIDA
+  // ==========================================
+  
+  // 1. Decidir qué ruta usar (Spec > Producto > Placeholder)
+  let rawImage = "/placeholder.jpg"; // Por defecto
+
+  if (activeSpec?.image) {
+    rawImage = activeSpec.image;
+  } else if (product?.image) {
+    rawImage = product.image;
+  }
+
+  // 2. Asegurar que empieza por "/" para que sea una ruta absoluta desde la raíz
+  // Si rawImage ya es "/products/...", lo dejamos. Si es "products/...", le ponemos la barra.
+  const finalImage = rawImage.startsWith("/") ? rawImage : `/${rawImage}`;
+
+  // ==========================================
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -100,7 +119,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         
         {/* IMAGEN */}
         <div className="h-fit sticky top-24">
-            <ProductGallery images={product.image ? [product.image] : []} />
+            <ProductGallery images={[finalImage]} />
         </div>
 
         {/* CONFIGURADOR */}

@@ -54,6 +54,10 @@ class Spec(models.Model):
     storage = models.CharField(max_length=50)
     color = models.CharField(max_length=50)
 
+    # --- NUEVO CAMPO ---
+    # Permitimos que sea null, porque si no tiene foto específica, usaremos la del padre (Product)
+    image = models.ImageField(upload_to='specs/', null=True, blank=True)
+
     # CACHÉ NIVEL 2: El precio más bajo para ESTA combinación concreta.
     min_price_cached = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) # Sirve para pintar los botones del configurador: "[ Azul (Desde 320€) ]"
     last_updated = models.DateTimeField(null=True, blank=True)

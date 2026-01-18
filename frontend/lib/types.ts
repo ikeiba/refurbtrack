@@ -24,6 +24,7 @@ export interface Spec {
   back_market_uuid: string;
   storage: string;
   color: string;
+  image: string | null; // <--- NUEVO
   min_price_cached: number | null;
   offers: Offer[];
 }
