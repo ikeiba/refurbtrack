@@ -35,3 +35,14 @@ proyecto_scraper/
     npm run dev
 
 En total, hay 1093 combinaciones unicas para price history (producto, variante, estado, bateria)
+
+
+### Conventional Commits
+feat: nueva funcionalidad --> feat(api): add price alert endpoint
+fix: bug --> fix(scraper): handle empty price field
+refactor: cambio interno sin alterar comportamiento --> refactor(db): simplify price history schema
+perf: mejora de rendimiento
+test: tests
+docs: documentación
+style: formato (espacios, lint…)
+chore: tareas auxiliares (configs, deps) --> chore: update requirements
