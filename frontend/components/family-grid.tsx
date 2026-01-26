@@ -25,8 +25,8 @@ export function FamilyGrid({ products }: FamilyGridProps) {
             key={product.id} 
             className="group block"
           >
-            <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/10">
-              <div className="aspect-square relative bg-secondary/30 p-8 flex items-center justify-center">
+            <Card className="h-full overflow-hidden px-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2 border-transparent hover:border-primary/10">
+              <div className="aspect-square relative bg-secondary/80 p-8 flex items-center justify-center rounded-xl">
                 {product.image ? (
                   <img
                     src={product.image}
@@ -36,24 +36,33 @@ export function FamilyGrid({ products }: FamilyGridProps) {
                 ) : (
                   <span className="text-6xl">📱</span>
                 )}
-                
-                {/* Badge de precio flotante */}
-                <Badge className="absolute bottom-3 right-3 text-base px-3 py-1 shadow-sm">
-                  {product.min_price_cached 
-                    ? `Desde ${product.min_price_cached}€` 
-                    : "Sin Stock"}
-                </Badge>
               </div>
               
-              <CardContent className="p-5">
-                <div className="flex justify-between items-start mb-2">
+              <CardContent className="px-2">
+                <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold text-xl group-hover:text-primary transition-colors">
                       {product.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Apple Smartphone
-                    </p>
+                    
+                    {/* CONENEDOR FLEX: Pone los elementos uno al lado del otro */}
+                    {/* items-baseline: Alinea el texto por la base (queda mejor cuando hay tamaños de letra distintos) */}
+                    {/* gap-2: Separa el precio actual del precio original */}
+                    <div className="flex items-baseline gap-2 mt-1">
+                      
+                      {/* Precio Actual */}
+                      <p className="text-sm font-medium text-foreground">
+                        {product.min_price_cached 
+                          ? `Desde ${product.min_price_cached}€` 
+                          : "Sin Stock"}
+                      </p>
+
+                      {/* Precio Original (Tachado) */}
+                      <p className="text-xs text-muted-foreground line-through">
+                        vs ~ 1000€ new
+                      </p>
+                      
+                    </div>
                   </div>
                 </div>
               </CardContent>

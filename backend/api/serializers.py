@@ -118,3 +118,40 @@ class AlertSerializer(serializers.ModelSerializer):
             **validated_data
         )
         return alert
+    
+
+class HistoricalLowOfferSerializer(serializers.ModelSerializer):
+    # Campos aplanados para facilitar la vida al frontend
+    product_id = serializers.IntegerField(source='spec.product.id')
+    name = serializers.CharField(source='spec.product.name')
+    storage = serializers.CharField(source='spec.storage')
+    color = serializers.CharField(source='spec.color')
+    condition = serializers.CharField(source='get_condition_display')
+    
+    # CAMBIO CLAVE: Usamos SerializerMethodField pero devolvemos STRING, no URL
+    image = serializers.SerializerMethodField()
+    
+    old_price = serializers.DecimalField(source='max_price_30d', max_digits=10, decimal_places=2)
+
+    class Meta:
+        model = Offer
+        fields = [
+            'id', 'product_id', 'name', 'storage', 'color', 
+            'condition', 'battery_new', 'current_price', 'old_price', 'image'
+        ]
+
+    def get_image(self, obj):
+        """
+        Devuelve la ruta relativa de la imagen como string (ej: "products/iphone.avif").
+        El frontend (Next.js) se encargará de buscar esto en su carpeta /public.
+        """
+        # 1. Priorizamos la imagen específica de la Spec (ej: iPhone rojo)
+        # 2. Si no tiene, usamos la genérica del Producto (ej: iPhone genérico)
+        img_field = obj.spec.image or obj.spec.product.image
+        
+        if img_field:
+            # Al hacer str(img_field), Django nos da lo que hay en la BD: "products/iphone-12.avif"
+            # SIN añadir http://localhost:8000 ni nada delante.
+            return str(img_field)
+            
+        return None

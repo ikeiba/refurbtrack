@@ -13,18 +13,22 @@ import type { Offer } from "@/lib/types"
 import { AlertModal } from "@/components/alert-modal"
 import { cn, getColorHex } from "@/lib/utils" // <--- Importamos tus nuevas funciones
 import { Header } from "@/components/header" // El componente visual
-import { useRouter } from "next/navigation" // <--- ¡IMPORTANTE: next/navigation!
+import { useRouter, useSearchParams } from "next/navigation" // <--- ¡IMPORTANTE: next/navigation!
+import { useToast } from "@/hooks/use-toast" // Asegúrate de importar esto para las alertas
+import { CHART_COLORS } from "@/lib/utils" // Importa la paleta de colores
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-
+    
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  
   // Estado para el selector de país del header
   const [country, setCountry] = useState("ES")
 
   // 2. AÑADE ESTA LÍNEA AQUÍ (Faltaba esto):
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // --- ESTADOS DE SELECCIÓN ---
   const [selectedColor, setSelectedColor] = useState<string>("")
@@ -38,16 +42,103 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   // --- ESTADO DEL GRÁFICO ---
   const [chartData, setChartData] = useState<{ name: string; color?: string; data: any[] }[]>([])
 
+  const { toast } = useToast() // Hook para notificaciones
+
+  // 1. Función auxiliar para actualizar la URL sin recargar
+  const updateUrl = (key: string, value: string) => {
+    // Copiamos los parámetros actuales
+    const current = new URLSearchParams(Array.from(searchParams.entries()))
+    
+    // Actualizamos o borramos la clave que ha cambiado
+    if (value) {
+        current.set(key, value)
+    } else {
+        current.delete(key)
+    }
+
+    // Construimos la nueva URL
+    const search = current.toString()
+    const query = search ? `?${search}` : ""
+    
+    // Navegamos (scroll: false es importante para que no salte arriba)
+    router.replace(`/product/${id}${query}`, { scroll: false })
+  }
+
+  // 2. Wrappers: Funciones puente que actualizan Estado + URL
+  const changeColor = (color: string) => {
+      setSelectedColor(color)
+      updateUrl("color", color)
+  }
+  const changeStorage = (storage: string) => {
+      setSelectedStorage(storage)
+      updateUrl("storage", storage)
+  }
+  const changeCondition = (condition: string) => {
+      setSelectedCondition(condition)
+      updateUrl("condition", condition)
+  }
+  const changeBattery = (isNew: boolean) => {
+      setSelectedBattery(isNew)
+      updateUrl("battery", isNew ? "new" : "standard")
+  }
+
+
   // 1. CARGA INICIAL
   useEffect(() => {
     getProductDetail(id).then((data) => {
       setProduct(data)
+      
       if (data.specs.length > 0) {
-        setSelectedColor(data.specs[0].color)
-        setSelectedStorage(data.specs[0].storage)
+        // 1. LEER URL
+        const paramColor = searchParams.get("color")
+        const paramStorage = searchParams.get("storage")
+        const paramCondition = searchParams.get("condition")
+        const paramBattery = searchParams.get("battery")
+
+        // 2. CALCULAR VALORES FINALES (Prioridad: URL > Defecto)
+        const availableColors = Array.from(new Set(data.specs.map((s: any) => s.color)))
+        const availableStorages = Array.from(new Set(data.specs.map((s: any) => s.storage)))
+
+        // Color
+        const finalColor = (paramColor && availableColors.includes(paramColor)) 
+            ? paramColor 
+            : data.specs[0].color
+
+        // Storage
+        const finalStorage = (paramStorage && availableStorages.includes(paramStorage)) 
+            ? paramStorage 
+            : data.specs[0].storage
+
+        // Condición (Default: Fair)
+        const finalCondition = paramCondition || "Fair"
+        
+        // Batería (Default: Standard/false)
+        let finalBattery = false
+        if (paramBattery === "new") finalBattery = true
+        // Si no hay param o es "standard", se queda en false
+        
+        // 3. ACTUALIZAR ESTADOS VISUALES
+        setSelectedColor(finalColor as string)
+        setSelectedStorage(finalStorage as string)
+        setSelectedCondition(finalCondition)
+        setSelectedBattery(finalBattery)
+
+        // 4. SINCRONIZAR URL (La clave de todo)
+        // Construimos la URL perfecta con los valores finales y reemplazamos la actual
+        const newParams = new URLSearchParams()
+        newParams.set("color", finalColor as string)
+        newParams.set("storage", finalStorage as string)
+        newParams.set("condition", finalCondition)
+        newParams.set("battery", finalBattery ? "new" : "standard")
+        
+        // router.replace cambia la URL sin recargar la página
+        router.replace(`/product/${id}?${newParams.toString()}`, { scroll: false })
       }
       setLoading(false)
     })
+    // IMPORTANTE: Añade searchParams al array de dependencias para silenciar warnings,
+    // aunque en este caso solo queremos que corra al montar (id).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   // 2. BUSCAR OFERTA ACTIVA
@@ -59,26 +150,55 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     (o: any) => o.condition === selectedCondition && o.battery_new === selectedBattery
   )
 
-  // 3. CARGA HISTORIAL PRINCIPAL
+  // 3. CARGA HISTORIAL PRINCIPAL (MODIFICADO)
   useEffect(() => {
-    if (activeOffer) {
+    if (activeOffer && product) { // Aseguramos que product existe para usar su nombre
       getOfferHistory(activeOffer.id).then((history) => {
-        setChartData([
-            { 
-                name: `${activeSpec?.storage} - ${selectedCondition}`, 
+        // Mantenemos las comparaciones existentes si las hubiera, pero actualizamos la primera (Principal)
+        setChartData(prevData => {
+            // Nombre completo: "iPhone 13 - 128GB - Fair"
+            const mainSeriesName = `${product.name} ${activeSpec?.color} ${activeSpec?.storage}GB - ${selectedCondition}`;
+            
+            const mainSeries = { 
+                name: mainSeriesName, 
                 data: history,
-                color: "#2563eb" // Azul
-            }
-        ])
+                color: CHART_COLORS[0] // Siempre el verde esmeralda para el principal
+            };
+
+            return [mainSeries];
+        })
       })
     } else {
-        setChartData([])
+        // Si no hay oferta activa, podríamos vaciar o dejarlo.
+        // setChartData([]) 
     }
-  }, [activeOffer, activeSpec, selectedCondition])
+  }, [activeOffer, activeSpec, selectedCondition, product]) // Añadimos 'product' a dependencias
 
-  // 4. AÑADIR COMPARACIÓN
+  // 4. AÑADIR COMPARACIÓN (MODIFICADO)
   const handleAddComparison = async (targetOffer: Offer, label: string) => {
-    if (chartData.some(series => series.name === label)) return; 
+    // 1. NUEVA COMPROBACIÓN: ¿Es el mismo que el principal?
+    if (activeOffer && targetOffer.id === activeOffer.id) {
+        toast({
+            title: "Modelo actual",
+            description: "No puedes comparar el producto con sí mismo.",
+            variant: "default" // O "destructive" si prefieres rojo
+        })
+        return;
+    }
+    // A. Límite de 6 modelos
+    if (chartData.length >= 6) {
+        toast({
+            title: "Límite alcanzado",
+            description: "Solo puedes comparar hasta 6 modelos a la vez.",
+            variant: "default"
+        })
+        return;
+    }
+
+    if (chartData.some(series => series.name === label)) {
+        toast({ title: "Ya añadido", description: "Este modelo ya está en la gráfica." })
+        return; 
+    }
 
     try {
         const history = await getOfferHistory(targetOffer.id);
@@ -88,13 +208,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 {
                     name: label,
                     data: history,
-                    color: "#db2777" // Rosa
+                    // B. Asignación de color: Cogemos el color correspondiente al índice actual
+                    color: CHART_COLORS[prev.length] || "#888888" 
                 }
             ])
         }
     } catch (e) {
         console.error("Error cargando comparativa", e);
     }
+  }
+
+  // 5. NUEVA FUNCIÓN: ELIMINAR SERIE
+  const handleRemoveSeries = (seriesName: string) => {
+      setChartData(prev => prev.filter(s => s.name !== seriesName));
+      // Nota: Al borrar, los colores de los que quedan NO cambian, lo cual es bueno para no confundir.
+      // Si añades uno nuevo después de borrar, cogerá el slot de color libre al final.
   }
 
   if (loading || !product) return <div className="p-20 text-center text-muted-foreground">Cargando...</div>
@@ -180,16 +308,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                           return (
                               <button
                                   key={storage}
-                                  onClick={() => setSelectedStorage(storage)}
+                                  // Antes: onClick={() => setSelectedStorage(storage)}
+                                  // AHORA:
+                                  onClick={() => changeStorage(storage)}
                                   className={cn(
                                       "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all h-10 rounded-md gap-1.5 px-4 min-w-fit border",
                                       isSelected 
-                                          ? "bg-foreground text-background ring-2 ring-primary border-primary" 
+                                          ? "bg-emerald-600 text-background" 
                                           : "bg-background shadow-sm hover:bg-accent hover:text-accent-foreground border-input"
                                   )}
                               >
                                   <span className="font-semibold">{storage}GB</span>
-                                  <span className={cn("ml-2 text-xs", isSelected ? "opacity-80" : "opacity-50")}>
+                                  <span className={cn("ml-2 text-xs", isSelected ? "opacity-90" : "opacity-60")}>
                                       (desde {price}€)
                                   </span>
                               </button>
@@ -207,7 +337,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                           return (
                               <button 
                                   key={color}
-                                  onClick={() => setSelectedColor(color)}
+                                  // Antes: onClick={() => setSelectedColor(color)}
+                                  // AHORA:
+                                  onClick={() => changeColor(color)}
                                   className={cn(
                                       "h-10 w-10 rounded-full border-2 transition-all shadow-sm",
                                       isSelected 
@@ -222,7 +354,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                           )
                       })}
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground font-medium">{selectedColor}</p>
+                  <p className="mt-2 text-xs text-muted-foreground font-medium">{selectedColor}</p>
               </div>
 
               {/* 4. SELECTOR ESTADO & BATERÍA */}
@@ -239,7 +371,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                   <Button
                                       key={cond}
                                       variant={selectedCondition === cond ? "default" : "outline"}
-                                      onClick={() => setSelectedCondition(cond)}
+                                      // Antes: onClick={() => setSelectedCondition(cond)}
+                                      // AHORA:
+                                      onClick={() => changeCondition(cond)}
                                       disabled={!hasStock}
                                       className={cn("h-8 text-xs", selectedCondition === cond ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                                   >
@@ -255,14 +389,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       <div className="grid grid-cols-2 gap-2">
                           <Button
                               variant={!selectedBattery ? "default" : "outline"}
-                              onClick={() => setSelectedBattery(false)}
+                              // Antes: onClick={() => setSelectedBattery(false)}
+                              // AHORA:
+                              onClick={() => changeBattery(false)} 
                               className={cn("h-8 text-xs", !selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                           >
                               Estándar
                           </Button>
                           <Button
                               variant={selectedBattery ? "default" : "outline"}
-                              onClick={() => setSelectedBattery(true)}
+                              // Antes: onClick={() => setSelectedBattery(true)}
+                              // AHORA:
+                              onClick={() => changeBattery(true)}
                               className={cn("h-8 text-xs", selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                           >
                               Nueva
@@ -297,7 +435,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               {/* 6. BOTÓN DE ALERTA */}
               <div>
                   <Button 
-                      className="w-full h-12 text-lg gap-2" 
+                      className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700" 
                       size="lg"
                       disabled={!activeSpec} // Si no existe la combinación (ej: Color raro + GB raros)
                       onClick={() => setIsAlertOpen(true)}
@@ -322,10 +460,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
           </div>
           
-          <Card className="p-6 bg-card border shadow-sm h-[400px]">
-              {/* AQUÍ ESTABA EL ERROR: Simplificado */}
+          <Card className="p-6 bg-card border shadow-sm h-[450px]"> {/* Aumenté un poco la altura para la leyenda */}
               {chartData.length > 0 ? (
-                  <PriceHistoryChart series={chartData} />
+                  <PriceHistoryChart 
+                    series={chartData} 
+                    onRemoveSeries={handleRemoveSeries} // <--- Pasamos la función
+                  />
               ) : (
                   <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
                       <TrendingDown className="w-10 h-10 mb-2 opacity-20" />

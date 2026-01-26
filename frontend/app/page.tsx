@@ -3,54 +3,92 @@
 import { useEffect, useState } from "react"
 import { Header } from "@/components/header"
 import { HomeHero } from "@/components/home-hero"
-import { FamilyGrid } from "@/components/family-grid" // Usaremos el de v0 adaptado
+import { FamilyGrid } from "@/components/family-grid"
+import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
 import { Toaster } from "@/components/ui/toaster"
-import { getProducts } from "@/services/api" // Tu API real
-import type { ProductSummary } from "@/lib/types" // Tu tipo real
+import { getProducts, getHistoricalLowOffers } from "@/services/api"
+import type { ProductSummary, OfferSummary } from "@/lib/types"
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
+  const router = useRouter()
+  
+  // ESTADOS
   const [selectedCountry, setSelectedCountry] = useState("ES")
   const [products, setProducts] = useState<ProductSummary[]>([])
+  const [hotOffers, setHotOffers] = useState<OfferSummary[]>([]) // <--- Nuevo Estado
   const [loading, setLoading] = useState(true)
+  
+  // 1. SOLUCIÓN: Definimos el estado para la búsqueda
+  const [searchQuery, setSearchQuery] = useState("") // <--- AÑADIDO
 
-  // 1. Cargar datos reales de Django al iniciar
+  // CARGA DE DATOS
+  // CARGA DE DATOS
   useEffect(() => {
-    getProducts()
-      .then((data) => {
-        console.log("Productos cargados:", data)
-        setProducts(data)
+    setLoading(true)
+    
+    // Usamos Promise.all para cargar las dos cosas a la vez (paralelo)
+    Promise.all([
+        getProducts(),
+        getHistoricalLowOffers()
+    ])
+      .then(([productsData, offersData]) => {
+        setProducts(productsData)
+        setHotOffers(offersData) // <--- Guardamos las ofertas
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
   }, [])
 
+  // (OPCIONAL) Filtrado: Si escribes, que el grid cambie
+  const filteredProducts = products.filter((p) => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Usamos el Header de v0 */}
+      
+      {/* HEADER CONECTADO AL ESTADO */}
       <Header 
         selectedCountry={selectedCountry}
-        onCountryChange={setSelectedCountry} searchQuery={""} onSearchChange={function (query: string): void {
-          throw new Error("Function not implemented.")
-        } } onMenuClick={function (): void {
-          throw new Error("Function not implemented.")
-        } }      />
+        onCountryChange={setSelectedCountry}
+        
+        // 2. SOLUCIÓN: Pasamos las variables de verdad
+        searchQuery={searchQuery} 
+        onSearchChange={setSearchQuery} 
+        
+        // Evitamos que explote si das click al menú en móvil
+        onMenuClick={() => console.log("Menú click")} 
+      />
       
-      {/* Usamos el Hero de v0 */}
-      <HomeHero />
+      {/* HERO (Solo mostrar si no se busca nada, queda mejor) */}
+      {!searchQuery && <HomeHero />}
       
-      {/* Aquí está la clave: Pasamos los productos reales al Grid.
-         Nota: Hemos quitado 'onSelectFamily' porque ahora usaremos Links directos.
-      */}
+      {/* CARRUSEL DE OFERTAS CONCRETAS */}
+      {/* Usamos hotOffers en vez de products */}
+      {!searchQuery && hotOffers.length > 0 && (
+          <HistoricalLowsCarousel 
+            offers={hotOffers} 
+            // Truco: Al hacer click, vamos al producto pero con params para pre-seleccionar
+            // url: /product/12?color=Blue&storage=128GB&condition=Good
+            
+            onOfferClick={
+              (o) => {
+                const batteryParam = o.battery_new ? 'new' : 'standard'
+                router.push(`/product/${o.product_id}?color=${o.color}&storage=${o.storage}&condition=${o.condition}&battery=${batteryParam}`)
+              }
+            }
+          />
+       )}
+
+      {/* GRID DE PRODUCTOS */}
       {loading ? (
         <div className="text-center py-20 text-muted-foreground">Cargando catálogo...</div>
       ) : (
-        <FamilyGrid products={products} />
+        // Pasamos los productos filtrados para que la búsqueda funcione visualmente
+        <FamilyGrid products={filteredProducts} />
       )}
 
-      {/* Nota: He quitado la CompareBar global por ahora. 
-        Como dijiste, prefieres la comparación dentro del gráfico del producto.
-      */}
-      
       <Toaster />
     </div>
   )

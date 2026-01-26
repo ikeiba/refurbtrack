@@ -1,5 +1,5 @@
 // frontend_light/services/api.ts
-import { ProductSummary, AlertData } from "@/lib/types";
+import { ProductSummary, AlertData, OfferSummary } from "@/lib/types";
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
 const API_URL = "http://127.0.0.1:8000/api"; 
@@ -64,3 +64,14 @@ export const createAlert = async (data: AlertData) => {
   
   return res.json();
 };
+
+export const getHistoricalLowOffers = async (): Promise<OfferSummary[]> => {
+  try {
+    const res = await fetch(`${API_URL}/offers/historical-lows/`)
+    if (!res.ok) throw new Error("Error fetching offers")
+    return await res.json()
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}

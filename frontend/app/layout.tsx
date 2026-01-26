@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { Toaster } from "@/components/ui/toaster"
+
 
 const _inter = Inter({ subsets: ["latin"] })
 
@@ -36,7 +38,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased">{children}</body>
+      <body 
+      className="font-sans antialiased">{children}
+      <Toaster /> {/* <--- ¡ESTO ES LO QUE FALTA! */}
+      </body>
     </html>
   )
 }

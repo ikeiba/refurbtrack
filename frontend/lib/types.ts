@@ -58,3 +58,17 @@ export interface AlertData {
   // Coincide con tu BooleanField(null=True)
   battery_new: boolean | null; 
 }
+
+//? ESTO ES LO QUE RECIBIMOS EN EL CARRUSEL DE MINIMOS
+export interface OfferSummary {
+  id: number
+  product_id: number
+  name: string
+  storage: string
+  color: string
+  condition: string // "Excellent", "Good"...
+  battery_new: boolean
+  current_price: number
+  old_price?: number // Puede ser null
+  image?: string
+}

@@ -32,3 +32,12 @@ export const colorMap: Record<string, string> = {
 export function getColorHex(colorName: string) {
   return colorMap[colorName] || "#888888"; // Gris por defecto si no encuentra
 }
+
+// 1. DEFINIMOS LA PALETA DE COLORES (Fuera del componente o arriba)
+export const CHART_COLORS = [
+    "#059669", // Esmeralda (Principal)
+    "#2563eb", // Azul
+    "#db2777", // Rosa
+    "#d97706", // Naranja
+    "#7c3aed", // Violeta (Reserva)
+];

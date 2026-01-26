@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProductViewSet, OfferHistoryView, AlertCreateView
+from .views import HistoricalLowOffersView, ProductViewSet, OfferHistoryView, AlertCreateView
 
 # El Router crea automáticamente las rutas estándar para el ViewSet:
 # GET /api/products/       (Lista)
@@ -17,4 +17,6 @@ urlpatterns = [
     path('offers/<int:pk>/history/', OfferHistoryView.as_view(), name='offer-history'),
     # NUEVA RUTA
     path('alerts/', AlertCreateView.as_view(), name='create-alert'),
+
+    path('offers/historical-lows/', HistoricalLowOffersView.as_view(), name='historical-lows'),
 ]
