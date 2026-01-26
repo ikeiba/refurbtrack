@@ -17,12 +17,12 @@ class Product(models.Model):
     Solo define la 'Familia' (Ej: iPhone 13, Smartphone, 280€).
     """
     class ProductType(models.TextChoices):
-        SMARTPHONE = 'Smartphone', 'Móvil'
+        SMARTPHONE = 'Smartphone', 'Smartphone'
         TABLET = 'Tablet', 'Tablet'
-        LAPTOP = 'Laptop', 'Portátil'
+        LAPTOP = 'Laptop', 'Laptop'
         SMARTWATCH = 'Smartwatch', 'Smartwatch'
-        CONSOLE = 'Console', 'Consola'
-        OTHER = 'Other', 'Otro'
+        CONSOLE = 'Console', 'Console'
+        OTHER = 'Other', 'Other'
 
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=ProductType.choices, default=ProductType.OTHER)
@@ -79,9 +79,9 @@ class Offer(models.Model):
     Una opción de compra real. (Ej: 'iPhone 13 128GB Azul - Muy Bueno - Batería Nueva - ES - current_price, last_updated, min_price_30d, max_price_30d, deal_score').
     """
     class Condition(models.TextChoices):
-        FAIR = 'Fair', 'Correcto'
-        GOOD = 'Good', 'Muy Bueno'
-        EXCELLENT = 'Excellent', 'Excelente'
+        FAIR = 'Fair', 'Fair'
+        GOOD = 'Good', 'Good'
+        EXCELLENT = 'Excellent', 'Excellent'
         PREMIUM = 'Premium', 'Premium'
 
     spec = models.ForeignKey(Spec, on_delete=models.CASCADE, related_name='offers')

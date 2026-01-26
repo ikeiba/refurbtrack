@@ -230,7 +230,7 @@ class BackMarketSpider(scrapy.Spider):
             # --- RESULTADO Y GUARDADO ---
             # Variables para log (extraídas del objeto offer)
             batt_label = "🔋 NUEVA" if offer.battery_new else "Std"
-            cond_name = offer.get_condition_display() # Ej: "Correcto" en vez de "Fair"
+            cond_name = offer.get_condition_display()
             
             # Calcular tasa de éxito
             success_rate = (self.exitosos / self.contador * 100) if self.contador > 0 else 0

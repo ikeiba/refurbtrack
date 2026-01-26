@@ -25,7 +25,6 @@ class OfferSerializer(serializers.ModelSerializer):
         fields = [
             'id', 
             'condition', 
-            'condition_label', 
             'battery_new', 
             'current_price', 
             'country', 
