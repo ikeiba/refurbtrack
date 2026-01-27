@@ -2,11 +2,11 @@
 
 import { useState, useRef, useMemo } from "react"
 import { Header } from "@/components/header"
-import { HeroSection } from "@/components/hero-section"
+import { HeroSection } from "@/components/other/hero-section"
 import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
-import { FilterSidebar } from "@/components/filter-sidebar"
-import { ProductGrid } from "@/components/product-grid"
-import { PriceHistoryModal } from "@/components/price-history-modal"
+import { FilterSidebar } from "@/components/other/filter-sidebar"
+import { ProductGrid } from "@/components/other/product-grid"
+import { PriceHistoryModal } from "@/components/other/price-history-modal"
 import { Toaster } from "@/components/ui/toaster"
 import type { Product, Filters, ScrapedProduct } from "@/lib/types"
 

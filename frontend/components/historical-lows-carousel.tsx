@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { OfferSummary } from "@/lib/types" // <--- CAMBIO IMPORTANTE: Usamos OfferSummary
+import { t } from "@/lib/translations"
 
 interface HistoricalLowsCarouselProps {
   offers: OfferSummary[] // <--- Recibimos Ofertas, no Productos
@@ -94,13 +95,13 @@ function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
     >
         {/* Badge Flotante: CONDICIÓN */}
         <Badge className="absolute left-2 top-2 z-10 bg-black/70 hover:bg-black/80 px-2 py-0.5 text-[10px] backdrop-blur-md border-0">
-            {offer.condition}
+            {t(offer.condition)}
         </Badge>
 
         {/* Badge Batería (si es nueva) */}
         {offer.battery_new && (
              <Badge className="absolute right-2 top-2 z-10 bg-emerald-600 px-1.5 py-0.5 text-[10px] border-0 gap-1">
-                <BatteryFull className="w-3 h-3" /> Nueva
+                <BatteryFull className="w-3 h-3" /> {t("new")}
              </Badge>
         )}
 
@@ -130,7 +131,7 @@ function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                 <span>{offer.storage}</span>
                 <span className="text-[8px] opacity-40">●</span>
-                <span>{offer.color}</span>
+                <span>{t(offer.color)}</span>
             </p>
             
             {/* Precios */}

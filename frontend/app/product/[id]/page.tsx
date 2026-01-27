@@ -16,6 +16,7 @@ import { Header } from "@/components/header" // El componente visual
 import { useRouter, useSearchParams } from "next/navigation" // <--- ¡IMPORTANTE: next/navigation!
 import { useToast } from "@/hooks/use-toast" // Asegúrate de importar esto para las alertas
 import { CHART_COLORS } from "@/lib/utils" // Importa la paleta de colores
+import { t } from "@/lib/translations"
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -157,7 +158,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         // Mantenemos las comparaciones existentes si las hubiera, pero actualizamos la primera (Principal)
         setChartData(prevData => {
             // Nombre completo: "iPhone 13 - 128GB - Fair"
-            const mainSeriesName = `${product.name} ${activeSpec?.color} ${activeSpec?.storage}GB - ${selectedCondition}`;
+            const mainSeriesName = `${product.name} ${t(activeSpec?.color)} ${activeSpec?.storage}GB - ${t(selectedCondition)}`;
             
             const mainSeries = { 
                 name: mainSeriesName, 
@@ -347,14 +348,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                           : "border-transparent hover:scale-110 hover:border-border"
                                   )}
                                   style={{ backgroundColor: getColorHex(color) }}
-                                  title={color}
+                                  title={t(color)}
                               >
                                   <span className="sr-only">{color}</span>
                               </button>
                           )
                       })}
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground font-medium">{selectedColor}</p>
+                  <p className="mt-2 text-xs text-muted-foreground font-medium">
+                    {t(selectedColor)} {/* Muestra "Azul" aunque selectedColor sea "Blue" */}
+                  </p>
               </div>
 
               {/* 4. SELECTOR ESTADO & BATERÍA */}
@@ -377,7 +380,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                       disabled={!hasStock}
                                       className={cn("h-8 text-xs", selectedCondition === cond ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                                   >
-                                      {cond}
+                                      {t(cond)}
                                   </Button>
                               )
                           })}
@@ -394,7 +397,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                               onClick={() => changeBattery(false)} 
                               className={cn("h-8 text-xs", !selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                           >
-                              Estándar
+                              {t("standard")} {/* Muestra "Estándar" */}
                           </Button>
                           <Button
                               variant={selectedBattery ? "default" : "outline"}
@@ -403,7 +406,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                               onClick={() => changeBattery(true)}
                               className={cn("h-8 text-xs", selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                           >
-                              Nueva
+                              {t("new")} {/* Muestra "Nueva" */}
                           </Button>
                       </div>
                   </div>
@@ -413,7 +416,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <div className="rounded-lg border border-border bg-muted/30 p-4">
                   <p className="text-sm text-muted-foreground">Configuración seleccionada</p>
                   <p className="mt-1 font-semibold text-lg">
-                      {product.name} · {selectedStorage}GB · {selectedColor} · {selectedCondition}
+                      {product.name} · {selectedStorage}GB · {t(selectedColor)} · {t(selectedCondition)}
                   </p>
                   
                   <div className="mt-2 flex items-baseline gap-3">

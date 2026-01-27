@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils"
 import type { Product } from "@/lib/types"
 import { mockProducts, storageOptions, colorOptions, conditions, batteryHealthOptions } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
-import { ImageCarousel } from "@/components/image-carousel"
+import { ImageCarousel } from "@/components/other/image-carousel"
 
 interface PriceHistoryModalProps {
   product: Product | null

@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast"
 import { cn, getColorHex } from "@/lib/utils" // <--- Importamos getColorHex
 import { createAlert } from "@/services/api"
 import type { ProductDetail } from "@/lib/types"
+import { t } from "@/lib/translations"
+
 
 interface AlertModalProps {
   isOpen: boolean
@@ -120,18 +122,26 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
   // Helper para descripción del resumen - Incluye batería
   const getAlertDescription = () => {
     const parts = []
-    parts.push(anyStorage ? "cualquier almacenamiento" : selectedStorages.join("/"))
-    parts.push(anyColor ? "cualquier color" : selectedColors.join("/"))
-    parts.push(anyCondition ? "cualquier estado" : selectedConditions.join("/"))
+
+    // Almacenamiento (Suele ser igual en ambos idiomas, ej: 128GB)
+    parts.push(anyStorage ? "Cualquier almacenamiento" : selectedStorages.join("/"))
+
+    // Color: Usamos .map(c => t(c)) para convertir ["Blue", "Red"] en "Azul/Rojo"
+    parts.push(anyColor ? "Cualquier color" : selectedColors.map(c => t(c)).join("/"))
+
+    // Estado: Convertimos ["Fair"] en "Correcto"
+    parts.push(anyCondition ? "Cualquier estado" : selectedConditions.map(c => t(c)).join("/"))
     
+    // Batería
     if (anyBattery) {
-      parts.push("cualquier batería")
+      parts.push("Cualquier batería")
     } else {
-      const batteryLabels = []
-      if (selectedBattery.includes('standard')) batteryLabels.push("Estándar")
-      if (selectedBattery.includes('new')) batteryLabels.push("Nueva")
+      // Simplificamos la lógica usando map y el traductor
+      // Si selectedBattery es ['new', 'standard'] -> mostrará "Nueva/Estándar"
+      const batteryLabels = selectedBattery.map(b => t(b))
       parts.push(batteryLabels.join("/"))
     }
+
     return parts.join(" + ")
   }
 
@@ -252,7 +262,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border opacity-60 hover:opacity-100"
                     )}
                     style={{ backgroundColor: getColorHex(color) }}
-                    title={color}
+                    title={t(color)}
                   />
                 ))}
               </div>
@@ -261,7 +271,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
               <p className="text-sm text-muted-foreground italic">Cualquier color</p>
             )}
             {!anyColor && selectedColors.length > 0 && (
-                <p className="text-xs text-muted-foreground">Seleccionado: {selectedColors.join(", ")}</p>
+                <p className="text-xs text-muted-foreground">Seleccionado: {selectedColors.map(c => t(c)).join(", ")}</p>
             )}
           </div>
 
@@ -287,7 +297,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border bg-transparent hover:border-emerald-600/50"
                     )}
                   >
-                    {cond}
+                    {t(cond)}
                   </button>
                 ))}
               </div>
@@ -317,7 +327,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border hover:bg-muted"
                     )}
                   >
-                    <Battery className="h-4 w-4" /> Estándar
+                    <Battery className="h-4 w-4" /> {t("standard")}
                   </button>
                   <button
                     onClick={() => toggleSelection(selectedBattery, 'new', setSelectedBattery)}
@@ -328,7 +338,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border hover:bg-muted"
                     )}
                   >
-                    <BatteryFull className="h-4 w-4" /> Nueva (100%)
+                    <BatteryFull className="h-4 w-4" /> {t("new")} (100%)
                   </button>
               </div>
             )}

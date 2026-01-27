@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Plus, Loader2 } from "lucide-react"
 import { getProducts, getProductDetail } from "@/services/api"
 import type { ProductSummary, ProductDetail, Offer } from "@/lib/types"
+import { t } from "@/lib/translations" // <--- 1. IMPORTAR TRADUCTOR
 
 interface ComparisonPopoverProps {
   onCompare: (offer: Offer, label: string) => void
@@ -24,9 +25,9 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
   // Selecciones
   const [selectedProductId, setSelectedProductId] = useState<string>("")
-  const [color, setColor] = useState<string>("") // <--- NUEVO
+  const [color, setColor] = useState<string>("") 
   const [storage, setStorage] = useState<string>("")
-  const [condition, setCondition] = useState<string>("Good")
+  const [condition, setCondition] = useState<string>("Good") // Interno: Inglés
   const [batteryNew, setBatteryNew] = useState<string>("false")
 
   // 1. Cargar lista al abrir
@@ -49,7 +50,6 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
       const details = await getProductDetail(productId)
       setTargetProduct(details as unknown as ProductDetail)
       
-      // Preseleccionar primer color disponible
       if (details.specs.length > 0) {
         setColor(details.specs[0].color)
       }
@@ -64,7 +64,6 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
   const handleConfirm = () => {
     if (!targetProduct) return
 
-    // Buscar la Spec exacta (Color + Almacenamiento)
     const targetSpec = targetProduct.specs.find(s => s.color === color && s.storage === storage)
     
     if (!targetSpec) {
@@ -72,16 +71,16 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
         return
     }
 
-    // Buscar Oferta
     const isNewBatt = batteryNew === "true"
     const targetOffer = targetSpec.offers.find(
       o => o.condition === condition && o.battery_new === isNewBatt
     )
 
     if (targetOffer) {
-      const battLabel = isNewBatt ? "(Bat. Nueva)" : ""
-      // Etiqueta completa con color
-      const label = `${targetProduct.name} ${color} ${storage}GB - ${condition} ${battLabel}`.trim()
+      // 2. CREACIÓN DE ETIQUETA TRADUCIDA
+      // Usamos t() para que la leyenda del gráfico diga "Azul" y "Correcto"
+      const battLabel = isNewBatt ? `(${t("new")})` : ""
+      const label = `${targetProduct.name} ${t(color)} ${storage}GB - ${t(condition)} ${battLabel}`.trim()
       
       onCompare(targetOffer, label)
       setOpen(false)
@@ -90,17 +89,14 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
     }
   }
 
-  // Listas dinámicas para los selects
   const availableColors = targetProduct 
     ? Array.from(new Set(targetProduct.specs.map(s => s.color)))
     : []
 
-  // Filtramos almacenamientos disponibles SOLO para el color seleccionado
   const availableStorages = targetProduct && color
     ? Array.from(new Set(targetProduct.specs.filter(s => s.color === color).map(s => s.storage)))
     : []
   
-  // Efecto: Cuando cambia el color, preseleccionar primer almacenamiento válido
   useEffect(() => {
     if (availableStorages.length > 0 && !availableStorages.includes(storage)) {
       setStorage(availableStorages[0])
@@ -139,13 +135,16 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
             {targetProduct && !loadingDetails && (
                 <>
-                    {/* 2. Color (NUEVO) */}
+                    {/* 2. Color */}
                     <div className="grid gap-1.5">
                         <Label>Color</Label>
                         <Select value={color} onValueChange={setColor}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                {availableColors.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                {availableColors.map(c => (
+                                  // 3. TRADUCCIÓN VISUAL: Value=Inglés ("Blue"), Texto=Español ("Azul")
+                                  <SelectItem key={c} value={c}>{t(c)}</SelectItem> 
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -167,7 +166,10 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
                         <Select value={condition} onValueChange={setCondition}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                {["Fair", "Good", "Excellent", "Premium"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                {["Fair", "Good", "Excellent", "Premium"].map(c => (
+                                  // 3. TRADUCCIÓN VISUAL
+                                  <SelectItem key={c} value={c}>{t(c)}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -178,8 +180,9 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
                         <Select value={batteryNew} onValueChange={setBatteryNew}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="false">Estándar</SelectItem>
-                                <SelectItem value="true">Nueva (100%)</SelectItem>
+                                {/* 3. TRADUCCIÓN VISUAL usando claves del diccionario */}
+                                <SelectItem value="false">{t("standard")}</SelectItem>
+                                <SelectItem value="true">{t("new")}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

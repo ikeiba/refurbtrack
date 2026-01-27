@@ -17,8 +17,6 @@ class OfferSerializer(serializers.ModelSerializer):
     Representa una opción de compra (ej: 'Estado Bueno - 340€').
     Sustituye a la lógica mezclada que tenías en Variant anteriormente.
     """
-    # Texto legible para el frontend (ej: "Fair" -> "Correcto")
-    condition_label = serializers.CharField(source='get_condition_display', read_only=True)
 
     class Meta:
         model = Offer

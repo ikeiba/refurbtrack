@@ -3,9 +3,9 @@
 ### ESTRUCTURA CARPETAS
 
 proyecto_scraper/
-├── frontend/               # React
-├── scraper/                # Scrapy
-└── backend/                # Django
+├── frontend/                # React
+├── scraper/                 # Scrapy
+└── backend/                 # Django
 │    ├── manage.py           # Ejecutor de comandos
 │    ├── config/             # Configuración Global (settings, urls)
 │    └── api/                # Tu App: Lógica y Modelos
@@ -14,7 +14,7 @@ proyecto_scraper/
 │        ├── serializers.py  # Traductor a JSON (Crear manual)
 │        └── urls.py         # Rutas de la API (Crear manual)
 │
-└── docker-compose.yml        # Levanta Backend, Frontend (dev) y BDD
+└── docker-compose.yml       # Levanta Backend, Frontend (dev) y BDD
 
 
 ## COMANDOS:
