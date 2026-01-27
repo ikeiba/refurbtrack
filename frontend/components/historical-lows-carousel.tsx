@@ -1,3 +1,4 @@
+//? CARRUSEL DE OFERTAS QUE MUESTRA LOS MÍNIMOS HISTÓRICOS DE 30 DÍAS (EN LA PÁGINA PRINCIPAL)
 "use client"
 
 import { useRef } from "react"
@@ -30,7 +31,7 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
   if (offers.length === 0) return null
 
   return (
-    <section className="w-full border-b border-border bg-orange-50/50 dark:bg-orange-950/10 py-6">
+    <section className="w-full border-b border-border bg-orange-50/30 dark:bg-orange-950/10 py-6">
       <div className="container mx-auto px-4">
         
         <div className="mb-4 flex items-center justify-between">
@@ -81,7 +82,7 @@ interface CompactOfferCardProps {
 function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
   // Calculamos ahorro respecto al máximo de 30 días (si existe)
   const current = Number(offer.current_price)
-  const previous = Number(offer.old_price) || current * 1.15
+  const previous = 600 // Number(offer.old_price) || current * 1.15
   const savings = Math.round(((previous - current) / previous) * 100)
 
   return (
@@ -90,7 +91,7 @@ function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
       className={cn(
         "group relative flex-shrink-0 cursor-pointer snap-start",
         "w-[210px] rounded-xl border bg-card transition-all duration-300",
-        "hover:shadow-lg hover:-translate-y-1 hover:border-orange-500/30"
+        "hover:shadow-lg hover:border-orange-500/30"
       )}
     >
         {/* Badge Flotante: CONDICIÓN */}
@@ -112,7 +113,7 @@ function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
                     src={offer.image}
                     alt={offer.name}
                     fill
-                    className="object-contain p-3 transition-transform duration-500 group-hover:scale-110 mix-blend-multiply dark:mix-blend-normal"
+                    className="object-contain p-6 pb-0 transition-transform duration-500 group-hover:scale-108 mix-blend-multiply dark:mix-blend-normal"
                     sizes="200px"
                 />
              ) : (
@@ -139,7 +140,7 @@ function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
                 <div>
                     {previous > current && (
                         <p className="text-[10px] text-muted-foreground line-through">
-                            era ~{Math.round(previous)}€
+                             {previous}€
                         </p>
                     )}
                     <p className="text-lg font-bold text-orange-600 dark:text-orange-500 leading-none">

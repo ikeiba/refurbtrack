@@ -1,3 +1,4 @@
+//? PROVEEDOR DE TEMA PARA MODO OSCURO/CLARO (EN TODA LA APLICACIÓN)s
 'use client'
 
 import * as React from 'react'

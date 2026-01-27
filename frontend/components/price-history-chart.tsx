@@ -1,3 +1,4 @@
+//? GRÁFICO DE HISTÓRICO DE PRECIOS CON (EN LA PÁGINA DE PRODUCTO)
 "use client"
 
 import { useMemo } from "react"

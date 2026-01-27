@@ -1,3 +1,4 @@
+//? MODAL PARA CREAR ALERTAS DE PRECIO (EN LA PÁGINA DE PRODUCTO)
 "use client"
 
 import { useState, useEffect } from "react"

@@ -1,3 +1,4 @@
+//? BARRA DE ARRIBA DEL TODO (EN TODAS LAS PÁGINAS)
 "use client"
 
 import { Search, Bell, User, Menu, Moon, Sun, ChevronLeft } from "lucide-react" // <--- 1. Añadido ChevronLeft
@@ -74,11 +75,11 @@ export function Header({
         {/* === ZONA CENTRAL: BUSCADOR === */}
         <div className="flex flex-1 items-center justify-center px-4">
           <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground " />
             <Input
               type="search"
               placeholder="Buscar productos..."
-              className="w-full pl-9"
+              className="w-full pl-9 focus-visible:ring-emerald-500"
               value={searchQuery || ""} // Evitamos valor undefined 
               // Protegemos la llamada: solo ejecuta si la función existe
               onChange={(e) => onSearchChange && onSearchChange(e.target.value)}

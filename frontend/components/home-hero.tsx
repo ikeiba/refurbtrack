@@ -1,3 +1,4 @@
+//? SECCIÓN PRINCIPAL QUE INCLUYE TITULO, DESCRIPCIÓN Y BARRA DE BÚSQUEDA (EN LA PÁGINA DE INICIO)
 "use client"
 
 import { Search } from "lucide-react"

@@ -1,3 +1,4 @@
+//? GALERÍA DE IMÁGENES DEL PRODUCTO (EN LA PÁGINA DE PRODUCTO)
 "use client"
 
 import { useState } from "react"

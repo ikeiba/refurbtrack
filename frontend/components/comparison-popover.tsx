@@ -1,3 +1,4 @@
+//? POPOVER PARA AÑADIR LÍNEAS DE COMPARACIÓN AL GRÁFICO (EN LA PÁGINA DE PRODUCTO)
 "use client"
 
 import { useState, useEffect } from "react"
