@@ -1,13 +1,12 @@
-//? CARRUSEL DE OFERTAS QUE MUESTRA LOS MÍNIMOS HISTÓRICOS DE 30 DÍAS (EN LA PÁGINA PRINCIPAL)
 "use client"
 
 import { useRef } from "react"
 import Image from "next/image"
-import { ChevronLeft, ChevronRight, Flame, TrendingDown, BatteryFull } from "lucide-react"
+import { ChevronLeft, ChevronRight, Flame, TrendingDown, BatteryFull, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { OfferSummary, HistoricalLowsCarouselProps } from "@/lib/types" // <--- CAMBIO IMPORTANTE: Usamos OfferSummary
+import type { OfferSummary, HistoricalLowsCarouselProps } from "@/lib/types"
 import { t } from "@/lib/translations"
 
 export const getConditionStyles = (condition: string) => {
@@ -41,7 +40,7 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
   if (offers.length === 0) return null
 
   return (
-    <section className="w-full border-b border-border bg-orange-50/30 dark:bg-orange-950/10 py-6">
+    <section className="w-full border-b border-border bg-background dark:bg-background py-6">
       <div className="container mx-auto px-4">
         
         <div className="mb-4 flex items-center justify-between">
@@ -50,8 +49,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
                 <Flame className="h-5 w-5 text-orange-600 dark:text-orange-400 fill-orange-600 dark:fill-orange-400" />
             </div>
             <div>
-                <h2 className="text-lg font-bold tracking-tight text-foreground">Mínimos de 30 Días</h2>
-                <p className="text-xs text-muted-foreground hidden sm:block">Ofertas específicas en su precio más bajo del mes</p>
+                <h2 className="text-xl font-bold tracking-tight text-foreground">Mínimos de 30 Días</h2>
+                <p className="text-sm text-muted-foreground hidden sm:block">Ofertas específicas en su precio más bajo del mes</p>
             </div>
           </div>
           
@@ -71,7 +70,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {offers.map((offer) => (
-            <CompactOfferCard 
+            // CAMBIA AQUÍ ENTRE 'CompactOfferCardOption1' Y 'CompactOfferCardOption2' PARA PROBAR
+            <CompactOfferCardOption2 
                 key={offer.id} 
                 offer={offer} 
                 onClick={() => onOfferClick(offer)} 
@@ -83,16 +83,17 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
   )
 }
 
-// --- NUEVA TARJETA DE OFERTA ---
+// =====================================================================
+// OPCIÓN 1: Botón pequeño a la derecha alineado con el precio
+// =====================================================================
 interface CompactOfferCardProps {
   offer: OfferSummary
   onClick: () => void
 }
 
-function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
-  // Calculamos ahorro respecto al máximo de 30 días (si existe)
+function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
   const current = Number(offer.current_price)
-  const previous = 600 // Number(offer.old_price) || current * 1.15
+  const previous = 600 
   const savings = Math.round(((previous - current) / previous) * 100)
 
   return (
@@ -100,74 +101,194 @@ function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
       onClick={onClick}
       className={cn(
         "group relative flex-shrink-0 cursor-pointer snap-start",
-        "w-[210px] rounded-xl border bg-card transition-all duration-300",
+        "w-[270px] rounded-xl border bg-card transition-all duration-300",
         "hover:shadow-lg hover:border-orange-500/30"
       )}
     >
         {/* Badge Flotante: CONDICIÓN */}
         <Badge className={cn(
-            "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm", // Clases base y posición
-            getConditionStyles(offer.condition) // Clases de color dinámicas
+            "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm",
+            getConditionStyles(offer.condition)
         )}>
             {t(offer.condition)}
         </Badge>
 
-        {/* Badge Batería (si es nueva) */}
+        {/* Badge Batería */}
         {offer.battery_new && (
              <Badge className="absolute right-2 top-2 z-10 bg-emerald-600 px-1.5 py-0.5 text-[10px] border-0 gap-1">
                 <BatteryFull className="w-3 h-3" /> {t("new")}
              </Badge>
         )}
 
-        {/* Imagen */}
+        {/* Imagen + Porcentaje de Descuento (Movido aquí) */}
         <div className="aspect-square relative p-4 bg-white dark:bg-secondary/20 rounded-t-xl overflow-hidden">
              {offer.image ? (
                 <Image
                     src={offer.image}
                     alt={offer.name}
                     fill
-                    className="object-contain p-6 pb-0 transition-transform duration-500 group-hover:scale-108 mix-blend-multiply dark:mix-blend-normal"
+                    className="object-contain p-7 pb-0 transition-transform duration-500 group-hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
                     sizes="200px"
                 />
              ) : (
                 <div className="w-full h-full flex items-center justify-center text-4xl">📱</div>
              )}
+             
+             {/* PORCENTAJE DE AHORRO: Parte inferior derecha de la imagen */}
+             {savings > 0 && (
+                <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-orange-700 bg-orange-100 dark:bg-orange-900/50 dark:text-orange-400 px-2 py-1 rounded-md shadow-sm border border-orange-200/50">
+                    <TrendingDown className="w-3 h-3 mr-1" />
+                    -{savings}%
+                </div>
+             )}
         </div>
 
         {/* Info Detallada */}
-        <div className="p-3 border-t bg-muted/20">
-            {/* Nombre Producto */}
-            <h3 className="truncate text-sm font-bold text-foreground" title={offer.name}>
-                {offer.name}
-            </h3>
-            
-            {/* Specs: 128GB · Azul */}
-            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                <span>{offer.storage}</span>
-                <span className="text-[8px] opacity-40">●</span>
-                <span>{t(offer.color)}</span>
-            </p>
-            
-            {/* Precios */}
-            <div className="mt-2 flex items-end justify-between">
-                <div>
-                    {previous > current && (
-                        <p className="text-[10px] text-muted-foreground line-through">
-                             {previous}€
-                        </p>
-                    )}
-                    <p className="text-lg font-bold text-orange-600 dark:text-orange-500 leading-none">
-                        {current}€
+        <div className="p-4 border-t bg-muted/20">
+            {/* Contenedor Flex para alinear Info a la Izq y Botón a la Der */}
+            <div className="flex items-end justify-between gap-2">
+                
+                {/* COLUMNA IZQUIERDA: Info + Precios */}
+                <div className="flex flex-col gap-1 min-w-0">
+                    {/* Nombre */}
+                    <h3 className="truncate text-sm font-bold text-foreground" title={offer.name}>
+                        {offer.name}
+                    </h3>
+                    
+                    {/* Specs */}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span>{offer.storage}</span>
+                        <span className="text-[8px] opacity-40">●</span>
+                        <span>{t(offer.color)}</span>
                     </p>
-                </div>
-                {savings > 0 && (
-                    <div className="flex items-center text-xs font-bold text-orange-700 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 px-1.5 py-0.5 rounded">
-                        <TrendingDown className="w-3 h-3 mr-0.5" />
-                        {savings}%
+
+                    {/* Precios (Vertical) */}
+                    <div className="mt-1">
+                        {previous > current && (
+                            <p className="text-[11px] text-muted-foreground line-through decoration-muted-foreground/60">
+                                {previous}€
+                            </p>
+                        )}
+                        <p className="text-xl font-bold text-orange-600 dark:text-orange-500 leading-none">
+                            {current}€
+                        </p>
                     </div>
-                )}
+                </div>
+
+                {/* COLUMNA DERECHA: Botón Link */}
+                <Button 
+                    size="sm" 
+                    className="h-9 px-4 bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0"
+                    onClick={(e) => {
+                        e.stopPropagation(); // Evita que se dispare el onClick de la tarjeta
+                        // Aquí pondremos el link real más tarde
+                        console.log("Ir a Back Market"); 
+                    }}
+                >
+                    Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover:opacity-100" />
+                </Button>
             </div>
         </div>
     </div>
   )
 }
+
+// =====================================================================
+// OPCIÓN 2: Precios arriba derecha y Botón ancho abajo
+// =====================================================================
+
+function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
+    const current = Number(offer.current_price)
+    const previous = 600
+    const savings = Math.round(((previous - current) / previous) * 100)
+  
+    return (
+      <div 
+        onClick={onClick}
+        className={cn(
+          "group relative flex-shrink-0 cursor-pointer snap-start",
+          "w-[270px] rounded-xl border bg-card transition-all duration-300",
+          "hover:shadow-lg hover:border-orange-500/30"
+        )}
+      >
+          {/* Badges Superiores (Igual) */}
+          <Badge className={cn(
+              "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm",
+              getConditionStyles(offer.condition)
+          )}>
+              {t(offer.condition)}
+          </Badge>
+  
+          {offer.battery_new && (
+               <Badge className="absolute right-2 top-2 z-10 bg-emerald-600 px-1.5 py-0.5 text-[10px] border-0 gap-1">
+                  <BatteryFull className="w-3 h-3" /> {t("new")}
+               </Badge>
+          )}
+  
+          {/* Imagen + Porcentaje (Igual) */}
+          <div className="aspect-square relative p-4 bg-white dark:bg-secondary/20 rounded-t-xl overflow-hidden">
+               {offer.image ? (
+                  <Image
+                      src={offer.image}
+                      alt={offer.name}
+                      fill
+                      className="object-contain p-7 pb-0 transition-transform duration-500 group-hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
+                      sizes="200px"
+                  />
+               ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl">📱</div>
+               )}
+               
+               {/* PORCENTAJE DE AHORRO */}
+               {savings > 0 && (
+                  <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-orange-700 bg-orange-100 dark:bg-orange-900/50 dark:text-orange-400 px-2 py-1 rounded-md shadow-sm border border-orange-200/50">
+                      <TrendingDown className="w-3 h-3 mr-1" />
+                      -{savings}%
+                  </div>
+               )}
+          </div>
+  
+          {/* Info Detallada */}
+          <div className="p-4 border-t bg-muted/20">
+              
+              {/* FILA SUPERIOR: Info (Izq) vs Precios (Der) */}
+              <div className="flex justify-between items-start mb-3">
+                  {/* Izquierda: Datos */}
+                  <div className="flex flex-col min-w-0 pr-2">
+                      <h3 className="truncate text-sm font-bold text-foreground" title={offer.name}>
+                          {offer.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <span>{offer.storage}</span>
+                          <span className="text-[8px] opacity-40">●</span>
+                          <span>{t(offer.color)}</span>
+                      </p>
+                  </div>
+
+                  {/* Derecha: Precios Alineados a la derecha */}
+                  <div className="flex flex-col items-end shrink-0">
+                        {previous > current && (
+                            <p className="text-[10px] text-muted-foreground line-through">
+                                {previous}€
+                            </p>
+                        )}
+                        <p className="text-xl font-bold text-orange-600 dark:text-orange-500 leading-none">
+                            {current}€
+                        </p>
+                  </div>
+              </div>
+  
+              {/* FILA INFERIOR: Botón Ancho */}
+              <Button 
+                  className="w-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn"
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      console.log("Ir a Back Market");
+                  }}
+              >
+                  Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover/btn:opacity-100" />
+              </Button>
+          </div>
+      </div>
+    )
+  }

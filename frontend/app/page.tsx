@@ -81,13 +81,15 @@ export default function HomePage() {
           />
        )}
 
-      {/* GRID DE PRODUCTOS */}
-      {loading ? (
-        <div className="text-center py-20 text-muted-foreground">Cargando catálogo...</div>
-      ) : (
-        // Pasamos los productos filtrados para que la búsqueda funcione visualmente
-        <FamilyGrid products={filteredProducts} />
-      )}
+      {/* Grid (Gris otra vez) */}
+      {/* 3. CAMBIO: Envolvemos el grid en un div con fondo gris */}
+      <div className="bg-muted/30 border-border min-h-[50vh] py-4">
+        {loading ? (
+            <div className="text-center text-muted-foreground">Cargando catálogo...</div>
+        ) : (
+            <FamilyGrid products={filteredProducts} />
+        )}
+      </div>
 
       <Toaster />
     </div>

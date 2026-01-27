@@ -21,16 +21,16 @@ export function ProductGallery({ images }: ProductGalleryProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pt-12">
       {/* IMAGEN PRINCIPAL (Estilo v0) */}
       {/* bg-muted/30 le da ese fondo gris suave. rounded-2xl bordes muy redondos. */}
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted/30">
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted/60">
         <img
           src={images[selectedIndex]}
           alt="Product view"
           // p-8 da el margen interno para que el móvil no toque los bordes
           // mix-blend-multiply ayuda a que el fondo blanco de la foto se funda con el gris
-          className="h-full w-full object-contain p-8 mix-blend-multiply transition-transform duration-500 hover:scale-105"
+          className="h-full w-full object-contain p-14 mix-blend-multiply transition-transform duration-500 hover:scale-105"
         />
       </div>
 
