@@ -7,12 +7,22 @@ import { ChevronLeft, ChevronRight, Flame, TrendingDown, BatteryFull } from "luc
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { OfferSummary } from "@/lib/types" // <--- CAMBIO IMPORTANTE: Usamos OfferSummary
+import type { OfferSummary, HistoricalLowsCarouselProps } from "@/lib/types" // <--- CAMBIO IMPORTANTE: Usamos OfferSummary
 import { t } from "@/lib/translations"
 
-interface HistoricalLowsCarouselProps {
-  offers: OfferSummary[] // <--- Recibimos Ofertas, no Productos
-  onOfferClick: (offer: OfferSummary) => void
+export const getConditionStyles = (condition: string) => {
+  switch (condition) {
+    case "Fair":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+    case "Good":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+    case "Excellent":
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+    case "Premium":
+      return "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200"
+    default:
+      return "bg-secondary text-secondary-foreground"
+  }
 }
 
 export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsCarouselProps) {
@@ -95,7 +105,10 @@ function CompactOfferCard({ offer, onClick }: CompactOfferCardProps) {
       )}
     >
         {/* Badge Flotante: CONDICIÓN */}
-        <Badge className="absolute left-2 top-2 z-10 bg-black/70 hover:bg-black/80 px-2 py-0.5 text-[10px] backdrop-blur-md border-0">
+        <Badge className={cn(
+            "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm", // Clases base y posición
+            getConditionStyles(offer.condition) // Clases de color dinámicas
+        )}>
             {t(offer.condition)}
         </Badge>
 

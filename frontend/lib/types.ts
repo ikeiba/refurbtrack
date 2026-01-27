@@ -72,3 +72,9 @@ export interface OfferSummary {
   old_price?: number // Puede ser null
   image?: string
 }
+
+//? ESTO ES LO QUE RECIBIMOS EN LA PÁGINA PRINCIPAL PARA VER EL CARRUSEL
+export interface HistoricalLowsCarouselProps {
+  offers: OfferSummary[] // <--- Recibimos Ofertas, no Productos
+  onOfferClick: (offer: OfferSummary) => void
+}

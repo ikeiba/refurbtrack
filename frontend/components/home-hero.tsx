@@ -13,7 +13,7 @@ export function HomeHero() {
         <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
           Compara precios de productos reacondicionados en múltiples marketplaces. Encuentra las mejores ofertas en iPhones, iPads y más.
         </p>
-        <div className="mx-auto mt-8 max-w-md">
+        {/*<div className="mx-auto mt-8 max-w-md">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -28,7 +28,7 @@ export function HomeHero() {
               Search
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   )
