@@ -5,7 +5,7 @@ import { getProductDetail, getOfferHistory } from "@/services/api"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Card } from "@/components/ui/card"
-import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity } from "lucide-react" // <--- Nuevos iconos
+import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity, ExternalLink } from "lucide-react" // <--- Nuevos iconos
 import { ProductGallery } from "@/components/product-gallery"
 import PriceHistoryChart from "@/components/price-history-chart"
 import { ComparisonPopover } from "@/components/comparison-popover"
@@ -211,7 +211,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="grid md:grid-cols-2 items-start">
           
           <div className="h-fit w-full max-w-[550px] mx-auto lg:ml-auto">
-              <ProductGallery images={[finalImage]} />
+              <ProductGallery 
+              images={[finalImage]} 
+              onImageClick={() => {
+                    // Misma lógica que el botón de compra
+                    if (activeOffer) {
+                        console.log("Redirigiendo a Back Market desde la imagen...")
+                        // window.open(activeOffer.url, '_blank')
+                    }
+                }}
+            />
           </div>
 
           <div className="flex flex-col gap-3 mt-12">
@@ -318,28 +327,53 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </div>
               </div>
 
+              {/* 5. RESUMEN FINAL, PRECIO Y BOTÓN DE COMPRA */}
               <div className="rounded-lg border border-border bg-muted/30 p-4">
-                  <p className="text-sm text-muted-foreground">Configuración seleccionada</p>
-                  <p className="mt-1 font-semibold text-lg">
-                      {product.name} · {selectedStorage}GB · {t(selectedColor)} · {t(selectedCondition)}
-                  </p>
+                  <div className="flex items-start justify-between">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Configuración seleccionada</p>
+                        <p className="mt-1 font-semibold text-lg">
+                            {product.name} · {selectedStorage}GB · {t(selectedColor)} · {t(selectedCondition)}
+                        </p>
+                    </div>
+                  </div>
                   
-                  <div className="mt-2 flex items-baseline gap-3">
+                  <div className="mt-3">
                       {activeOffer ? (
-                          <>
-                              <p className="text-3xl font-bold text-emerald-600">
-                                  {activeOffer.current_price}€
-                              </p>
-                              <span className="text-sm text-muted-foreground">
-                                  {activeOffer.battery_new ? "Batería Nueva" : "Batería Estándar"}
-                              </span>
-                          </>
+                          <div className="space-y-3">
+                              {/* FILA 1: Precio y Estado Batería */}
+                              <div className="flex items-baseline gap-3">
+                                <p className="text-3xl font-bold text-emerald-600">
+                                    {activeOffer.current_price}€
+                                </p>
+                                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                    {activeOffer.battery_new ? (
+                                        <span className="text-emerald-600 font-medium">Batería Nueva (100%)</span>
+                                    ) : (
+                                        <span>Batería Estándar</span>
+                                    )}
+                                </span>
+                              </div>
+
+                              {/* FILA 2: BOTÓN DE COMPRA (Call to Action) */}
+                              <Button 
+                                className="w-full h-11 text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all"
+                                onClick={() => {
+                                    // Aquí iría el link real: window.open(activeOffer.url, '_blank')
+                                    console.log("Redirigiendo a Back Market...")
+                                }}
+                              >
+                                Ver oferta en Back Market
+                                <ExternalLink className="ml-2 w-4 h-4 opacity-80" />
+                              </Button>
+                          </div>
                       ) : (
-                          <p className="text-xl text-muted-foreground">Sin stock para esta combinación</p>
+                          <p className="text-xl text-muted-foreground py-2">Sin stock para esta combinación</p>
                       )}
                   </div>
               </div>
 
+              {/* 6. BOTÓN DE ALERTA (Se mantiene fuera para diferenciar acciones) */}
               <div>
                   <Button 
                       className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700" 
