@@ -21,7 +21,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Tu comparador de confianza para productos reacondicionados. Ahorra dinero y ayuda al planeta.
+              Facilitando la transición hacia una economía circular y sostenible a través de la transparencia en precios de tecnología reacondicionada.
             </p>
           </div>
 
@@ -57,7 +57,7 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Compañía</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="#" className="hover:text-emerald-600 transition-colors">
+                <Link href="/company/about" className="hover:text-emerald-600 transition-colors">
                   Sobre Nosotros
                 </Link>
               </li>
@@ -72,7 +72,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-emerald-600 transition-colors">
+                <Link href="/company/contact" className="hover:text-emerald-600 transition-colors">
                   Contacto
                 </Link>
               </li>
@@ -84,17 +84,17 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="#" className="hover:text-emerald-600 transition-colors">
+                <Link href="/legal/privacy" className="hover:text-emerald-600 transition-colors">
                   Privacidad
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-emerald-600 transition-colors">
+                <Link href="/legal/terms" className="hover:text-emerald-600 transition-colors">
                   Términos
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-emerald-600 transition-colors">
+                <Link href="/legal/cookies" className="hover:text-emerald-600 transition-colors">
                   Cookies
                 </Link>
               </li>

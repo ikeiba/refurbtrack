@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
+import { Leaf } from "lucide-react" // <--- 1. Importar el icono de la hoja
 
 export function HomeHero() {
   return (
@@ -15,13 +16,20 @@ export function HomeHero() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+
+        {/* 2. NUEVA ETIQUETA "CONSUMO CONSCIENTE" */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-600/20 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 text-sm font-medium mb-8 shadow-sm ring-1 ring-emerald-500/20">
+            <Leaf className="w-4 h-4 fill-emerald-800 dark:fill-emerald-200" />
+            Consumo Consciente: Ahorra CO2 y Dinero
+        </div>
         
-        {/* 2. TÍTULO PRINCIPAL CON ESTILO STITCH */}
+        {/* TÍTULO PRINCIPAL */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground mb-6">
-          Rastrea los{" "}
+          Rastrea el mejor precio,{" "}
+          <br className="hidden sm:block" />
           <span className="text-emerald-600 relative inline-block">
-            mejores precios
-            {/* El subrayado orgánico SVG */}
+            protege el planeta.
+            {/* Subrayado SVG movido aquí */}
             <svg
               className="absolute w-full h-3 -bottom-1 left-0 text-emerald-600 opacity-20"
               preserveAspectRatio="none"
@@ -34,14 +42,12 @@ export function HomeHero() {
                 strokeWidth="8"
               />
             </svg>
-          </span>{" "}
-          <br className="hidden sm:block" />
-          de iPhones reacondicionados
+          </span>
         </h1>
 
         <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground">
-          Compara precios de productos reacondicionados en múltiples marketplaces. 
-          Encuentra las mejores ofertas verificadas por calidad y ahorra hasta un 40%.
+          Cada dispositivo reacondicionado ahorra hasta 80kg de CO2. Comparamos los mejores precios en 
+          tecnología reacondicionada para que tu impacto sea positivo tanto para tu bolsillo como para el medio ambiente.
         </p>
       </div>
     </section>

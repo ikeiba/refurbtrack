@@ -3,6 +3,13 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { ProductSummary } from "@/lib/types" // Tu tipo real
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Info } from "lucide-react" // Icono de información
 
 interface FamilyGridProps {
   products: ProductSummary[]
@@ -58,11 +65,23 @@ export function FamilyGrid({ products }: FamilyGridProps) {
                           : "Sin Stock"}
                       </p>
 
-                      {/* Precio Original (Tachado) */}
-                      <p className="text-xs text-muted-foreground line-through">
-                        vs ~ 1000€ new
-                      </p>
-                      
+                      {/* Mostrar precio tachado SOLO si existe y es mayor que el actual */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground line-through ml-1 cursor-help decoration-muted-foreground/60 decoration-1">
+                              vs {product.market_price}€ new
+                              {/* Opcional: Icono info muy sutil */}
+                              {/* <Info className="w-3 h-3 opacity-50" /> */}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                            <p>
+                              Fuente de referencia: Back Market.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>

@@ -25,11 +25,14 @@ class OfferSerializer(serializers.ModelSerializer):
             'condition',
             'url', 
             'battery_new', 
-            'current_price', 
+            'current_price',
+            'last_updated', 
             'country', 
             'deal_score', 
             'min_price_30d',
-            'last_updated'
+            'min_price_30d_date',
+            'max_price_30d',
+            'max_price_30d_date'
         ]
 
 # --- 3. NIVEL 2: LA SPEC (El Configurador) ---
@@ -63,7 +66,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     image = serializers.CharField(read_only=True) # <--- AÑADIR ESTO
     class Meta:
         model = Product
-        fields = ['id', 'name', 'type', 'image', 'min_price_cached']
+        fields = ['id', 'name', 'type', 'image', 'min_price_cached', 'market_price']
 
 # B. Para el DETALLE (Vista Pesada)
 class ProductDetailSerializer(serializers.ModelSerializer):
@@ -129,7 +132,7 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
     # CAMBIO CLAVE: Usamos SerializerMethodField pero devolvemos STRING, no URL
     image = serializers.SerializerMethodField()
     
-    old_price = serializers.DecimalField(source='max_price_30d', max_digits=10, decimal_places=2)
+    old_price = serializers.DecimalField(source='all_time_max_price', max_digits=10, decimal_places=2)
 
     class Meta:
         model = Offer

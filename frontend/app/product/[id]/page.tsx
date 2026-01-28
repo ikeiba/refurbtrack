@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState, use, useMemo } from "react" // <--- Añadido useMemo
+import { useEffect, useState, use, useMemo } from "react"
 import { getProductDetail, getOfferHistory } from "@/services/api"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Card } from "@/components/ui/card"
-import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity, ExternalLink } from "lucide-react" // <--- Nuevos iconos
+import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity, ExternalLink } from "lucide-react"
 import { ProductGallery } from "@/components/product-gallery"
 import PriceHistoryChart from "@/components/price-history-chart"
 import { ComparisonPopover } from "@/components/comparison-popover"
@@ -16,7 +16,7 @@ import { Header } from "@/components/header"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { t } from "@/lib/translations"
-import { format } from "date-fns" // Para formatear la fecha
+import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -119,28 +119,61 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   }, [activeOffer, activeSpec, selectedCondition, product])
 
   // 4. CALCULAR ESTADÍSTICAS EN TIEMPO REAL (Memoizado)
-  // Usamos el historial (chartData[0]) para calcular el promedio real, ya que tenemos los puntos exactos.
   const priceStats = useMemo(() => {
     if (!activeOffer) return null;
 
-    // A. Datos básicos de la oferta
-    const currentPrice = Number(activeOffer.current_price);
-    const min30d = Number(activeOffer.min_price_30d);
-    const max30d = Number(activeOffer.max_price_30d);
+    // A. Datos básicos con protección anti-NaN
+    const currentPrice = Number(activeOffer.current_price) || 0;
     
-    // B. Cálculo del Promedio (usando el historial cargado)
+    // Si la API devuelve null o 0, usamos el precio actual como fallback
+    let min30d = Number(activeOffer.min_price_30d);
+    let max30d = Number(activeOffer.max_price_30d);
+
+    // Fechas que vienen de la API
+    let minDate = activeOffer.min_price_30d_date;
+    let maxDate = activeOffer.max_price_30d_date;
+
+    if (!min30d || isNaN(min30d)) min30d = currentPrice;
+    if (!max30d || isNaN(max30d)) max30d = currentPrice;
+    
+    // B. Cálculo del Promedio (usando el historial cargado del gráfico)
     let avg30d = 0;
+    // Buscamos los datos de la serie principal (la verde esmeralda)
     const historyPoints = chartData.find(s => s.color === CHART_COLORS[0])?.data || [];
     
     if (historyPoints.length > 0) {
+        // Si hay gráfico, calculamos la media real exacta
         const sum = historyPoints.reduce((acc: number, curr: any) => acc + Number(curr.price), 0);
         avg30d = Math.round(sum / historyPoints.length);
+        
+        // CORRECCIÓN EXTRA: Si el historial tiene picos más altos que lo que dice la API (por lag de caché), 
+        // actualizamos localmente y buscamos la fecha en el historial.
+        const historyMax = Math.max(...historyPoints.map((p:any) => Number(p.price)));
+        const historyMin = Math.min(...historyPoints.map((p:any) => Number(p.price)));
+        
+        if (historyMax > max30d) {
+             max30d = historyMax;
+             const point = historyPoints.find((p:any) => Number(p.price) === historyMax);
+             if (point) maxDate = point.timestamp;
+        }
+        if (historyMin < min30d && historyMin > 0) {
+             min30d = historyMin;
+             const point = historyPoints.find((p:any) => Number(p.price) === historyMin);
+             if (point) minDate = point.timestamp;
+        }
+
     } else {
-        // Fallback si no hay historial cargado aún: (max + min) / 2 es una aproximación burda pero útil
+        // Fallback si no hay historial cargado aún
         avg30d = Math.round((min30d + max30d) / 2);
     }
 
-    // C. Formateo de fecha
+    // C. Formateo de fechas
+    const formatDate = (d: string | null) => {
+        if (!d) return "N/A";
+        try { return format(new Date(d), "d MMM", { locale: es }); } 
+        catch { return "N/A"; }
+    };
+
     const lastUpdateDate = activeOffer.last_updated 
         ? format(new Date(activeOffer.last_updated), "d MMM, HH:mm", { locale: es })
         : "N/A";
@@ -148,7 +181,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return {
         current: currentPrice,
         min: min30d,
+        minDate: formatDate(minDate),
         max: max30d,
+        maxDate: formatDate(maxDate),
         avg: avg30d,
         date: lastUpdateDate
     };
@@ -212,16 +247,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           
           <div className="h-fit w-full max-w-[550px] mx-auto lg:ml-auto">
               <ProductGallery 
-              images={[finalImage]} 
-              onImageClick={() => {
-                    // Misma lógica que el botón de compra
+                images={[finalImage]} 
+                onImageClick={() => {
                     if (activeOffer) {
                         if (activeOffer?.url) {
                             window.open(activeOffer.url, '_blank', 'noopener,noreferrer');
                             console.log("Redirigiendo a Back Market desde la imagen...")
                         } else {
                             console.warn("Esta oferta no tiene link");
-                            // Fallback opcional: Ir a la home de Back Market
                         }
                     }
                 }}
@@ -332,7 +365,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </div>
               </div>
 
-              {/* 5. RESUMEN FINAL, PRECIO Y BOTÓN DE COMPRA */}
               <div className="rounded-lg border border-border bg-muted/30 p-4">
                   <div className="flex items-start justify-between">
                     <div>
@@ -346,7 +378,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <div className="mt-3">
                       {activeOffer ? (
                           <div className="space-y-3">
-                              {/* FILA 1: Precio y Estado Batería */}
                               <div className="flex items-baseline gap-3">
                                 <p className="text-3xl font-bold text-emerald-600">
                                     {activeOffer.current_price}€
@@ -360,7 +391,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                 </span>
                               </div>
 
-                              {/* FILA 2: BOTÓN DE COMPRA (Call to Action) */}
                               <Button 
                                 className="w-full h-11 text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all"
                                 onClick={() => {
@@ -368,7 +398,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                         window.open(activeOffer.url, '_blank', 'noopener,noreferrer');
                                     } else {
                                         console.warn("Esta oferta no tiene link");
-                                        // Fallback opcional: Ir a la home de Back Market
                                     }
                                 }}
                               >
@@ -382,7 +411,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </div>
               </div>
 
-              {/* 6. BOTÓN DE ALERTA (Se mantiene fuera para diferenciar acciones) */}
               <div>
                   <Button 
                       className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700" 
@@ -398,7 +426,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* --- SECCIÓN DE ESTADÍSTICAS Y GRÁFICO --- */}
         <div className="mt-20">
           <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -410,10 +437,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
           </div>
 
-          {/* 1. TARJETAS DE ESTADÍSTICAS (KPIs) */}
           {priceStats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                {/* A. Precio Actual */}
                 <Card className="p-4 border shadow-sm bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900">
                     <div className="flex flex-col">
                         <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
@@ -428,7 +453,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     </div>
                 </Card>
 
-                {/* B. Mínimo 30d */}
                 <Card className="p-4 border shadow-sm">
                     <div className="flex flex-col">
                         <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
@@ -437,10 +461,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         <span className="text-2xl font-bold text-foreground mt-1">
                             {priceStats.min}€
                         </span>
+                        {/* Fecha Mínimo */}
+                        <span className="text-[10px] text-muted-foreground mt-1">
+                            {priceStats.minDate !== "N/A" ? `Registrado el ${priceStats.minDate}` : ""}
+                        </span>
                     </div>
                 </Card>
 
-                {/* C. Promedio 30d */}
                 <Card className="p-4 border shadow-sm">
                     <div className="flex flex-col">
                         <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
@@ -455,7 +482,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     </div>
                 </Card>
 
-                {/* D. Máximo 30d */}
                 <Card className="p-4 border shadow-sm">
                     <div className="flex flex-col">
                         <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
@@ -463,6 +489,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         </span>
                         <span className="text-2xl font-bold text-foreground mt-1">
                             {priceStats.max}€
+                        </span>
+                        {/* Fecha Máximo */}
+                        <span className="text-[10px] text-muted-foreground mt-1">
+                            {priceStats.maxDate !== "N/A" ? `Registrado el ${priceStats.maxDate}` : ""}
                         </span>
                     </div>
                 </Card>

@@ -10,6 +10,7 @@ export interface ProductSummary {
   name: string;
   image: string | null;
   min_price_cached: number;
+  market_price: number | null; // <--- NUEVO CAMPO
 }
 
 //? ESTO ES LO QUE RECIBIMOS PARA VER EL GRÁFICO DE HISTORIAL DE PRECIOS
@@ -37,6 +38,12 @@ export interface Offer {
   current_price: number | null;
   last_updated: string | null;
   url?: string;
+
+  // --- NUEVOS CAMPOS ---
+  min_price_30d?: number;       // Puede ser opcional (?) o obligatorio si siempre lo mandas
+  max_price_30d?: number;
+  min_price_30d_date?: string;  // Fecha en string ISO
+  max_price_30d_date?: string;
 }
 
 //? ESTOS SON TODAS LAS SPECS DENTRO DE UN PRODUCTO

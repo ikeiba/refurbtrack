@@ -49,8 +49,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
                 <Flame className="h-5 w-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600 dark:fill-emerald-400" />
             </div>
             <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground">Mínimos de 30 Días</h2>
-                <p className="text-sm text-muted-foreground hidden sm:block">Ofertas específicas en su precio más bajo del mes</p>
+                <h2 className="text-xl font-bold tracking-tight text-foreground">Mínimos sostenibles</h2>
+                <p className="text-sm text-muted-foreground hidden sm:block">Precios mensuales más bajos en productos que dan una segunda vida a la tecnología.</p>
             </div>
           </div>
           
@@ -93,7 +93,7 @@ interface CompactOfferCardProps {
 
 function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
   const current = Number(offer.current_price)
-  const previous = 600 
+  const previous = Number(offer.old_price) 
   const savings = Math.round(((previous - current) / previous) * 100)
 
   return (
@@ -199,7 +199,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
 
 function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
     const current = Number(offer.current_price)
-    const previous = 600
+    const previous = Number(offer.old_price)
     const savings = Math.round(((previous - current) / previous) * 100)
   
     return (
@@ -241,7 +241,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                
                {/* PORCENTAJE DE AHORRO */}
                {savings > 0 && (
-                  <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/50 dark:text-emerald-400 px-2 py-1 rounded-md shadow-sm border border-emerald-200/50">
+                  <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-md shadow-sm border border-emerald-200/50">
                       <TrendingDown className="w-3 h-3 mr-1" />
                       -{savings}%
                   </div>

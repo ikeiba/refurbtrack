@@ -3,7 +3,7 @@ import { TreePine, Sprout } from "lucide-react"
 export function WhyRefurbished() {
   return (
     <section className="py-12 container mx-auto px-4">
-      <div className="relative overflow-hidden rounded-[3rem] bg-emerald-600 px-6 py-12 text-center text-white shadow-xl shadow-emerald-600/20 sm:px-12">
+      <div className="relative overflow-hidden rounded-[3rem] bg-emerald-600/90 px-6 py-12 text-center text-white shadow-xl shadow-emerald-600/20 sm:px-12">
         
         {/* Contenido Principal (z-10 para estar encima del icono de fondo) */}
         <div className="relative z-10 flex flex-col items-center">
