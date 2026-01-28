@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { getProducts, getHistoricalLowOffers } from "@/services/api"
 import type { ProductSummary, OfferSummary } from "@/lib/types"
 import { useRouter } from "next/navigation"
+import { WhyRefurbished } from "@/components/why-refurbished"
 
 export default function HomePage() {
   const router = useRouter()
@@ -90,6 +91,14 @@ export default function HomePage() {
             <FamilyGrid products={filteredProducts} />
         )}
       </div>
+
+      {/* --- AÑADIR AQUÍ LA SECCIÓN --- */}
+        {/* Solo la mostramos si no están buscando, para no ensuciar los resultados */}
+        {!searchQuery && (
+          <div className="mt-12">
+            <WhyRefurbished />
+          </div>
+        )}
 
       <Toaster />
     </div>

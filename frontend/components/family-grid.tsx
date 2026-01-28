@@ -52,7 +52,7 @@ export function FamilyGrid({ products }: FamilyGridProps) {
                     <div className="flex items-baseline gap-2 mt-1">
                       
                       {/* Precio Actual */}
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-bold text-emerald-600">
                         {product.min_price_cached 
                           ? `Desde ${product.min_price_cached}€` 
                           : "Sin Stock"}

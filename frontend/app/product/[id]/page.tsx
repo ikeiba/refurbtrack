@@ -216,8 +216,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               onImageClick={() => {
                     // Misma lógica que el botón de compra
                     if (activeOffer) {
-                        console.log("Redirigiendo a Back Market desde la imagen...")
-                        // window.open(activeOffer.url, '_blank')
+                        if (activeOffer?.url) {
+                            window.open(activeOffer.url, '_blank', 'noopener,noreferrer');
+                            console.log("Redirigiendo a Back Market desde la imagen...")
+                        } else {
+                            console.warn("Esta oferta no tiene link");
+                            // Fallback opcional: Ir a la home de Back Market
+                        }
                     }
                 }}
             />
@@ -359,8 +364,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                               <Button 
                                 className="w-full h-11 text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all"
                                 onClick={() => {
-                                    // Aquí iría el link real: window.open(activeOffer.url, '_blank')
-                                    console.log("Redirigiendo a Back Market...")
+                                    if (activeOffer?.url) {
+                                        window.open(activeOffer.url, '_blank', 'noopener,noreferrer');
+                                    } else {
+                                        console.warn("Esta oferta no tiene link");
+                                        // Fallback opcional: Ir a la home de Back Market
+                                    }
                                 }}
                               >
                                 Ver oferta en Back Market

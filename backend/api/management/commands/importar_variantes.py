@@ -5,6 +5,15 @@ from django.utils.text import slugify
 class Command(BaseCommand):
     help = 'Carga inicial de productos, specs y genera la matriz de ofertas vacías con imágenes'
 
+    # 1. MAPEO DE CONDICIONES (Igual que en el scraper)
+    # Fair=12, Good=11, Excellent=10. Premium suele ser 10 también en la URL básica.
+    CONDITION_CODES = {
+        Offer.Condition.FAIR: '12',
+        Offer.Condition.GOOD: '11',
+        Offer.Condition.EXCELLENT: '10',
+        Offer.Condition.PREMIUM: '9' 
+    }
+
     def handle(self, *args, **kwargs):
         self.stdout.write("Iniciando importación masiva y generación de ofertas...")
         
@@ -31,7 +40,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="9b8f4e2c-76b6-4087-80b5-16f698fb491c", storage="256", color="Purple")
         self.insert_spec(product_id=id, uuid="1dbbb866-d798-4cb9-b72e-ac0cee641d0b", storage="256", color="White")
 
-        self.insert_product(name="iPhone 11 Pro", type="Smartphone", image_path="products/iphone-11-pro-green.avif")
+        self.insert_product(name="iPhone 11 Pro", type="Smartphone", image_path="products/iphone-11-pro-midnight-green.avif")
         id = self.get_product_by_name(name="iPhone 11 Pro")[0]
         self.insert_spec(product_id=id, uuid="8a9d4ab9-46f9-406b-8a10-c18a719cda81", storage="64",  color="Space Gray")
         self.insert_spec(product_id=id, uuid="b35cbbcd-fce1-4dc2-92da-00296472aaf4", storage="64",  color="Midnight Green")
@@ -309,16 +318,34 @@ class Command(BaseCommand):
                     battery_options = [False, True]
 
                 for battery_new in battery_options:
-                    Offer.objects.get_or_create(
+
+                    # --- A. CONSTRUCCIÓN DE URL (Igual que el Scraper) ---
+                    base_url = f"https://www.backmarket.es/es-es/p/-/{uuid}"
+                    cond_code = self.CONDITION_CODES.get(condition, '12') # Default 12 (Fair) por seguridad
+                    
+                    final_url = f"{base_url}?l={cond_code}"
+                    
+                    if battery_new:
+                        final_url += "&offerType=7"
+                    
+                    # --- B. CREAR/ACTUALIZAR OFERTA ---
+                    offer, created = Offer.objects.get_or_create(
                         spec=spec,
                         condition=condition,
                         battery_new=battery_new,
                         country='ES',
                         defaults={
                             'current_price': None,
-                            'deal_score': 50
+                            'deal_score': 50,
+                            'url': final_url  # <--- GUARDAMOS LA URL AQUÍ
                         }
                     )
+                    
+                    # IMPORTANTE: Si la oferta ya existía (created=False) pero no tenía URL
+                    # (porque acabamos de añadir el campo), se la actualizamos ahora.
+                    if not created and not offer.url:
+                        offer.url = final_url
+                        offer.save()
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error procesando {uuid}: {e}"))

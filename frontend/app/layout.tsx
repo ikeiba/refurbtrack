@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
+import { Footer } from "@/components/footer" // <--- 1. Importar
 
 
 const _inter = Inter({ subsets: ["latin"] })
@@ -40,6 +41,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body 
       className="font-sans antialiased">{children}
+      {/* 2. Añadir el Footer aquí abajo */}
+      <Footer />
       <Toaster /> {/* <--- ¡ESTO ES LO QUE FALTA! */}
       </body>
     </html>

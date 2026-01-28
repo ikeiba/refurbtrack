@@ -22,7 +22,8 @@ class OfferSerializer(serializers.ModelSerializer):
         model = Offer
         fields = [
             'id', 
-            'condition', 
+            'condition',
+            'url', 
             'battery_new', 
             'current_price', 
             'country', 
@@ -133,7 +134,7 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         fields = [
-            'id', 'product_id', 'name', 'storage', 'color', 
+            'id', 'product_id', 'name', 'storage', 'color', 'url',
             'condition', 'battery_new', 'current_price', 'old_price', 'image'
         ]
 

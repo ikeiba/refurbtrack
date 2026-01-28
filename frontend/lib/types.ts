@@ -36,6 +36,7 @@ export interface Offer {
   battery_new: boolean;
   current_price: number | null;
   last_updated: string | null;
+  url?: string;
 }
 
 //? ESTOS SON TODAS LAS SPECS DENTRO DE UN PRODUCTO
@@ -71,6 +72,7 @@ export interface OfferSummary {
   current_price: number
   old_price?: number // Puede ser null
   image?: string
+  url?: string;
 }
 
 //? ESTO ES LO QUE RECIBIMOS EN LA PÁGINA PRINCIPAL PARA VER EL CARRUSEL

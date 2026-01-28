@@ -14,9 +14,9 @@ export const getConditionStyles = (condition: string) => {
     case "Fair":
       return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
     case "Good":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+      return "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200"
     case "Excellent":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+      return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
     case "Premium":
       return "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200"
     default:
@@ -45,8 +45,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
         
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
-                <Flame className="h-5 w-5 text-orange-600 dark:text-orange-400 fill-orange-600 dark:fill-orange-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900">
+                <Flame className="h-5 w-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600 dark:fill-emerald-400" />
             </div>
             <div>
                 <h2 className="text-xl font-bold tracking-tight text-foreground">Mínimos de 30 Días</h2>
@@ -102,7 +102,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
       className={cn(
         "group relative flex-shrink-0 cursor-pointer snap-start",
         "w-[270px] rounded-xl border bg-card transition-all duration-300",
-        "hover:shadow-lg hover:border-orange-500/30"
+        "hover:shadow-lg hover:border-emerald-500/30"
       )}
     >
         {/* Badge Flotante: CONDICIÓN */}
@@ -208,7 +208,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
         className={cn(
           "group relative flex-shrink-0 cursor-pointer snap-start",
           "w-[270px] rounded-xl border bg-card transition-all duration-300",
-          "hover:shadow-lg hover:border-orange-500/30"
+          "hover:shadow-lg hover:border-emerald-500/30"
         )}
       >
           {/* Badges Superiores (Igual) */}
@@ -241,7 +241,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                
                {/* PORCENTAJE DE AHORRO */}
                {savings > 0 && (
-                  <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-orange-700 bg-orange-100 dark:bg-orange-900/50 dark:text-orange-400 px-2 py-1 rounded-md shadow-sm border border-orange-200/50">
+                  <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/50 dark:text-emerald-400 px-2 py-1 rounded-md shadow-sm border border-emerald-200/50">
                       <TrendingDown className="w-3 h-3 mr-1" />
                       -{savings}%
                   </div>
@@ -272,7 +272,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                                 {previous}€
                             </p>
                         )}
-                        <p className="text-xl font-bold text-orange-600 dark:text-orange-500 leading-none">
+                        <p className="text-xl font-bold text-emerald-600 dark:text-emerald-500 leading-none">
                             {current}€
                         </p>
                   </div>
@@ -280,10 +280,15 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
   
               {/* FILA INFERIOR: Botón Ancho */}
               <Button 
-                  className="w-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn"
+                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn"
                   onClick={(e) => {
                       e.stopPropagation();
-                      console.log("Ir a Back Market");
+                      if (offer?.url) {
+                          window.open(offer.url, '_blank', 'noopener,noreferrer');
+                      } else {
+                          console.warn("Esta oferta no tiene link");
+                          // Fallback opcional: Ir a la home de Back Market
+                      }
                   }}
               >
                   Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover/btn:opacity-100" />

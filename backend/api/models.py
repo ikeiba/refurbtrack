@@ -88,7 +88,8 @@ class Offer(models.Model):
     
     condition = models.CharField(max_length=20, choices=Condition.choices)
     battery_new = models.BooleanField(default=False) # False=Standard, True=New
-    country = models.CharField(max_length=5, default='ES') 
+    country = models.CharField(max_length=5, default='ES')
+    url = models.URLField(max_length=2000, null=True, blank=True)
 
     # CACHÉ NIVEL 3: Datos listos para pintar en la lista de ofertas sin calcular nada
     current_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
