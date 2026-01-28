@@ -1,7 +1,7 @@
 //? BARRA DE ARRIBA DEL TODO (EN TODAS LAS PÁGINAS)
 "use client"
 
-import { Search, Bell, User, Menu, Moon, Sun, ChevronLeft } from "lucide-react" // <--- 1. Añadido ChevronLeft
+import { Search, Bell, User, Menu, Moon, Sun, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -12,24 +12,28 @@ interface HeaderProps {
   selectedCountry: string
   onCountryChange: (country: string) => void
   
-  // 2. Props de búsqueda y menú ahora son OPCIONALES (?) para no romper la ProductPage
+  // Props de búsqueda y menú
   searchQuery?: string
   onSearchChange?: (query: string) => void
   onMenuClick?: () => void
 
-  // 3. Nuevas props para el botón de atrás
+  // Props para el botón de atrás
   showBackButton?: boolean
   onBackClick?: () => void
+
+  // 1. NUEVA PROP: Para decidir si mostramos la barra de búsqueda o no
+  showSearch?: boolean 
 }
 
 export function Header({ 
   selectedCountry, 
   onCountryChange, 
-  searchQuery = "", // Valor por defecto para evitar errores si no se pasa
+  searchQuery = "", 
   onSearchChange, 
   onMenuClick,
-  showBackButton,   // Recibimos la prop
-  onBackClick       // Recibimos la función
+  showBackButton,   
+  onBackClick,
+  showSearch = true // 2. Por defecto TRUE para que se vea en la Home y ProductPage
 }: HeaderProps) {
   
   const [isDark, setIsDark] = useState(false)
@@ -51,13 +55,11 @@ export function Header({
         
         {/* === ZONA IZQUIERDA: MENÚ O VOLVER === */}
         {showBackButton ? (
-           // CASO A: Estamos en producto -> Mostramos FLECHA (visible en móvil y escritorio)
            <Button variant="ghost" size="icon" onClick={onBackClick} className="mr-2">
-             <ChevronLeft className="h-6 w-6" /> {/* Icono un poco más grande */}
+             <ChevronLeft className="h-6 w-6" />
              <span className="sr-only">Go back</span>
            </Button>
         ) : (
-           // CASO B: Estamos en home -> Mostramos MENÚ HAMBURGUESA (solo móvil)
            <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
              <Menu className="h-5 w-5" />
              <span className="sr-only">Toggle menu</span>
@@ -72,22 +74,26 @@ export function Header({
           <span className="hidden text-xl font-semibold tracking-tight sm:inline-block">RefurbTrack</span>
         </div>
 
-        {/* === ZONA CENTRAL: BUSCADOR === */}
-        <div className="flex flex-1 items-center justify-center px-4">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground " />
-            <Input
-              type="search"
-              placeholder="Buscar productos..."
-              className="w-full pl-9 focus-visible:ring-emerald-500"
-              value={searchQuery || ""} // Evitamos valor undefined 
-              // Protegemos la llamada: solo ejecuta si la función existe
-              onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-              // Si no hay función de búsqueda (ProductPage), deshabilitamos visualmente o dejamos funcional solo visual
-              disabled={!onSearchChange} 
-            />
-          </div>
-        </div>
+        {/* === ZONA CENTRAL: BUSCADOR O ESPACIO === */}
+        {/* 3. CONDICIONAL: Si showSearch es true, mostramos el input. Si no, un espaciador */}
+        {showSearch ? (
+            <div className="flex flex-1 items-center justify-center px-4">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground " />
+                <Input
+                  type="search"
+                  placeholder="Buscar productos..."
+                  className="w-full pl-9 focus-visible:ring-emerald-500"
+                  value={searchQuery || ""} 
+                  onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                  disabled={!onSearchChange} 
+                />
+              </div>
+            </div>
+        ) : (
+            // Este div vacío empuja el contenido de la derecha hacia el final
+            <div className="flex-1" />
+        )}
 
         {/* === ZONA DERECHA: ACCIONES === */}
         <div className="flex items-center gap-2">
