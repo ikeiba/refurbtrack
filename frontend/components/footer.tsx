@@ -105,7 +105,7 @@ export function Footer() {
         {/* LÍNEA DIVISORIA Y COPYRIGHT */}
         <div className="border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2024 RefurbTrack. Todos los derechos reservados.
+            © 2026 RefurbTrack. Todos los derechos reservados.
           </p>
           
           {/* REDES SOCIALES */}

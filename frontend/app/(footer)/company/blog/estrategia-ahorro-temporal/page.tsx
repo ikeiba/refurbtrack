@@ -6,7 +6,7 @@ import { Calendar, User, ArrowLeft, Share2, TrendingDown } from 'lucide-react'
 export default function BlogPost() {
   return (
     <div className="space-y-8">
-      <Link href="/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -24,7 +24,7 @@ export default function BlogPost() {
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            22 de enero de 2024
+            22 de enero de 2026
           </span>
           <span>•</span>
           <span className="flex items-center gap-1">
@@ -82,7 +82,7 @@ export default function BlogPost() {
 
         <h2 className="text-2xl font-bold mt-8">3️⃣ Compra Modelos Discontinuados o de Hace 2 Años</h2>
         <p>
-          El iPhone 13 sigue siendo un excelente dispositivo en 2024, pero cuesta menos porque está "viejo" de serie.
+          El iPhone 13 sigue siendo un excelente dispositivo en 2026, pero cuesta menos porque está "viejo" de serie.
         </p>
         <p>
           Ahorros típicos:
@@ -107,7 +107,7 @@ export default function BlogPost() {
           <li><strong>Noches (22:00-06:00):</strong> Ocasionalmente más bajos en tiendas que actualizan nocturnamente</li>
         </ul>
         <p className="mt-4">
-          <strong>Estrategia:</strong> Configura alertas de precio para el modelo que quieres. RefurbTrack (próximamente) te notificará cuando baje.
+          <strong>Estrategia:</strong> Configura alertas de precio para el modelo que quieres. RefurbTrack te notificará cuando baje.
         </p>
 
         <h2 className="text-2xl font-bold mt-8">5️⃣ Compara Entre Marketplaces Constantemente</h2>
@@ -118,15 +118,15 @@ export default function BlogPost() {
           <h4 className="font-bold text-emerald-800 dark:text-emerald-200 mb-3">📊 Ejemplo Real (iPhone 14 Pro, Excelente estado)</h4>
           <ul className="space-y-2 text-sm">
             <li className="flex justify-between">
-              <span>Back Market (Vendedor A)</span>
+              <span>Vendedor A</span>
               <span className="font-bold">€899</span>
             </li>
             <li className="flex justify-between">
-              <span>Amazon Renewed (Vendedor B)</span>
+              <span>Vendedor B</span>
               <span className="font-bold">€949</span>
             </li>
             <li className="flex justify-between">
-              <span>eBay (Subasta - Vendedor C)</span>
+              <span>Subasta - Vendedor C</span>
               <span className="font-bold">€799 (después de pujas)</span>
             </li>
             <li className="flex justify-between text-emerald-700 dark:text-emerald-300 font-bold">
@@ -136,19 +136,19 @@ export default function BlogPost() {
           </ul>
         </div>
 
-        <h2 className="text-2xl font-bold mt-8">Estrategia Combinada: El Plan Perfectof</h2>
+        <h2 className="text-2xl font-bold mt-8">Estrategia Combinada: El Plan Perfecto</h2>
         <p>
           Si quieres maximizar ahorro, combina todas:
         </p>
         <ol className="list-decimal pl-5 space-y-3">
           <li>
-            <strong>Mes 1:</strong> Identifica el modelo que quieres (puede ser 1-2 años más antiguo)
+            <strong>Semana 1:</strong> Identifica el modelo que quieres (puede ser 1-2 años más antiguo)
           </li>
           <li>
-            <strong>Mes 2:</strong> Configura alertas de precio en RefurbTrack para todos los marketplaces
+            <strong>Semana 2:</strong> Configura alertas de precio en RefurbTrack para todos los marketplaces
           </li>
           <li>
-            <strong>Mes 3-5:</strong> Espera el próximo evento (Black Friday, lanzamiento, etc.)
+            <strong>Semana 3-5:</strong> Espera el próximo evento (Black Friday, lanzamiento, etc.)
           </li>
           <li>
             <strong>Evento:</strong> Compara precios en tiempo real entre Back Market, Amazon y eBay
@@ -184,19 +184,10 @@ export default function BlogPost() {
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">¿Fue útil?</p>
-            <div className="flex gap-2 mt-2">
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👍 Sí</button>
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👎 No</button>
-            </div>
-          </div>
-          <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </button>
-        </div>
+        <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <ArrowLeft className="w-4 h-4" />
+        Volver al blog
+        </Link>
       </div>
     </div>
   )

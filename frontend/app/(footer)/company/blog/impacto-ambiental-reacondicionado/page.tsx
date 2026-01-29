@@ -6,7 +6,7 @@ import { Calendar, User, ArrowLeft, Share2, Leaf } from 'lucide-react'
 export default function BlogPost() {
   return (
     <div className="space-y-8">
-      <Link href="/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -24,7 +24,7 @@ export default function BlogPost() {
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            18 de enero de 2024
+            18 de enero de 2026
           </span>
           <span>•</span>
           <span className="flex items-center gap-1">
@@ -218,19 +218,10 @@ export default function BlogPost() {
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">¿Fue útil este artículo?</p>
-            <div className="flex gap-2 mt-2">
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👍 Sí</button>
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👎 No</button>
-            </div>
-          </div>
-          <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </button>
-        </div>
+        <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <ArrowLeft className="w-4 h-4" />
+        Volver al blog
+        </Link>
       </div>
     </div>
   )

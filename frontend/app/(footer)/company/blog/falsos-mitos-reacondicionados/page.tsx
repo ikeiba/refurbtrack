@@ -6,7 +6,7 @@ import { Calendar, User, ArrowLeft, Share2 } from 'lucide-react'
 export default function BlogPost() {
   return (
     <div className="space-y-8">
-      <Link href="/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -24,7 +24,7 @@ export default function BlogPost() {
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            24 de enero de 2024
+            24 de enero de 2026
           </span>
           <span>•</span>
           <span className="flex items-center gap-1">
@@ -51,25 +51,25 @@ export default function BlogPost() {
             <li>Unidades de demostración en tiendas</li>
             <li>Reemplazos bajo garantía del fabricante</li>
             <li>Devoluciones de seguros</li>
+            <li> Ventas de particulares que ya no los quieren</li>
           </ul>
-          <p className="text-sm mt-3 italic">El resto: Reparaciones legítimas de defectos de fábrica.</p>
         </div>
 
         <h2 className="text-2xl font-bold mt-8">Mito #2: "La Batería Está Muerta en 6 Meses"</h2>
         <div className="bg-red-50 dark:bg-red-950/20 p-6 rounded-lg border border-red-200 dark:border-red-800">
           <h4 className="font-bold text-red-800 dark:text-red-200 mb-2">❌ FALSO</h4>
           <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-            La batería es el componente más información. Marketplaces certificados reportan estado exacto:
+            La batería es el componente más importante. Marketplaces certificados reportan estado exacto:
           </p>
           <ul className="space-y-2 text-sm">
             <li>
               <strong>Dispositivo "Excelente" (85-100% batería):</strong> Durará 4-5 años con uso normal
             </li>
             <li>
-              <strong>Dispositivo "Muy Bueno" (75-85%):</strong> Durará 3-4 años
+              <strong>Dispositivo "Muy Bueno" (80-85%):</strong> Durará 3-4 años
             </li>
             <li>
-              <strong>Dispositivo "Bueno" (65-75%):</strong> Durará 2-3 años
+              <strong>Dispositivo "Correcto" (~80%):</strong> Durará 2-3 años
             </li>
           </ul>
           <p className="text-xs italic mt-2 text-red-600 dark:text-red-400">Nota: Una batería al 75% aún tiene AÑOS de vida. Incluso un nuevo dispositivo pierde 5% en el primer año.</p>
@@ -171,7 +171,7 @@ export default function BlogPost() {
           <li>✅ <strong>Seguros y confiables</strong> (testados, garantizados, con período de prueba)</li>
           <li>✅ <strong>Significativamente más baratos</strong> (20-50% descuento común)</li>
           <li>✅ <strong>Mejor para el planeta</strong> (77 kg CO₂ menos por dispositivo)</li>
-          <li>✅ <strong>No es un riesgo</strong> (garantía cubreTodo, devolución fácil)</li>
+          <li>✅ <strong>No es un riesgo</strong> (garantía y devolución fácil)</li>
         </ul>
 
         <p className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
@@ -180,19 +180,10 @@ export default function BlogPost() {
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">¿Fue útil?</p>
-            <div className="flex gap-2 mt-2">
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👍 Sí</button>
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👎 No</button>
-            </div>
-          </div>
-          <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </button>
-        </div>
+        <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <ArrowLeft className="w-4 h-4" />
+        Volver al blog
+        </Link>
       </div>
     </div>
   )

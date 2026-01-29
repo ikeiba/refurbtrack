@@ -23,7 +23,7 @@ export default function AboutPage() {
           <div className="bg-card p-6 rounded-2xl border shadow-sm hover:shadow-md transition-shadow">
               <Search className="w-10 h-10 text-emerald-600 mb-4" />
               <h3 className="font-bold text-xl mb-2">Inteligencia de Mercado</h3>
-              <p className="text-muted-foreground">No somos una tienda, somos un analista. Monitorizamos miles de precios diariamente para detectar las verdaderas oportunidades y evitar falsos descuentos.</p>
+              <p className="text-muted-foreground">No somos una tienda, somos un analista. Monitorizamos precios diariamente para detectar las verdaderas oportunidades y evitar falsos descuentos.</p>
           </div>
           <div className="bg-card p-6 rounded-2xl border shadow-sm hover:shadow-md transition-shadow">
               <Target className="w-10 h-10 text-emerald-600 mb-4" />
@@ -39,6 +39,7 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
+      {/*}
       <section className="bg-emerald-50 dark:bg-emerald-950/20 p-8 rounded-2xl border border-emerald-200 dark:border-emerald-800">
         <h2 className="text-3xl font-bold mb-8 text-center">Impacto hasta la Fecha</h2>
         <div className="grid md:grid-cols-3 gap-8">
@@ -55,14 +56,14 @@ export default function AboutPage() {
             <p className="text-muted-foreground">De residuos evitados estimados</p>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Historia */}
       <section className="space-y-4">
         <h2 className="text-3xl font-bold mb-8">Nuestra Historia</h2>
         <div className="prose prose-stone dark:prose-invert max-w-none space-y-4">
           <p className="text-lg text-muted-foreground leading-relaxed">
-            RefurbTrack comenzó en 2024 como respuesta a un problema que enfrentaban miles de consumidores: ¿cómo saber si un precio de un móvil reacondicionado es realmente una buena oferta? ¿O si es más barato que hace un mes?
+            RefurbTrack comenzó en 2025 como respuesta a un problema que enfrentaban miles de consumidores: ¿cómo saber si un precio de un móvil reacondicionado es realmente una buena oferta? ¿O si es más barato que hace un mes?
           </p>
           <p className="text-lg text-muted-foreground leading-relaxed">
             El mercado de tecnología reacondicionada está en auge, pero es fragmentado. Cada vendedor tiene sus propios precios, sin correlación clara. Los usuarios tenían que visitar múltiples sitios, abrir hojas de cálculo, o simplemente aceptar cualquier precio que encontraran.

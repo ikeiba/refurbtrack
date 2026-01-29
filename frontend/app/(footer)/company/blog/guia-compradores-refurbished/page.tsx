@@ -6,7 +6,7 @@ import { Calendar, User, ArrowLeft, Share2 } from 'lucide-react'
 export default function BlogPost() {
   const post = {
     title: '📖 Guía Completa para Compradores de Dispositivos Reacondicionados',
-    date: '2024-01-15',
+    date: '2026-01-15',
     author: 'Equipo RefurbTrack',
     readTime: '8 min',
     category: 'Educación'
@@ -14,7 +14,7 @@ export default function BlogPost() {
 
   return (
     <div className="space-y-8">
-      <Link href="/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -60,10 +60,10 @@ export default function BlogPost() {
           Aquí hay algunos escenarios comunes:
         </p>
         <ul className="list-disc pl-5 space-y-2">
-          <li><strong>Devoluciones de clientes:</strong> Alguien lo compró, cambió de opinión en el período de devolución, y lo devolvió sin usar (o apenas usado)</li>
-          <li><strong>Stock excedente:</strong> Producto sin vender después de cierto tiempo, completamente nuevo pero etiquetado como refurbished</li>
+          <li><strong>Devoluciones de clientes:</strong> Alguien lo compró, cambió de opinión en el período de devolución, y lo devolvió apenas usado</li>
           <li><strong>Defectos de fábrica:</strong> Se detectó un problema, fue reparado correctamente y probado</li>
           <li><strong>Reemplazo de garantía:</strong> El fabricante lo reacondicionó como parte de un servicio de garantía</li>
+          <li><strong>Cambio de móvil:</strong> Después de un tiempo usado por un cliente, el dispositivo es vendido a una empresa de reacondicionamiento y donde es reacondicionado para su reventa</li>
         </ul>
 
         <h2 className="text-2xl font-bold mt-8">Estados de Reacondicionamiento</h2>
@@ -80,20 +80,21 @@ export default function BlogPost() {
 
           <div>
             <h4 className="font-bold text-emerald-700 dark:text-emerald-300">🟡 MUY BUENO / Excellent</h4>
-            <p className="text-sm text-muted-foreground mt-1">Señales mínimas de uso. Funciona perfectamente. Batería con 75-85% de capacidad.</p>
+            <p className="text-sm text-muted-foreground mt-1">Señales mínimas de uso. Funciona perfectamente. Batería con 80-85% de capacidad.</p>
             <p className="text-xs text-muted-foreground mt-2"><strong>Mejor para:</strong> La mayoría de usuarios. Mejor relación precio-calidad</p>
           </div>
 
           <div>
-            <h4 className="font-bold text-emerald-700 dark:text-emerald-300">🟠 BUENO / Good</h4>
-            <p className="text-sm text-muted-foreground mt-1">Signos evidentes de uso (arañazos, microabrasivos). Funciona perfectamente. Batería con 70-80% de capacidad.</p>
-            <p className="text-xs text-muted-foreground mt-2"><strong>Mejor para:</strong> Presupuesto ajustado, usuarios que no le importa el aspecto</p>
+            <h4 className="font-bold text-emerald-700 dark:text-emerald-300">🟠 CORRECTO / Fair / Aceptable</h4>
+            <p className="text-sm text-muted-foreground mt-1"> Marcas visibles de uso. Funciona perfectamente, pero el aspecto no es pristino. Batería con alrededor del 80% de capacidad.</p>
+            <p className="text-xs text-muted-foreground mt-2"><strong>Mejor para:</strong> Máximo ahorro, usuarios con uso intensivo</p>
           </div>
 
-          <div>
-            <h4 className="font-bold text-emerald-700 dark:text-emerald-300">🔴 CORRECTO / Fair / Aceptable</h4>
-            <p className="text-sm text-muted-foreground mt-1">Múltiples marcas de uso. Funciona correctamente, pero el aspecto no es pristino. Batería con 60-70% de capacidad.</p>
-            <p className="text-xs text-muted-foreground mt-2"><strong>Mejor para:</strong> Máximo ahorro, usuarios con uso intensivo</p>
+
+          <div className="bg-blue-50 dark:bg-blue-950/20 border-l-4 border-blue-500 p-4 rounded mt-4">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <strong>💡 Consejo:</strong> Para más información sobre clasificaciones, consulta el marketplace donde planeas comprar. Por ejemplo: <a href="https://www.backmarket.es/es-es/quality" className="underline hover:text-blue-800 dark:hover:text-blue-200">Back Market - Clasificaciones de Calidad</a>
+          </p>
           </div>
         </div>
 
@@ -119,7 +120,8 @@ export default function BlogPost() {
             <strong>Accesorios incluidos:</strong> ¿Viene con caja original? ¿Cable de carga? Esto afecta el valor general
           </li>
         </ol>
-
+        
+        {/*
         <h2 className="text-2xl font-bold mt-8">¿Cuánto Puedes Ahorrar?</h2>
         <p>
           Los ahorros varían, pero estos son porcentajes típicos para dispositivos reacondicionados comparados con nuevos:
@@ -144,7 +146,7 @@ export default function BlogPost() {
               <span className="font-bold">40-60% descuento</span>
             </li>
           </ul>
-        </div>
+        </div> */}
 
         <h2 className="text-2xl font-bold mt-8">Preguntas que Debes Hacer</h2>
         <ul className="list-disc pl-5 space-y-2">
@@ -178,19 +180,10 @@ export default function BlogPost() {
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Fue útil este artículo?</p>
-            <div className="flex gap-2 mt-2">
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👍 Sí</button>
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👎 No</button>
-            </div>
-          </div>
-          <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </button>
-        </div>
+        <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <ArrowLeft className="w-4 h-4" />
+        Volver al blog
+        </Link>
       </div>
     </div>
   )

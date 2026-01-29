@@ -6,7 +6,7 @@ import { Calendar, User, ArrowLeft, Share2 } from 'lucide-react'
 export default function BlogPost() {
   return (
     <div className="space-y-8">
-      <Link href="/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -24,7 +24,7 @@ export default function BlogPost() {
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            20 de enero de 2024
+            20 de enero de 2026
           </span>
           <span>•</span>
           <span className="flex items-center gap-1">
@@ -48,7 +48,7 @@ export default function BlogPost() {
             <li>Garantía estándar: 12 meses</li>
             <li>Retorno: 30 días sin preguntas</li>
             <li>Comunidad: Reseñas verificadas de compradores reales</li>
-            <li>Presencia: Europa, USA, Japón y Asia</li>
+            <li>Presencia: Europa, USA y Japón</li>
           </ul>
         </div>
 
@@ -58,7 +58,7 @@ export default function BlogPost() {
           <li><strong>Transparencia:</strong> Fotos claras de daños, estado de batería exacto</li>
           <li><strong>Reseñas verificadas:</strong> Solo compradores reales pueden calificar</li>
           <li><strong>Precios competitivos:</strong> Muchos vendedores crean presión a la baja</li>
-          <li><strong>Garantía generosa:</strong> 12 meses es estándar, algunos ofrecen más</li>
+          <li><strong>Garantía generosa:</strong> 12 meses es estándar, muchas veces llegando hasta los 24</li>
         </ul>
 
         <h3 className="text-xl font-bold mt-6">Desventajas</h3>
@@ -102,7 +102,7 @@ export default function BlogPost() {
         </ul>
 
         <h3 className="text-xl font-bold mt-6">Mejor para</h3>
-        <p className="italic">Usuarios de Amazon Prime que valoran velocidad de envío y protección robusta. Si Amazon Prime ya tienes, suele ser más rápido.</p>
+        <p className="italic">Usuarios de Amazon Prime que valoran velocidad de envío y protección robusta. Si ya tienes Amazon Prime, suele ser más rápido.</p>
 
         <h2 className="text-2xl font-bold mt-8">eBay Refurbished: El Mercado de Masas</h2>
         <div className="bg-red-50 dark:bg-red-950/20 p-6 rounded-lg border border-red-200 dark:border-red-800">
@@ -223,28 +223,15 @@ export default function BlogPost() {
 
         <h2 className="text-2xl font-bold mt-8">Nuestra Recomendación</h2>
         <p>
-          <strong>RefurbTrack</strong> hace exactamente esto: compara precios en todos los marketplaces principales para que veas en un vistazo dónde está la mejor oferta. Porque en muchos casos, el mismo modelo está disponible a precios distintos en Back Market, Amazon y eBay. Nosotros hacemos el trabajo de verificar dónde está más barato, verificamos estados, garantías y velocidades de envío.
-        </p>
-
-        <p>
-          La respuesta correcta es: <strong>el que tenga el mejor precio para el producto específico que quieres</strong>. Y eso cambiará de un producto a otro.
+          <strong>RefurbTrack</strong> hace exactamente esto: compara precios en todos los marketplaces principales para que veas en un vistazo dónde está la mejor oferta. Porque en muchos casos, el mismo modelo está disponible a precios distintos en Back Market, Amazon y eBay. Nosotros hacemos el trabajo de verificar dónde está más barato y en qué estados.
         </p>
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">¿Fue útil?</p>
-            <div className="flex gap-2 mt-2">
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👍 Sí</button>
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👎 No</button>
-            </div>
-          </div>
-          <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </button>
-        </div>
+        <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <ArrowLeft className="w-4 h-4" />
+        Volver al blog
+        </Link>
       </div>
     </div>
   )

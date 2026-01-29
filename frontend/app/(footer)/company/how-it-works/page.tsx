@@ -5,7 +5,7 @@ export default function HowItWorksPage() {
     {
       icon: Search,
       title: "1. Rastreo Continuo",
-      desc: "Nuestro algoritmo escanea miles de fichas de producto cada hora en busca de cambios de precio y stock en los principales reacondicionadores verificados (Back Market, Amazon Renewed, eBay Refurbished, etc.)."
+      desc: "Escaneamos fichas de producto a diario en busca de cambios de precio y stock en los principales reacondicionadores verificados (Back Market, Amazon Renewed, eBay Refurbished, etc.)."
     },
     {
       icon: BarChart3,
@@ -26,18 +26,13 @@ export default function HowItWorksPage() {
       icon: Truck,
       title: "5. Envío y Garantía",
       desc: "El vendedor gestiona el envío y te ofrece garantía legal (mínimo 12 meses). Disfrutas de la protección total del marketplace mientras que nosotros seguimos rastreando el mercado."
-    },
-    {
-      icon: Zap,
-      title: "6. Ahorro Documentado",
-      desc: "Visualiza cuánto ahorraste en cada compra y qué impacto ambiental generaste (CO2 evitado, residuos electrónicos prevenidos, agua ahorrada)."
     }
   ]
 
   const faqs = [
     {
       q: "¿Por qué el precio en RefurbTrack es diferente al de la tienda?",
-      a: "Los precios cambian constantemente. Si ves una diferencia pequeña, probablemente se debe a que RefurbTrack actualiza cada 1-2 horas, mientras que puede haber cambios en tiempo real. Siempre verifica el precio final en la página del vendedor antes de comprar."
+      a: "Los precios cambian constantemente. Si ves una diferencia pequeña, probablemente se debe a que RefurbTrack actualiza cada cierto tiempo, mientras que puede haber cambios en tiempo real (la actualización en tiempo real es imposible y sería demasiado intrusiva para nuestros partners). Siempre verifica el precio final en la página del vendedor antes de comprar."
     },
     {
       q: "¿RefurbTrack vende productos directamente?",
@@ -57,7 +52,7 @@ export default function HowItWorksPage() {
     },
     {
       q: "¿Cuánto tiempo tardan en actualizar los precios?",
-      a: "Actualizamos principalmente cada 1-2 horas, aunque algunos datos pueden tardar más. Si necesitas el precio exacto en tiempo real, accede directamente al sitio del vendedor."
+      a: "Actualizamos todos los precios diariamente, y algunos más frecuentemente. Nuestro objetivo no es ofrecer precios en tiempo real, si no una comparación a lo largo del tiempo. Si necesitas el precio exacto en tiempo real, accede directamente al sitio del vendedor."
     }
   ]
 
@@ -67,7 +62,7 @@ export default function HowItWorksPage() {
       <div className="text-center space-y-4 mb-8">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Cómo Funciona RefurbTrack</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Un proceso simple de 6 pasos para encontrar las mejores ofertas en tecnología reacondicionada, verificada y con garantía.
+          Un proceso simple de 5 pasos para encontrar las mejores ofertas en tecnología reacondicionada, verificada y con garantía.
         </p>
       </div>
       
@@ -92,6 +87,7 @@ export default function HowItWorksPage() {
       </div>
 
       {/* Visualización del flujo */}
+      {/*
       <div className="bg-muted/50 p-8 rounded-2xl border my-8">
         <h3 className="font-bold text-lg mb-6 text-center">El Flujo Completo</h3>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
@@ -115,7 +111,7 @@ export default function HowItWorksPage() {
             <p className="font-medium">Recibe + Garantía</p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Características principales */}
       <section className="space-y-4">
@@ -128,7 +124,7 @@ export default function HowItWorksPage() {
               </div>
               <div>
                 <h4 className="font-bold mb-2">Historial de Precios</h4>
-                <p className="text-sm text-muted-foreground">Gráficos de 30, 60 y 90 días para detectar tendencias y evitar comprar en picos de precio.</p>
+                <p className="text-sm text-muted-foreground">Gráficos de 30 días para detectar tendencias y evitar comprar en picos de precio.</p>
               </div>
             </div>
           </div>
@@ -139,7 +135,7 @@ export default function HowItWorksPage() {
               </div>
               <div>
                 <h4 className="font-bold mb-2">Alertas de Precio</h4>
-                <p className="text-sm text-muted-foreground">Recibe notificaciones cuando el precio cae por debajo de tu objetivo (próximamente).</p>
+                <p className="text-sm text-muted-foreground">Recibe notificaciones cuando el precio cae por debajo de tu objetivos</p>
               </div>
             </div>
           </div>
@@ -161,7 +157,7 @@ export default function HowItWorksPage() {
               </div>
               <div>
                 <h4 className="font-bold mb-2">Impacto Ambiental</h4>
-                <p className="text-sm text-muted-foreground">Visualiza el CO2, agua y residuos que evitas con cada compra reacondicionada.</p>
+                <p className="text-sm text-muted-foreground">Reflexión sobre el CO2, agua y residuos que evitas con cada compra reacondicionada.</p>
               </div>
             </div>
           </div>

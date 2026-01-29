@@ -6,7 +6,7 @@ import { Calendar, User, ArrowLeft, Share2, TrendingUp } from 'lucide-react'
 export default function BlogPost() {
   return (
     <div className="space-y-8">
-      <Link href="/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -19,12 +19,12 @@ export default function BlogPost() {
           <span className="text-xs text-muted-foreground">9 min</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-          📊 Tendencias del Mercado Refurbished 2024: Crecimiento y Oportunidades
+          📊 Tendencias del Mercado Refurbished 2026: Crecimiento y Oportunidades
         </h1>
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            26 de enero de 2024
+            26 de enero de 2026
           </span>
           <span>•</span>
           <span className="flex items-center gap-1">
@@ -108,34 +108,7 @@ export default function BlogPost() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold mt-8">2️⃣ Cambios en Precios a Lo Largo de 2024</h2>
-        <p>
-          Análisis de tendencias mensuales de RefurbTrack:
-        </p>
-
-        <div className="bg-muted/50 p-6 rounded-lg border">
-          <h4 className="font-bold mb-4">Predicciones de Precios (vs Nuevo)</h4>
-          <ul className="space-y-2 text-sm">
-            <li className="flex justify-between">
-              <span>Q1 2024 (Ahora)</span>
-              <span className="font-bold">20-30% descuento promedio</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Q2 2024 (Primavera)</span>
-              <span className="font-bold">18-28% (posible alza antes de lanzamiento)</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Q3 2024 (Verano)</span>
-              <span className="font-bold">22-35% (Black Friday anticipado)</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Q4 2024 (Black Friday)</span>
-              <span className="font-bold">28-45% (máximo descuento esperado)</span>
-            </li>
-          </ul>
-        </div>
-
-        <h2 className="text-2xl font-bold mt-8">3️⃣ Innovaciones en Marketplaces</h2>
+        <h2 className="text-2xl font-bold mt-8">2️⃣ Innovaciones en Marketplaces</h2>
         <h3 className="text-xl font-bold mt-6">✅ Tendencias Positivas</h3>
         <ul className="list-disc pl-5 space-y-2">
           <li><strong>Garantías más largas:</strong> Algunos vendedores ofrecen ya 18-24 meses (antes 12 meses estándar)</li>
@@ -145,18 +118,7 @@ export default function BlogPost() {
           <li><strong>IA para matching:</strong> Sistemas de recomendación personalizados basados en historial</li>
         </ul>
 
-        <h2 className="text-2xl font-bold mt-8">4️⃣ Impacto Ambiental: Narrativa Creciente</h2>
-        <p>
-          El análisis de RefurbTrack de 10,000+ búsquedas muestra que:
-        </p>
-        <ul className="list-disc pl-5 space-y-2">
-          <li>37% de compradores menciona "impacto ambiental" como razón</li>
-          <li>Crecimiento de búsquedas con "sostenible" +45% YoY</li>
-          <li>Millennials y Gen Z comprenden mayor proporción (58% vs 35% Gen X)</li>
-          <li>Empresas B2B comenzando a preferir reacondicionados para equipos corporativos</li>
-        </ul>
-
-        <h2 className="text-2xl font-bold mt-8">5️⃣ Desafíos Actuales del Mercado</h2>
+        <h2 className="text-2xl font-bold mt-8">3️⃣ Desafíos Actuales del Mercado</h2>
         <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 space-y-3">
           <div>
             <h4 className="font-bold text-yellow-800 dark:text-yellow-200">⚠️ Fragmentación Persistente</h4>
@@ -178,7 +140,7 @@ export default function BlogPost() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold mt-8">6️⃣ Oportunidades para el Consumidor</h2>
+        <h2 className="text-2xl font-bold mt-8">4️⃣ Oportunidades para el Consumidor</h2>
         <h3 className="text-xl font-bold mt-6">🎯 Aprovecha Estas Tendencias</h3>
         <ol className="list-decimal pl-5 space-y-3">
           <li>
@@ -188,27 +150,12 @@ export default function BlogPost() {
             <strong>Participa en nuevos programas:</strong> Back Market y otros lanzan rewards programs regularmente
           </li>
           <li>
-            <strong>Invierte en MacBooks M1/M2:</strong> Los precios bajaron 35% en Q1 2024 (tendencia al alza en productividad Apple)
-          </li>
-          <li>
             <strong>Compra antes de lanzamientos:</strong> Los precios suben 5-10% antes de eventos Apple (anticipación de descenso post-lanzamiento)
           </li>
           <li>
             <strong>Usa comparadores:</strong> La fragmentación de precios es cada vez mayor. Herramientas como RefurbTrack son clave
           </li>
         </ol>
-
-        <h2 className="text-2xl font-bold mt-8">7️⃣ Predicciones para H2 2024</h2>
-        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-3">🔮 Qué Esperamos</h4>
-          <ul className="space-y-2 text-sm list-disc pl-5 text-blue-700 dark:text-blue-300">
-            <li><strong>Lanzamiento de iPhone 16:</strong> Precios de iPhone 15 caerán 20-30% adicionales</li>
-            <li><strong>Crecimiento de IA Marketplace:</strong> Más sitios implementarán chatbots para recomendaciones</li>
-            <li><strong>Programas corporativos:</strong> Más empresas comprarán reacondicionados para equipos</li>
-            <li><strong>Regulación:</strong> UE podría exigir etiquetas estándar de reacondicionamiento</li>
-            <li><strong>Integración de sostenibilidad:</strong> Será más fácil ver impacto ambiental en punto de venta</li>
-          </ul>
-        </div>
 
         <h2 className="text-2xl font-bold mt-8">Conclusión</h2>
         <p>
@@ -223,24 +170,15 @@ export default function BlogPost() {
         </ul>
 
         <p className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-          <strong>Consejo final:</strong> 2024 es un excelente año para comprar reacondicionado. Los precios están bajos, la competencia es alta, y la calidad y protecciones nunca han sido mejores. Usa herramientas como RefurbTrack para encontrar la mejor oferta y aprovecha esta tendencia al alza.
+          <strong>Consejo final:</strong> 2026 es un excelente año para comprar reacondicionado. Los precios están bajos, la competencia es alta, y la calidad y protecciones nunca han sido mejores. Usa herramientas como RefurbTrack para encontrar la mejor oferta y aprovecha esta tendencia al alza.
         </p>
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">¿Fue útil?</p>
-            <div className="flex gap-2 mt-2">
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👍 Sí</button>
-              <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors text-sm">👎 No</button>
-            </div>
-          </div>
-          <button className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </button>
-        </div>
+        <Link href="/company/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <ArrowLeft className="w-4 h-4" />
+        Volver al blog
+        </Link>
       </div>
     </div>
   )
