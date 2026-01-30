@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { Footer } from "@/components/footer" // <--- 1. Importar
+import { AuthProvider } from "@/context/auth-context" // <--- Importar el AuthProvider
 
 
 const _inter = Inter({ subsets: ["latin"] })
@@ -39,11 +40,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body 
-      className="font-sans antialiased">{children}
-      {/* 2. Añadir el Footer aquí abajo */}
-      <Footer />
-      <Toaster /> {/* <--- ¡ESTO ES LO QUE FALTA! */}
+      <body className={`${_inter.className} font-sans antialiased`}>
+        <AuthProvider>
+          {children}
+          <Footer />
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )

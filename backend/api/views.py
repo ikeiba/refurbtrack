@@ -1,4 +1,4 @@
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, permissions
 from rest_framework.response import Response
 from django.db.models import Prefetch
 from django.utils import timezone
@@ -12,8 +12,13 @@ from .serializers import (
     ProductListSerializer, 
     ProductDetailSerializer, 
     PriceHistorySerializer,
-    HistoricalLowOfferSerializer
+    HistoricalLowOfferSerializer, 
+    UserRegistrationSerializer
 )
+
+from django.contrib.auth.models import User
+from rest_framework.permissions import AllowAny
+
 
 # --- 1. VIEWSET PRINCIPAL (Catálogo) ---
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -78,9 +83,25 @@ class OfferHistoryView(generics.ListAPIView):
         return queryset
     
 
-class AlertCreateView(generics.CreateAPIView):
-    queryset = Alert.objects.all()
+# CAMBIO IMPORTANTE: Usamos ListCreateAPIView en lugar de CreateAPIView
+class AlertListCreateView(generics.ListCreateAPIView):
     serializer_class = AlertSerializer
+    # Mantenemos AllowAny para que el POST funcione desde el modal (invitados)
+    # PERO filtramos en get_queryset quién ve qué.
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        """
+        Lógica de seguridad:
+        - Si hay usuario logueado -> Devuelve SUS alertas.
+        - Si es anónimo -> Devuelve lista vacía (pero no falla, devuelve []).
+        """
+        user = self.request.user
+        if user.is_authenticated:
+            return Alert.objects.filter(subscriber__email=user.email).order_by('-id')
+        
+        # Si es GET y no está logueado, devolvemos nada
+        return Alert.objects.none()
 
 
 # --- NUEVA CLASE PARA EL CARRUSEL (Estilo Class-Based) ---
@@ -136,3 +157,20 @@ def get_historical_low_offers(request):
     return Response(data)
 
 '''
+
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [AllowAny] # Cualquiera puede registrarse sin estar logueado
+
+class AlertDetailView(generics.RetrieveDestroyAPIView):
+    serializer_class = AlertSerializer
+    # Solo usuarios logueados pueden borrar
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Seguridad: Filtramos para que un usuario solo pueda 
+        acceder o borrar alertas vinculadas a su email.
+        """
+        return Alert.objects.filter(subscriber__email=self.request.user.email)

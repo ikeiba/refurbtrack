@@ -2,7 +2,7 @@
 import { ProductSummary, AlertData, OfferSummary } from "@/lib/types";
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
-const API_URL = "http://127.0.0.1:8000/api"; 
+export const API_URL = "http://127.0.0.1:8000/api"; 
 
 
 
@@ -74,4 +74,30 @@ export const getHistoricalLowOffers = async (): Promise<OfferSummary[]> => {
     console.error(error)
     return []
   }
+}
+
+// 1. OBTENER MIS ALERTAS
+export async function getUserAlerts(token: string) {
+  const res = await fetch(`${API_URL}/alerts/`, {
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}` // <--- CLAVE: Enviamos el token
+    },
+  })
+
+  if (!res.ok) throw new Error("Error al cargar alertas")
+  return res.json()
+}
+
+// 2. BORRAR ALERTA
+export async function deleteAlert(id: number, token: string) {
+  const res = await fetch(`${API_URL}/alerts/${id}/`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    },
+  })
+
+  if (!res.ok) throw new Error("Error al eliminar alerta")
+  return true
 }

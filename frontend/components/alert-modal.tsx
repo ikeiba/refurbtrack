@@ -13,6 +13,7 @@ import { cn, getColorHex } from "@/lib/utils" // <--- Importamos getColorHex
 import { createAlert } from "@/services/api"
 import type { ProductDetail } from "@/lib/types"
 import { t } from "@/lib/translations"
+import { useAuth } from "@/context/auth-context" // <--- 1. Importar el cerebro
 
 
 interface AlertModalProps {
@@ -29,6 +30,7 @@ interface AlertModalProps {
 }
 
 export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertModalProps) {
+  const { user, isAuthenticated } = useAuth() // <--- 2. Sacar el usuario
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
 
@@ -59,8 +61,15 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
       setAnyColor(false)
       setAnyCondition(false)
       setAnyBattery(false)
+
+      // CAMBIO AQUÍ:
+      if (isAuthenticated && user) {
+        setEmail(user) // Si está logueado, ponemos su email
+      } else {
+        setEmail("")   // Si no, lo limpiamos
+      }
     }
-  }, [isOpen, currentConfig])
+  }, [isOpen, currentConfig, isAuthenticated, user])
 
   // Helpers
   const toggleSelection = (list: string[], item: string, setList: (l: string[]) => void) => {
@@ -191,7 +200,16 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                     placeholder="hola@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    // CAMBIO AQUÍ: Si está autenticado, deshabilitamos el campo y le bajamos la opacidad
+                    disabled={isAuthenticated} 
+                    className={cn(isAuthenticated && "bg-muted text-muted-foreground opacity-100 cursor-not-allowed")}
                 />
+                {/* Opcional: Mensaje pequeño para que sepa por qué está bloqueado */}
+                {/*
+                {isAuthenticated && (
+                  <p className="text-xs text-muted-foreground">Sesión iniciada como {user}</p>
+                )}
+                */}
             </div>
             {/* Precio con símbolo € absoluto */}
             <div className="space-y-2">

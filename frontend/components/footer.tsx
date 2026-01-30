@@ -109,12 +109,12 @@ export function Footer() {
           
           <div className="flex gap-8">
             <p className="text-sm text-muted-foreground">
-              Podemos ganar una comisión cuando sigues los enlaces para hacer una compra.
+              Podemos ganar una comisión cuando entras en los enlaces para hacer una compra.
               Haz clic {" "}
               <a href="/company/how-it-works" className="text-emerald-600 hover:underline">
               aquí 
               </a>
-              {" "} para saber más sobre cómo ganamos dinero. 
+              {" "} para saber con mas detalle cómo ganamos dinero. 
             </p>
           </div>
           {/* REDES SOCIALES */}

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber
+from django.contrib.auth.models import User
+from rest_framework.validators import UniqueValidator
 
 # --- 1. HISTÓRICO (Para la Gráfica) ---
 class PriceHistorySerializer(serializers.ModelSerializer):
@@ -85,16 +87,24 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 # backend/api/serializers.py
 
 class AlertSerializer(serializers.ModelSerializer):
-    # 1. DECLARAMOS LOS CAMPOS QUE NO EXISTEN EN EL MODELO
+    # Campos de escritura (Input)
     product_id = serializers.IntegerField(write_only=True)
-    email = serializers.EmailField(write_only=True) # <--- ¡ESTO ES LO QUE FALTABA!
+    email = serializers.EmailField(write_only=True)
+    
+    # Campos de lectura (Output para el Dashboard)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    # AÑADIDO: Devolvemos el ID real del producto para poder hacer links
+    product = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Alert
         fields = [
+            'id',
             'email',            # Ahora sí funciona porque lo declaramos arriba
             'price_threshold', 
-            'product_id', 
+            'product_id',   # Entrada (Write)
+            'product',      # Salida (Read) -> ID del producto
+            'product_name', # Salida (Read) -> Nombre 
             'target_colors', 
             'target_storages', 
             'target_conditions', 
@@ -156,3 +166,25 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
             return str(img_field)
             
         return None
+    
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    # 1. Hacemos el email OBLIGATORIO y ÚNICO (Django por defecto no lo exige)
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        # 2. Quitamos 'username' de aquí. El frontend no lo envía.
+        fields = ('email', 'password') 
+
+    def create(self, validated_data):
+        # 3. TRUCO: Usamos el email como username
+        user = User.objects.create_user(
+            username=validated_data['email'], 
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user

@@ -41,3 +41,16 @@ export const CHART_COLORS = [
     "#d97706", // Naranja
     "#7c3aed", // Violeta (Reserva)
 ];
+
+// Interfaz para mostrar la alerta en el Dashboard
+export interface AlertItem {
+  id: number
+  product_id: number
+  price_threshold: number
+  target_colors: string[]
+  target_storages: string[]
+  target_conditions: string[]
+  battery_new: boolean | null
+  product_name?: string     // Lo necesitaremos (si el backend no lo manda, habrá que ajustarlo o hacer trampa visual)
+  product_image?: string
+}

@@ -1,27 +1,36 @@
-//? BARRA DE ARRIBA DEL TODO (EN TODAS LAS PÁGINAS)
 "use client"
 
-import { Search, Bell, User, Menu, Moon, Sun, ChevronLeft } from "lucide-react"
+import { Search, Bell, User, Menu, Moon, Sun, ChevronLeft, LogOut, LayoutDashboard, LogIn, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip"
 import { countries } from "@/lib/mock-data"
 import { useEffect, useState } from "react"
+import { useAuth } from "@/context/auth-context" // <--- 1. Importamos el cerebro
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   selectedCountry: string
   onCountryChange: (country: string) => void
-  
-  // Props de búsqueda y menú
   searchQuery?: string
   onSearchChange?: (query: string) => void
   onMenuClick?: () => void
-
-  // Props para el botón de atrás
   showBackButton?: boolean
   onBackClick?: () => void
-
-  // 1. NUEVA PROP: Para decidir si mostramos la barra de búsqueda o no
   showSearch?: boolean 
 }
 
@@ -33,10 +42,13 @@ export function Header({
   onMenuClick,
   showBackButton,   
   onBackClick,
-  showSearch = true // 2. Por defecto TRUE para que se vea en la Home y ProductPage
+  showSearch = true 
 }: HeaderProps) {
   
   const [isDark, setIsDark] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth() // <--- 2. Sacamos el estado del usuario
+  const router = useRouter()
+  
   const currentCountry = countries.find((c) => c.code === selectedCountry)
 
   useEffect(() => {
@@ -53,7 +65,7 @@ export function Header({
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center gap-4 px-4 lg:px-6">
         
-        {/* === ZONA IZQUIERDA: MENÚ O VOLVER === */}
+        {/* === ZONA IZQUIERDA === */}
         {showBackButton ? (
            <Button variant="ghost" size="icon" onClick={onBackClick} className="mr-2">
              <ChevronLeft className="h-6 w-6" />
@@ -66,16 +78,15 @@ export function Header({
            </Button>
         )}
 
-        {/* LOGO */}
-        <div className="flex items-center gap-2">
+        {/* LOGO (Link a home para reiniciar) */}
+        <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-primary-foreground">
             <span className="text-sm font-bold text-white">R</span>
           </div>
           <span className="hidden text-xl font-semibold tracking-tight sm:inline-block">RefurbTrack</span>
-        </div>
+        </Link>
 
-        {/* === ZONA CENTRAL: BUSCADOR O ESPACIO === */}
-        {/* 3. CONDICIONAL: Si showSearch es true, mostramos el input. Si no, un espaciador */}
+        {/* === ZONA CENTRAL === */}
         {showSearch ? (
             <div className="flex flex-1 items-center justify-center px-4">
               <div className="relative w-full max-w-md">
@@ -91,15 +102,16 @@ export function Header({
               </div>
             </div>
         ) : (
-            // Este div vacío empuja el contenido de la derecha hacia el final
             <div className="flex-1" />
         )}
 
-        {/* === ZONA DERECHA: ACCIONES === */}
+        {/* === ZONA DERECHA === */}
         <div className="flex items-center gap-2">
+          
+          {/* Selector de País */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+              <Button variant="outline" size="sm" className="gap-2 bg-transparent border-transparent hover:border-border">
                 <span className="text-base">{currentCountry?.flag}</span>
                 <span className="hidden sm:inline">{currentCountry?.code}</span>
               </Button>
@@ -114,23 +126,98 @@ export function Header({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Tema Oscuro/Claro */}
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             <span className="sr-only">Toggle theme</span>
           </Button>
 
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-medium text-white">
-              3
-            </span>
-            <span className="sr-only">Notifications</span>
-          </Button>
+          {/* CAMPANA DE NOTIFICACIONES */}
+          {isAuthenticated ? (
+            // CASO A: LOGUEADO -> Ve notificaciones (Simulado)
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5" />
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-medium text-white">
+                        2
+                        </span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                    <DropdownMenuLabel>Mis Alertas</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                        <p>¡El iPhone 13 ha bajado de precio!</p>
+                        {/* Aquí conectaremos las notificaciones reales más adelante */}
+                    </div>
+                </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            // CASO B: INVITADO -> Tooltip invitando a entrar
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-muted-foreground/60">
+                            <Bell className="h-5 w-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Inicia sesión para gestionar alertas</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+          )}
 
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-            <span className="sr-only">User menu</span>
-          </Button>
+          {/* MENÚ DE USUARIO */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className={isAuthenticated ? "text-emerald-600" : ""}>
+                <User className="h-5 w-5" />
+                <span className="sr-only">User menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {isAuthenticated ? (
+                <>
+                    {/* MENÚ PARA USUARIO REGISTRADO */}
+                    <DropdownMenuLabel>
+                        <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">Mi Cuenta</p>
+                            <p className="text-xs leading-none text-muted-foreground truncate">
+                                {user}
+                            </p>
+                        </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        <span>Mi Panel</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Cerrar Sesión</span>
+                    </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                    {/* MENÚ PARA INVITADO */}
+                    <DropdownMenuLabel>Acceso Usuarios</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/auth/login")}>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        <span>Iniciar Sesión</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/auth/register")}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        <span>Registrarse</span>
+                    </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
         </div>
       </div>
     </header>
