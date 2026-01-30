@@ -72,7 +72,7 @@ export default function AboutPage() {
             Así nació la idea: crear un comparador independiente que aggregase datos de todos los principales reacondicionadores (Back Market, Amazon Renewed, eBay Refurbished, etc.) y brindase inteligencia de precios a los usuarios de forma gratuita y accesible.
           </p>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Pero no queríamos solo un comparador de precios más. Queríamos alinearnos con la economía circular, mostrar el impacto ambiental real, y mantener la máxima transparencia sobre cómo ganamos dinero (comisiones de afiliación, sin anuncios intrusivos).
+            Pero no queríamos solo un comparador de precios más. Queríamos alinearnos con la economía circular, mostrar el impacto ambiental real, y mantener la máxima transparencia sobre cómo podemos ganar dinero (comisiones de afiliación, sin anuncios intrusivos).
           </p>
         </div>
       </section>
@@ -143,7 +143,7 @@ export default function AboutPage() {
         </p>
         <div className="bg-background p-4 rounded border border-border mb-4">
           <p className="text-muted-foreground text-sm">
-            <strong>¿Cómo ganamos dinero?</strong> Nuestra plataforma se sostiene gracias a acuerdos de afiliación con marketplaces verificados (Back Market, Amazon Associates, etc.). Cuando encuentras un producto que te gusta y decides comprarlo a través de nuestros enlaces, podemos recibir una pequeña comisión sin coste adicional para ti. Esto nos permite mantener la tecnología libre de anuncios intrusivos y 100% enfocada en el usuario.
+            <strong>¿Cómo podemos ganar dinero?</strong> Nuestra plataforma se sostiene gracias a acuerdos de afiliación con marketplaces verificados. Cuando encuentras un producto que te gusta y decides comprarlo a través de nuestros enlaces, podemos recibir una pequeña comisión sin coste adicional para ti. Esto nos permite mantener la tecnología libre de anuncios intrusivos y 100% enfocada en el usuario.
           </p>
         </div>
         <p className="text-muted-foreground text-sm">

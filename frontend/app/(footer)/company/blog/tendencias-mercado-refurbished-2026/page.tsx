@@ -114,7 +114,6 @@ export default function BlogPost() {
           <li><strong>Garantías más largas:</strong> Algunos vendedores ofrecen ya 18-24 meses (antes 12 meses estándar)</li>
           <li><strong>Períodos de prueba extendidos:</strong> 60 días se vuelve más común</li>
           <li><strong>Batería certificada:</strong> Reportes de % exacto de capacidad (mejora radical en transparencia)</li>
-          <li><strong>Programas de fidelización:</strong> Back Market lanza programa de recompensas</li>
           <li><strong>IA para matching:</strong> Sistemas de recomendación personalizados basados en historial</li>
         </ul>
 

@@ -41,11 +41,6 @@ export default function CookiesPage() {
         <div className="border-l-4 border-emerald-500 pl-4 bg-emerald-50 dark:bg-emerald-900/10 p-4">
           <h4 className="font-bold text-lg mb-2">💰 Cookies de Marketing/Afiliación</h4>
           <p className="mb-2"><strong>Estas cookies son cruciales para nuestro modelo de negocio.</strong> Cuando haces clic en una oferta hacia una tienda colaboradora, se almacena una cookie para rastrear la referencia.</p>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li><strong>Awin:</strong> Red de afiliación para Back Market (awc, aw[números], etc.)</li>
-            <li><strong>Amazon Associates:</strong> Tag de afiliación de Amazon</li>
-            <li><strong>Impact/ShareASale:</strong> Otras redes según disponibilidad regional</li>
-          </ul>
           <p className="mt-2 text-sm">
             <strong>¿Qué información contienen?</strong> Solo un identificador único que indica que el visitante provino de RefurbTrack. <strong>NO contienen datos personales</strong> como nombre, email o dirección.
           </p>
@@ -73,7 +68,6 @@ export default function CookiesPage() {
       </p>
       <ul className="list-disc pl-5 space-y-2 my-4">
         <li><strong>Google Fonts:</strong> Tipografías optimizadas (puede almacenar caché)</li>
-        <li><strong>YouTube/Vimeo:</strong> Si embebemos vídeos explicativos (cookies de reproducción)</li>
         <li><strong>Sitios de vendedores:</strong> Al ser redirigido a Back Market, Amazon, etc., esos sitios establecen sus propias cookies bajo sus políticas</li>
       </ul>
 
@@ -83,7 +77,7 @@ export default function CookiesPage() {
           RefurbTrack es un servicio <strong>100% gratuito para el usuario final</strong>. No cobramos suscripciones, no mostramos anuncios intrusivos de terceros, ni vendemos tus datos.
         </p>
         <p className="mb-2">
-          Para mantener la infraestructura (servidores, bases de datos, scraping 24/7, desarrollo) y seguir ofreciendo un servicio de calidad, dependemos de comisiones de afiliación cuando ayudamos a conectar a usuarios con vendedores verificados.
+          Para mantener la infraestructura (servidores, bases de datos, seguimiento de precios, desarrollo) y seguir ofreciendo un servicio de calidad, dependemos de comisiones de afiliación cuando ayudamos a conectar a usuarios con vendedores verificados.
         </p>
         <p className="font-semibold text-emerald-700 dark:text-emerald-300">
           ✅ Sin cookies de afiliación → No podríamos atribuir las ventas → No recibiríamos comisiones → El servicio no sería sostenible
@@ -104,10 +98,11 @@ export default function CookiesPage() {
         <li>Rechazar cookies no esenciales (solo se usarán las técnicas)</li>
         <li>Personalizar tu elección (elegir qué tipos aceptas)</li>
       </ul>
+      {/*}
       <p className="mt-2">
         <button className="text-emerald-600 hover:underline font-medium">⚙️ Abrir configuración de cookies</button>
       </p>
-
+      */}
       <h4 className="font-bold text-lg mt-6">2. Configuración del navegador</h4>
       <p className="mb-2">
         Puedes configurar tu navegador para que bloquee o te avise sobre cookies. Consulta las instrucciones según tu navegador:
@@ -184,7 +179,7 @@ export default function CookiesPage() {
 
       <h3 className="text-xl font-bold mt-8">Recursos externos útiles</h3>
       <ul className="list-disc pl-5 space-y-2 my-4">
-        <li><a href="https://www.aepd.es/es/guias-y-herramientas/herramientas/guia-cookies" target="_blank" rel="noopener" className="text-emerald-600 hover:underline">Guía de Cookies - AEPD (Agencia Española de Protección de Datos)</a></li>
+        <li><a href="https://www.aepd.es/guias/guia-cookies.pdf" target="_blank" rel="noopener" className="text-emerald-600 hover:underline">Guía de Cookies - AEPD (Agencia Española de Protección de Datos)</a></li>
         <li><a href="https://www.allaboutcookies.org/" target="_blank" rel="noopener" className="text-emerald-600 hover:underline">All About Cookies - Información completa sobre cookies</a></li>
         <li><a href="https://cookiepedia.co.uk/" target="_blank" rel="noopener" className="text-emerald-600 hover:underline">Cookiepedia - Base de datos de cookies</a></li>
       </ul>

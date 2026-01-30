@@ -23,11 +23,11 @@ export default function TermsPage() {
       <ul className="list-disc pl-5 space-y-2 my-4">
         <li>Comparación de precios de productos electrónicos reacondicionados de múltiples vendedores</li>
         <li>Historial de evolución de precios y alertas de descuentos</li>
-        <li>Información sobre estados de reacondicionamiento (Excelente, Muy Bueno, Bueno, Correcto)</li>
+        <li>Información sobre estados de reacondicionamiento (Excelente, Muy Bueno, Correcto)</li>
         <li>Enlaces directos a tiendas verificadas donde puedes completar tu compra</li>
       </ul>
       <p className="mt-4">
-        La información mostrada (precios, stock, estado) se actualiza periódicamente mediante técnicas de web scraping automatizado, pero puede diferir de la información en tiempo real en la web del vendedor debido a la latencia técnica o cambios repentinos en el inventario.
+        La información mostrada (precios, estado) se actualiza periódicamente, pero puede diferir de la información en tiempo real en la web del vendedor debido a la latencia técnica o cambios repentinos en el inventario.
       </p>
 
       <h3 className="text-xl font-bold mt-8">3. Relación con Vendedores Externos</h3>
@@ -55,7 +55,6 @@ export default function TermsPage() {
       <h3 className="text-xl font-bold mt-8">5. Uso Aceptable del Servicio</h3>
       <p>Al utilizar RefurbTrack, te comprometes a:</p>
       <ul className="list-disc pl-5 space-y-2 my-4">
-        <li><strong>No realizar scraping automatizado</strong> de nuestro sitio web sin autorización previa escrita</li>
         <li><strong>No intentar comprometer</strong> la seguridad o integridad de nuestros sistemas</li>
         <li><strong>No utilizar</strong> nuestros datos para crear servicios competidores o bases de datos comerciales</li>
         <li><strong>No manipular</strong> enlaces de afiliación para beneficio propio o de terceros</li>
@@ -75,10 +74,10 @@ export default function TermsPage() {
 
       <h3 className="text-xl font-bold mt-8">7. Programa de Afiliación y Transparencia</h3>
       <p>
-        RefurbTrack participa en programas de marketing de afiliación con plataformas como:
+        RefurbTrack PUEDE participar en programas de marketing de afiliación con plataformas como:
       </p>
       <ul className="list-disc pl-5 space-y-2 my-4">
-        <li>Back Market (a través de Awin)</li>
+        <li>Back Market</li>
         <li>Amazon Associates</li>
         <li>Otras redes de afiliación según disponibilidad regional</li>
       </ul>
@@ -109,7 +108,7 @@ export default function TermsPage() {
         Dado que RefurbTrack no vende productos, no ofrecemos garantías propias. Sin embargo, los productos reacondicionados mostrados en nuestro sitio provienen de vendedores que generalmente ofrecen:
       </p>
       <ul className="list-disc pl-5 space-y-2 my-4">
-        <li><strong>Garantía mínima:</strong> 12 meses (estándar en Back Market)</li>
+        <li><strong>Garantía mínima:</strong> 12/24 meses (estándar en Back Market)</li>
         <li><strong>Periodo de prueba:</strong> Generalmente 30 días para devoluciones</li>
         <li><strong>Certificación:</strong> Reacondicionamiento realizado por técnicos cualificados</li>
       </ul>
@@ -157,7 +156,7 @@ export default function TermsPage() {
 
       <h3 className="text-xl font-bold mt-8">14. Ley Aplicable y Jurisdicción</h3>
       <p>
-        Estos Términos se regirán e interpretarán de acuerdo con las leyes de España, sin dar efecto a ningún principio de conflictos de leyes. Cualquier disputa relacionada con estos términos estará sujeta a la jurisdicción exclusiva de los tribunales de [Tu Ciudad/Provincia].
+        Estos Términos se regirán e interpretarán de acuerdo con las leyes de España, sin dar efecto a ningún principio de conflictos de leyes.
       </p>
 
       <h3 className="text-xl font-bold mt-8">15. Divisibilidad</h3>
@@ -170,15 +169,8 @@ export default function TermsPage() {
         Para preguntas sobre estos Términos y Condiciones, puedes contactarnos en:
       </p>
       <ul className="list-none space-y-2 my-4">
-        <li><strong>Email:</strong> legal@refurbtrack.com</li>
         <li><strong>Formulario de contacto:</strong> <a href="/company/contact" className="text-emerald-600 hover:underline">refurbtrack.com/company/contact</a></li>
       </ul>
-
-      <div className="bg-muted p-6 rounded-lg mt-8 border">
-        <p className="text-xs text-muted-foreground">
-          Estos términos están redactados con fines informativos generales. Para una implementación legal completa adaptada a tu jurisdicción específica, consulta con un abogado especializado antes de publicar tu sitio web.
-        </p>
-      </div>
     </div>
   )
 }

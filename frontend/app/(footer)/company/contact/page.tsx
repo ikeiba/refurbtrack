@@ -31,7 +31,9 @@ export default function ContactPage() {
 
       <div className="grid md:grid-cols-2 gap-12 mt-8">
         {/* Información de Contacto */}
+        
         <div className="space-y-6">
+          {/*
           <div>
             <h3 className="font-bold text-xl mb-4">Canales de Contacto</h3>
             <div className="space-y-4">
@@ -74,13 +76,14 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
+          */}
 
           <div className="bg-emerald-50 dark:bg-emerald-950/30 p-6 rounded-xl border border-emerald-100 dark:border-emerald-900">
             <h4 className="font-bold text-emerald-800 dark:text-emerald-200 mb-2">💡 Preguntas Frecuentes</h4>
             <div className="text-sm text-emerald-700 dark:text-emerald-300 space-y-3">
               <div>
                 <p className="font-semibold">¿Por qué el precio en la web del vendedor es diferente?</p>
-                <p className="text-xs">Los precios se actualizan cada pocas horas. Revisa la fecha de última actualización en la página del producto.</p>
+                <p className="text-xs">Los precios se actualizan cada cierto tiempo, aunque siempre al menos una vez al día. Revisa la fecha de última actualización en la página del producto.</p>
               </div>
               <div>
                 <p className="font-semibold">¿Cómo reporto un enlace roto?</p>
@@ -112,7 +115,7 @@ export default function ContactPage() {
               <label className="text-sm font-medium">Asunto *</label>
               <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 <option value="">Selecciona un asunto</option>
-                <option value="error-datos">❌ Error en datos/precios</option>
+                {/*<option value="error-datos">❌ Error en datos/precios</option>*/}
                 <option value="sugerencia">💡 Sugerencia de mejora</option>
                 <option value="colaboracion">🤝 Propuesta de colaboración</option>
                 <option value="tecnico">🔧 Problema técnico</option>
@@ -142,6 +145,7 @@ export default function ContactPage() {
             </Button>
           </form>
 
+          {/*}
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               ¿Prefieres email directo?{" "}
@@ -149,7 +153,7 @@ export default function ContactPage() {
                 hola@refurbtrack.com
               </a>
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -161,7 +165,11 @@ export default function ContactPage() {
             <div className="text-3xl mb-2">📚</div>
             <h4 className="font-bold mb-1">Guía de Uso</h4>
             <p className="text-sm text-muted-foreground">
-              Consulta nuestra documentación sobre cómo funciona el comparador
+              Consulta nuestra documentación sobre {" "}
+              <a href="/company/how-it-works" className="text-emerald-600 hover:underline">
+                cómo funciona
+              </a>
+              {" "} el comparador
             </p>
           </div>
           <div className="text-center p-4 bg-muted/30 rounded-lg border">

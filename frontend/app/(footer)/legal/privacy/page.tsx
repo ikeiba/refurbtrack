@@ -13,7 +13,7 @@ export default function PrivacyPage() {
 
       <h3 className="text-xl font-bold mt-8">1. Responsable del Tratamiento</h3>
       <p>
-        El responsable de los datos recogidos en RefurbTrack es [Nombre o Razón Social], con domicilio en [Tu Dirección/Ciudad]. Puedes contactarnos en privacidad@refurbtrack.com para ejercer tus derechos o resolver cualquier duda relacionada con el tratamiento de tus datos.
+        Puedes contactarnos en privacidad@refurbtrack.com para ejercer tus derechos o resolver cualquier duda relacionada con el tratamiento de tus datos.
       </p>
 
       <h3 className="text-xl font-bold mt-8">2. Datos que Recopilamos</h3>
@@ -50,10 +50,10 @@ export default function PrivacyPage() {
 
       <h3 className="text-xl font-bold mt-8">5. Enlaces de Afiliados y Terceros</h3>
       <p>
-        Nuestro sitio web contiene enlaces a sitios de terceros (como Back Market, Amazon Renewed, etc.). Si haces clic en una oferta y eres redirigido, el sitio de destino puede recopilar sus propios datos bajo sus propias políticas de privacidad. <strong>RefurbTrack no es responsable de las prácticas de privacidad de dichos sitios.</strong>
+        Nuestro sitio web contiene enlaces a sitios de terceros. Si haces clic en una oferta y eres redirigido, el sitio de destino puede recopilar sus propios datos bajo sus propias políticas de privacidad. <strong>RefurbTrack no es responsable de las prácticas de privacidad de dichos sitios.</strong>
       </p>
       <p className="mt-4">
-        Participamos en programas de marketing de afiliados (como Awin, Impact, ShareASale). Estos programas utilizan códigos de seguimiento y cookies para atribuir las ventas generadas desde nuestro sitio, lo que nos permite recibir una comisión sin coste adicional para ti.
+        Participamos en programas de marketing de afiliados. Estos programas utilizan códigos de seguimiento y cookies para atribuir las ventas generadas desde nuestro sitio, lo que nos permite recibir una comisión sin coste adicional para ti.
       </p>
 
       <h3 className="text-xl font-bold mt-8">6. Compartir Información con Terceros</h3>
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
         No vendemos ni alquilamos tus datos personales a terceros. Solo compartimos información con:
       </p>
       <ul className="list-disc pl-5 space-y-2 my-4">
-        <li><strong>Proveedores de servicios:</strong> Google Analytics (análisis web), Mailchimp (email marketing) bajo acuerdos de confidencialidad</li>
+        <li><strong>Proveedores de servicios:</strong> Google Analytics (análisis web), Mailjet (email marketing) bajo acuerdos de confidencialidad</li>
         <li><strong>Redes de afiliación:</strong> Solo información de clics y conversiones anónimas para cálculo de comisiones</li>
         <li><strong>Autoridades competentes:</strong> Cuando sea legalmente requerido</li>
       </ul>
@@ -99,7 +99,6 @@ export default function PrivacyPage() {
         <li>Cifrado SSL/TLS para todas las comunicaciones</li>
         <li>Acceso restringido a datos personales solo a personal autorizado</li>
         <li>Copias de seguridad regulares y protocolos de recuperación</li>
-        <li>Auditorías de seguridad periódicas</li>
       </ul>
 
       <h3 className="text-xl font-bold mt-8">10. Transferencias Internacionales</h3>
@@ -126,11 +125,6 @@ export default function PrivacyPage() {
         <li><strong>Autoridad de Control:</strong> Tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) en <a href="https://www.aepd.es" target="_blank" rel="noopener" className="text-emerald-600 hover:underline">www.aepd.es</a></li>
       </ul>
 
-      <div className="bg-muted p-6 rounded-lg mt-8 border">
-        <p className="text-xs text-muted-foreground">
-          Esta política de privacidad está redactada con fines informativos generales. Para una implementación legal completa, consulta con un abogado especializado en protección de datos antes de publicar tu sitio web.
-        </p>
-      </div>
     </div>
   )
 }

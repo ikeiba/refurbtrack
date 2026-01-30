@@ -179,7 +179,7 @@ export default function BlogPage() {
       )}
 
       {/* CTA */}
-      <div className="text-center py-12">
+      {/*<div className="text-center py-12">
         <h3 className="text-2xl font-bold mb-4">¿Quieres más contenido como este?</h3>
         <p className="text-muted-foreground mb-6">Suscríbete al newsletter para recibir análisis y consejos directamente en tu email</p>
         <div className="flex gap-2 max-w-md mx-auto">
@@ -192,7 +192,7 @@ export default function BlogPage() {
             Suscribirse
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

@@ -30,15 +30,14 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Productos</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="#" className="hover:text-emerald-600 transition-colors">
+                <Link href="" className="hover:text-emerald-600 transition-colors">
                   iPhones
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-emerald-600 transition-colors">
-                  iPads
-                </Link>
+                  En breve...
               </li>
+              {/*
               <li>
                 <Link href="#" className="hover:text-emerald-600 transition-colors">
                   MacBooks
@@ -48,7 +47,7 @@ export function Footer() {
                 <Link href="#" className="hover:text-emerald-600 transition-colors">
                   Apple Watch
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 
@@ -108,7 +107,18 @@ export function Footer() {
             © 2026 RefurbTrack. Todos los derechos reservados.
           </p>
           
+          <div className="flex gap-8">
+            <p className="text-sm text-muted-foreground">
+              Podemos ganar una comisión cuando sigues los enlaces para hacer una compra.
+              Haz clic {" "}
+              <a href="/company/how-it-works" className="text-emerald-600 hover:underline">
+              aquí 
+              </a>
+              {" "} para saber más sobre cómo ganamos dinero. 
+            </p>
+          </div>
           {/* REDES SOCIALES */}
+          {/*
           <div className="flex gap-4">
             <Link href="#" className="text-muted-foreground hover:text-emerald-600 transition-colors">
               <span className="sr-only">Twitter</span>
@@ -118,7 +128,7 @@ export function Footer() {
               <span className="sr-only">Instagram</span>
               <Instagram className="h-5 w-5" />
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>
