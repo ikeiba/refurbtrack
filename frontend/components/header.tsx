@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Bell, User, Menu, Moon, Sun, ChevronLeft, LogOut, LayoutDashboard, LogIn, UserPlus } from "lucide-react"
+import { Search, Bell, User, Menu, Moon, Sun, LogOut, LayoutDashboard, LogIn, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
@@ -19,8 +19,7 @@ import {
 } from "@/components/ui/tooltip"
 import { countries } from "@/lib/mock-data"
 import { useEffect, useState } from "react"
-import { useAuth } from "@/context/auth-context" // <--- 1. Importamos el cerebro
-import Link from "next/link"
+import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 
 interface HeaderProps {
@@ -28,9 +27,8 @@ interface HeaderProps {
   onCountryChange: (country: string) => void
   searchQuery?: string
   onSearchChange?: (query: string) => void
+  onSearchSubmit?: (query: string) => void
   onMenuClick?: () => void
-  showBackButton?: boolean
-  onBackClick?: () => void
   showSearch?: boolean 
 }
 
@@ -39,15 +37,15 @@ export function Header({
   onCountryChange, 
   searchQuery = "", 
   onSearchChange, 
+  onSearchSubmit,
   onMenuClick,
-  showBackButton,   
-  onBackClick,
   showSearch = true 
 }: HeaderProps) {
   
   const [isDark, setIsDark] = useState(false)
-  const { isAuthenticated, user, logout } = useAuth() // <--- 2. Sacamos el estado del usuario
+  const { isAuthenticated, user, logout } = useAuth()
   const router = useRouter()
+  const [inputValue, setInputValue] = useState(searchQuery || "")
   
   const currentCountry = countries.find((c) => c.code === selectedCountry)
 
@@ -56,9 +54,27 @@ export function Header({
     setIsDark(isDarkMode)
   }, [])
 
+  useEffect(() => {
+    setInputValue(searchQuery || "")
+  }, [searchQuery])
+
   const toggleTheme = () => {
     setIsDark(!isDark)
     document.documentElement.classList.toggle("dark")
+  }
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value)
+    if (onSearchChange) {
+      onSearchChange(value)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && onSearchSubmit) {
+      const trimmed = inputValue.trim()
+      onSearchSubmit(trimmed)
+    }
   }
 
   return (
@@ -66,38 +82,35 @@ export function Header({
       <div className="flex h-16 items-center gap-4 px-4 lg:px-6">
         
         {/* === ZONA IZQUIERDA === */}
-        {showBackButton ? (
-           <Button variant="ghost" size="icon" onClick={onBackClick} className="mr-2">
-             <ChevronLeft className="h-6 w-6" />
-             <span className="sr-only">Go back</span>
-           </Button>
-        ) : (
-           <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
-             <Menu className="h-5 w-5" />
-             <span className="sr-only">Toggle menu</span>
-           </Button>
-        )}
+        <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
 
-        {/* LOGO (Link a home para reiniciar) */}
-        <Link href="/" className="flex items-center gap-2">
+        {/* LOGO - Botón para volver a home sin filtros */}
+        <button 
+          onClick={() => router.push("/")} 
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-primary-foreground">
             <span className="text-sm font-bold text-white">R</span>
           </div>
           <span className="hidden text-xl font-semibold tracking-tight sm:inline-block">RefurbTrack</span>
-        </Link>
+        </button>
 
         {/* === ZONA CENTRAL === */}
         {showSearch ? (
             <div className="flex flex-1 items-center justify-center px-4">
               <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground " />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Buscar productos..."
                   className="w-full pl-9 focus-visible:ring-emerald-500"
-                  value={searchQuery || ""} 
-                  onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                  disabled={!onSearchChange} 
+                  value={inputValue}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={!onSearchChange && !onSearchSubmit}
                 />
               </div>
             </div>

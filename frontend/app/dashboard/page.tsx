@@ -9,15 +9,23 @@ import { Loader2, Trash2, Bell, ExternalLink, ArrowRight } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { Header } from "@/components/header"
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [alerts, setAlerts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+    const [selectedCountry, setSelectedCountry] = useState("ES")
+  const [searchQuery, setSearchQuery] = useState("")
   
   const { toast } = useToast()
   const router = useRouter()
+
+    const handleHeaderSearch = (query: string) => {
+        const trimmed = query.trim()
+        router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/")
+    }
 
   // 1. CARGAR DATOS
   useEffect(() => {
@@ -67,8 +75,16 @@ export default function DashboardPage() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-emerald-600"/></div>
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    return (
+        <div className="min-h-screen bg-background">
+            <Header
+                selectedCountry={selectedCountry}
+                onCountryChange={setSelectedCountry}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onSearchSubmit={handleHeaderSearch}
+            />
+            <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="flex items-center justify-between mb-8">
         <div>
             <h1 className="text-3xl font-bold tracking-tight">Mi Panel</h1>
@@ -162,6 +178,7 @@ export default function DashboardPage() {
             ))}
         </div>
       )}
-    </div>
+            </div>
+        </div>
   )
 }

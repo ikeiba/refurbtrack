@@ -8,11 +8,12 @@ import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
 import { Toaster } from "@/components/ui/toaster"
 import { getProducts, getHistoricalLowOffers } from "@/services/api"
 import type { ProductSummary, OfferSummary } from "@/lib/types"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { WhyRefurbished } from "@/components/why-refurbished"
 
 export default function HomePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   // ESTADOS
   const [selectedCountry, setSelectedCountry] = useState("ES")
@@ -22,6 +23,11 @@ export default function HomePage() {
   
   // 1. SOLUCIÓN: Definimos el estado para la búsqueda
   const [searchQuery, setSearchQuery] = useState("") // <--- AÑADIDO
+
+  useEffect(() => {
+    const urlQuery = searchParams.get("q") || ""
+    setSearchQuery(urlQuery)
+  }, [searchParams])
 
   // CARGA DE DATOS
   // CARGA DE DATOS
@@ -45,6 +51,10 @@ export default function HomePage() {
   const filteredProducts = products.filter((p) => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const handleHeaderSearch = (query: string) => {
+    setSearchQuery(query)
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">

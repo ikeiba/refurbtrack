@@ -25,6 +25,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [country, setCountry] = useState("ES")
+  const [searchQuery, setSearchQuery] = useState("")
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -39,6 +40,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [chartData, setChartData] = useState<{ name: string; color?: string; data: any[] }[]>([])
 
   const { toast } = useToast()
+
+    const handleHeaderSearch = (query: string) => {
+        const trimmed = query.trim()
+        router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/")
+    }
 
   // 1. URL UPDATER
   const updateUrl = (key: string, value: string) => {
@@ -236,12 +242,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Header 
-        selectedCountry={country}
-        onCountryChange={setCountry}
-        showBackButton={true}
-        onBackClick={() => router.push("/")}
-      />
+            <Header 
+                selectedCountry={country}
+                onCountryChange={setCountry}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onSearchSubmit={handleHeaderSearch}
+            />
       <div className="container mx-auto px-4 py-8">
         <div className="grid md:grid-cols-2 items-start">
           
