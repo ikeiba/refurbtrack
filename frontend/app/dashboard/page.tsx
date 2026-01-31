@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { t } from "@/lib/translations"
+import { type AlertItem } from "@/lib/types"
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
@@ -37,35 +38,29 @@ export default function DashboardPage() {
     }
 
     if (isAuthenticated) {
-        const token = localStorage.getItem("accessToken")
-        if (token) {
-            getUserAlerts(token)
-                .then(data => {
-                    setAlerts(data)
-                    setLoading(false)
-                })
-                .catch(err => {
-                    console.error(err)
-                    setLoading(false)
-                })
-        }
+        // YA NO NECESITAMOS LEER EL TOKEN AQUI MANUALMENTE
+        setLoading(true)
+        getUserAlerts() // <--- Llamada limpia sin argumentos
+            .then(data => {
+                setAlerts(data)
+                setLoading(false)
+            })
+            .catch(err => {
+                console.error(err)
+                setLoading(false)
+            })
     }
   }, [isAuthenticated, authLoading, router])
 
-  // 2. BORRAR ALERTA
   const handleDelete = async (id: number) => {
     setDeletingId(id)
-    const token = localStorage.getItem("accessToken")
-    if (!token) return
-
+    
     try {
-        await deleteAlert(id, token)
-        // Actualizamos la lista localmente
+        await deleteAlert(id) // <--- Llamada limpia sin token
         setAlerts(prev => prev.filter(a => a.id !== id))
         toast({ title: "Alerta eliminada", className: "bg-emerald-50 text-emerald-800 border-emerald-200" })
     } catch (error) {
-        console.error(error)
-        toast({ title: "Error", description: "No se pudo eliminar", variant: "default" })
+        toast({ title: "Error", description: "No se pudo eliminar", variant: "destructive" })
     } finally {
         setDeletingId(null)
     }

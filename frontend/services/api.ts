@@ -1,5 +1,6 @@
 // frontend_light/services/api.ts
 import { ProductSummary, AlertData, OfferSummary } from "@/lib/types";
+import { authService } from "./auth" // <--- 1. Importamos el servicio de auth
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
 export const API_URL = "http://127.0.0.1:8000/api"; 
@@ -76,26 +77,76 @@ export const getHistoricalLowOffers = async (): Promise<OfferSummary[]> => {
   }
 }
 
-// 1. OBTENER MIS ALERTAS
-export async function getUserAlerts(token: string) {
-  const res = await fetch(`${API_URL}/alerts/`, {
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}` // <--- CLAVE: Enviamos el token
-    },
+async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
+  // 1. Buscamos el token actual
+  let token = localStorage.getItem("accessToken")
+  
+  // Configuración inicial de cabeceras
+  const headers = {
+    "Content-Type": "application/json",
+    ...((options.headers as any) || {}),
+    "Authorization": token ? `Bearer ${token}` : ""
+  }
+
+  // 2. Primer intento
+  let res = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers
   })
+
+  // 3. SI FALLA CON 401 (UNAUTHORIZED) -> INTENTAMOS REFRESACAR
+  if (res.status === 401) {
+    const refreshToken = localStorage.getItem("refreshToken")
+    
+    if (refreshToken) {
+      try {
+        console.log("Token caducado. Intentando renovar sesión...")
+        
+        // A. Pedimos nuevo token a Django
+        const newTokens = await authService.refreshToken(refreshToken)
+        
+        // B. Guardamos el nuevo token
+        localStorage.setItem("accessToken", newTokens.access)
+        // Opcional: Si el backend devuelve un refresh nuevo, guardarlo también
+        // localStorage.setItem("refreshToken", newTokens.refresh) 
+
+        // C. Actualizamos la cabecera con el nuevo token
+        headers["Authorization"] = `Bearer ${newTokens.access}`
+
+        // D. Reintentamos la petición original
+        res = await fetch(`${API_URL}${endpoint}`, {
+          ...options,
+          headers
+        })
+        
+      } catch (refreshError) {
+        // Si el refresh también falla (ej: pasaron 7 días), no hay nada que hacer.
+        // Borramos todo para forzar login limpio la próxima vez.
+        localStorage.removeItem("accessToken")
+        localStorage.removeItem("refreshToken")
+        localStorage.removeItem("userEmail")
+        window.location.href = "/auth/login" // Redirigir a login
+        throw new Error("Sesión expirada. Por favor, inicia sesión de nuevo.")
+      }
+    }
+  }
+
+  return res
+}
+
+// --- TUS FUNCIONES ACTUALIZADAS ---
+
+// Ya no hace falta pasarle el token por parámetro, lo coge él solo de localStorage
+export async function getUserAlerts() {
+  const res = await authenticatedFetch("/alerts/") // Usamos la función mágica
 
   if (!res.ok) throw new Error("Error al cargar alertas")
   return res.json()
 }
 
-// 2. BORRAR ALERTA
-export async function deleteAlert(id: number, token: string) {
-  const res = await fetch(`${API_URL}/alerts/${id}/`, {
+export async function deleteAlert(id: number) {
+  const res = await authenticatedFetch(`/alerts/${id}/`, {
     method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    },
   })
 
   if (!res.ok) throw new Error("Error al eliminar alerta")

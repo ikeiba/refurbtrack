@@ -87,3 +87,16 @@ export interface HistoricalLowsCarouselProps {
   offers: OfferSummary[] // <--- Recibimos Ofertas, no Productos
   onOfferClick: (offer: OfferSummary) => void
 }
+
+// Interfaz para mostrar la alerta en el Dashboard
+export interface AlertItem {
+  id: number
+  product_id: number
+  price_threshold: number
+  target_colors: string[]
+  target_storages: string[]
+  target_conditions: string[]
+  battery_new: boolean | null
+  product_name?: string     // Lo necesitaremos (si el backend no lo manda, habrá que ajustarlo o hacer trampa visual)
+  product_image?: string
+}
