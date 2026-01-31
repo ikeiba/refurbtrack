@@ -1,15 +1,16 @@
 "use client"
 
 import { useEffect, useState, use, useMemo } from "react"
-import { getProductDetail, getOfferHistory } from "@/services/api"
+import { getProductDetail, getOfferHistory, getHistoricalLowOffers } from "@/services/api"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Card } from "@/components/ui/card"
-import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity, ExternalLink, Battery } from "lucide-react"
+import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity, ExternalLink, Battery, Sparkles } from "lucide-react"
 import { ProductGallery } from "@/components/product-gallery"
 import PriceHistoryChart from "@/components/price-history-chart"
 import { ComparisonPopover } from "@/components/comparison-popover"
-import type { Offer } from "@/lib/types"
+import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
+import type { Offer, OfferSummary } from "@/lib/types"
 import { AlertModal } from "@/components/alert-modal"
 import { cn, getColorHex, CHART_COLORS } from "@/lib/utils"
 import { Header } from "@/components/header"
@@ -26,6 +27,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true)
   const [country, setCountry] = useState("ES")
   const [searchQuery, setSearchQuery] = useState("")
+  const [hotOffers, setHotOffers] = useState<OfferSummary[]>([])
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -96,6 +98,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       }
       setLoading(false)
     })
+
+    // Cargar ofertas destacadas para el carrusel
+    getHistoricalLowOffers()
+      .then((offers) => {
+        setHotOffers(offers)
+      })
+      .catch((err) => console.error(err))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
@@ -526,6 +535,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </div>
               )}
           </Card>
+
+          {/* CARRUSEL: También te podría interesar */}
+          {hotOffers.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold flex items-center gap-2 mb-6">
+                <Sparkles className="w-6 h-6 text-primary" />
+                También te podría interesar
+              </h2>
+              <HistoricalLowsCarousel 
+                offers={hotOffers} 
+                onOfferClick={(o) => {
+                  const batteryParam = o.battery_new ? 'new' : 'standard'
+                  router.push(`/product/${o.product_id}?color=${o.color}&storage=${o.storage}&condition=${o.condition}&battery=${batteryParam}`)
+                }}
+              />
+            </div>
+          )}
         </div>
           {product && activeOffer && (
               <AlertModal 

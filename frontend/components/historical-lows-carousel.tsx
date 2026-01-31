@@ -86,6 +86,7 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
 // =====================================================================
 // OPCIÓN 1: Botón pequeño a la derecha alineado con el precio
 // =====================================================================
+
 interface CompactOfferCardProps {
   offer: OfferSummary
   onClick: () => void
@@ -123,16 +124,17 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
         {/* Imagen + Porcentaje de Descuento (Movido aquí) */}
         <div className="aspect-square relative p-4 bg-white dark:bg-secondary/20 rounded-t-xl overflow-hidden">
              {offer.image ? (
-                <Image
-                    src={offer.image}
-                    alt={offer.name}
-                    fill
-                    className="object-contain p-7 pb-0 transition-transform duration-500 group-hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
-                    sizes="200px"
-                />
-             ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl">📱</div>
-             )}
+                  <Image
+                      // CORRECCIÓN AQUÍ: Comprobamos si ya tiene barra antes de añadirla
+                      src={offer.image.startsWith('/') ? offer.image : `/${offer.image}`}
+                      alt={offer.name}
+                      fill
+                      className="object-contain p-7 pb-0 transition-transform duration-500 group-hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+              ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl">📱</div>
+              )}
              
              {/* PORCENTAJE DE AHORRO: Parte inferior derecha de la imagen */}
              {savings > 0 && (
@@ -178,7 +180,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                 {/* COLUMNA DERECHA: Botón Link */}
                 <Button 
                     size="sm" 
-                  className="h-9 px-4 bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0 cursor-pointer"
+                    className="h-9 px-4 bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0"
                     onClick={(e) => {
                         e.stopPropagation(); // Evita que se dispare el onClick de la tarjeta
                         // Aquí pondremos el link real más tarde
@@ -227,25 +229,26 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
   
           {/* Imagen + Porcentaje (Igual) */}
           <div className="aspect-square relative p-4 bg-white dark:bg-secondary/20 rounded-t-xl overflow-hidden">
-               {offer.image ? (
-                  <Image
-                      src={offer.image}
-                      alt={offer.name}
-                      fill
-                      className="object-contain p-7 pb-0 transition-transform duration-500 group-hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
-                      sizes="200px"
-                  />
-               ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl">📱</div>
-               )}
-               
-               {/* PORCENTAJE DE AHORRO */}
-               {savings > 0 && (
-                  <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-md shadow-sm border border-emerald-200/50">
-                      <TrendingDown className="w-3 h-3 mr-1" />
-                      -{savings}%
-                  </div>
-               )}
+            {offer.image ? (
+            <Image
+                // CORRECCIÓN AQUÍ: Comprobamos si ya tiene barra antes de añadirla
+                src={offer.image.startsWith('/') ? offer.image : `/${offer.image}`}
+                alt={offer.name}
+                fill
+                className="object-contain p-7 pb-0 transition-transform duration-500 group-hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center text-4xl">📱</div>
+            )}
+            
+            {/* PORCENTAJE DE AHORRO */}
+            {savings > 0 && (
+              <div className="absolute bottom-2 right-2 flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-md shadow-sm border border-emerald-200/50">
+                  <TrendingDown className="w-3 h-3 mr-1" />
+                  -{savings}%
+              </div>
+            )}
           </div>
   
           {/* Info Detallada */}
@@ -280,7 +283,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
   
               {/* FILA INFERIOR: Botón Ancho */}
               <Button 
-                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn cursor-pointer"
+                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn"
                   onClick={(e) => {
                       e.stopPropagation();
                       if (offer?.url) {
