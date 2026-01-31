@@ -90,7 +90,7 @@ export function Header({
         {/* LOGO - Botón para volver a home sin filtros */}
         <button 
           onClick={() => router.push("/")} 
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-primary-foreground">
             <span className="text-sm font-bold text-white">R</span>

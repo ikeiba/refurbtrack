@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Bell, Loader2, Battery, BatteryFull } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from "@/components/ui/toast"
 import { cn, getColorHex } from "@/lib/utils" // <--- Importamos getColorHex
 import { createAlert } from "@/services/api"
 import type { ProductDetail } from "@/lib/types"
 import { t } from "@/lib/translations"
 import { useAuth } from "@/context/auth-context" // <--- 1. Importar el cerebro
+import { useRouter } from "next/navigation"
 
 
 interface AlertModalProps {
@@ -32,6 +34,7 @@ interface AlertModalProps {
 export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertModalProps) {
   const { user, isAuthenticated } = useAuth() // <--- 2. Sacar el usuario
   const { toast } = useToast()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   // --- ESTADOS ---
@@ -47,6 +50,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
   const [anyColor, setAnyColor] = useState(false)
   const [anyCondition, setAnyCondition] = useState(false)
   const [anyBattery, setAnyBattery] = useState(false)
+
+  // Definir estos antes de los useEffect
+  const availableStorages = Array.from(new Set(product.specs.map(s => s.storage)))
+  const availableColors = Array.from(new Set(product.specs.map(s => s.color)))
+  const conditions = ["Fair", "Good", "Excellent", "Premium"]
 
   // Reset al abrir
   useEffect(() => {
@@ -71,6 +79,39 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
     }
   }, [isOpen, currentConfig, isAuthenticated, user])
 
+  // Auto-marcar "Cualquiera" si se seleccionan todas las opciones
+  useEffect(() => {
+    // Almacenamiento: Si se seleccionaron todos, marcar "Cualquiera"
+    if (selectedStorages.length === availableStorages.length && availableStorages.length > 0) {
+      setAnyStorage(true)
+      setSelectedStorages([])
+    }
+  }, [selectedStorages, availableStorages])
+
+  useEffect(() => {
+    // Color: Si se seleccionaron todos, marcar "Cualquiera"
+    if (selectedColors.length === availableColors.length && availableColors.length > 0) {
+      setAnyColor(true)
+      setSelectedColors([])
+    }
+  }, [selectedColors, availableColors])
+
+  useEffect(() => {
+    // Condición: Si se seleccionaron todos, marcar "Cualquiera"
+    if (selectedConditions.length === conditions.length && conditions.length > 0) {
+      setAnyCondition(true)
+      setSelectedConditions([])
+    }
+  }, [selectedConditions, conditions])
+
+  useEffect(() => {
+    // Batería: Si se seleccionaron ambas (nueva y estándar), marcar "Cualquiera"
+    if (selectedBattery.length === 2) {
+      setAnyBattery(true)
+      setSelectedBattery([])
+    }
+  }, [selectedBattery])
+
   // Helpers
   const toggleSelection = (list: string[], item: string, setList: (l: string[]) => void) => {
     if (list.includes(item)) {
@@ -79,10 +120,6 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
       setList([...list, item])
     }
   }
-
-  const availableStorages = Array.from(new Set(product.specs.map(s => s.storage)))
-  const availableColors = Array.from(new Set(product.specs.map(s => s.color)))
-  const conditions = ["Fair", "Good", "Excellent", "Premium"]
 
   // Submit
   const handleSubmit = async () => {
@@ -117,7 +154,12 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
       toast({
         title: "¡Alerta Creada!",
         description: `Te avisaremos en ${email} cuando baje de precio.`,
-        className: "bg-emerald-50 border-emerald-200 text-emerald-800"
+        className: "bg-emerald-50 border-emerald-200 text-emerald-800",
+        action: (
+          <ToastAction altText="Ir a mi panel" onClick={() => router.push("/dashboard")}>
+            Ir a mi panel
+          </ToastAction>
+        )
       })
       onClose()
       setEmail("")

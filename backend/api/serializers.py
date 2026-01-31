@@ -96,6 +96,9 @@ class AlertSerializer(serializers.ModelSerializer):
     # AÑADIDO: Devolvemos el ID real del producto para poder hacer links
     product = serializers.PrimaryKeyRelatedField(read_only=True)
 
+    # AÑADIDO: Recuperamos la imagen del producto relacionado
+    product_image = serializers.CharField(source='product.image', read_only=True)
+
     class Meta:
         model = Alert
         fields = [
@@ -104,7 +107,8 @@ class AlertSerializer(serializers.ModelSerializer):
             'price_threshold', 
             'product_id',   # Entrada (Write)
             'product',      # Salida (Read) -> ID del producto
-            'product_name', # Salida (Read) -> Nombre 
+            'product_name', # Salida (Read) -> Nombre
+            'product_image',# Salida (Read) -> Imagen 
             'target_colors', 
             'target_storages', 
             'target_conditions', 

@@ -5,11 +5,12 @@ import { useAuth } from "@/context/auth-context"
 import { getUserAlerts, deleteAlert } from "@/services/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Trash2, Bell, ExternalLink, ArrowRight } from "lucide-react"
+import { Loader2, Trash2, Bell, ExternalLink, ArrowRight, Image as ImageIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
+import { t } from "@/lib/translations"
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
@@ -117,11 +118,24 @@ export default function DashboardPage() {
                 <Card key={alert.id} className="overflow-hidden hover:border-emerald-500/50 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 gap-4">
                         
+                        {/* Imagen del Producto */}
+                        <div className="flex-shrink-0 w-20 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                            {alert.product_image ? (
+                                <img 
+                                    src={alert.product_image.startsWith("/") ? alert.product_image : `/${alert.product_image}`} 
+                                    alt={alert.product_name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                            )}
+                        </div>
+
                         {/* Info Principal */}
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="font-bold text-lg">
-                                    Producto {alert.product_name} {/* TODO: Necesitamos que el backend mande el nombre del producto */}
+                                    {alert.product_name || `Producto ${alert.product}`}
                                 </span>
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-medium">
                                     Activa
@@ -133,19 +147,47 @@ export default function DashboardPage() {
                             
                             {/* Filtros aplicados */}
                             <div className="flex flex-wrap gap-2 text-xs">
-                                {alert.battery_new !== null && (
+                                {/* Almacenamiento */}
+                                {alert.target_storages?.length > 0 ? (
+                                    <span className="bg-secondary px-2 py-1 rounded">
+                                        Almacenamiento: {alert.target_storages.join(", ")}GB
+                                    </span>
+                                ) : (
+                                    <span className="bg-secondary px-2 py-1 rounded">
+                                        Almacenamiento: Cualquiera
+                                    </span>
+                                )}
+
+                                {/* Color */}
+                                {alert.target_colors?.length > 0 ? (
+                                    <span className="bg-secondary px-2 py-1 rounded">
+                                        Color: {alert.target_colors.map(c => t(c)).join(", ")}
+                                    </span>
+                                ) : (
+                                    <span className="bg-secondary px-2 py-1 rounded">
+                                        Color: Cualquiera
+                                    </span>
+                                )}
+
+                                {/* Estado */}
+                                {alert.target_conditions?.length > 0 ? (
+                                    <span className="bg-secondary px-2 py-1 rounded">
+                                        Estado: {alert.target_conditions.map(c => t(c)).join(", ")}
+                                    </span>
+                                ) : (
+                                    <span className="bg-secondary px-2 py-1 rounded">
+                                        Estado: Cualquiera
+                                    </span>
+                                )}
+
+                                {/* Batería */}
+                                {alert.battery_new !== null ? (
                                     <span className="bg-secondary px-2 py-1 rounded">
                                         Batería: {alert.battery_new ? "Nueva" : "Estándar"}
                                     </span>
-                                )}
-                                {alert.target_storages?.length > 0 && (
+                                ) : (
                                     <span className="bg-secondary px-2 py-1 rounded">
-                                        GB: {alert.target_storages.join(", ")}
-                                    </span>
-                                )}
-                                {alert.target_conditions?.length > 0 && (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Estado: {alert.target_conditions.join(", ")}
+                                        Batería: Cualquiera
                                     </span>
                                 )}
                             </div>

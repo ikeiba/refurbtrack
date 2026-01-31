@@ -178,7 +178,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                 {/* COLUMNA DERECHA: Botón Link */}
                 <Button 
                     size="sm" 
-                    className="h-9 px-4 bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0"
+                  className="h-9 px-4 bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0 cursor-pointer"
                     onClick={(e) => {
                         e.stopPropagation(); // Evita que se dispare el onClick de la tarjeta
                         // Aquí pondremos el link real más tarde
@@ -280,7 +280,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
   
               {/* FILA INFERIOR: Botón Ancho */}
               <Button 
-                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn"
+                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn cursor-pointer"
                   onClick={(e) => {
                       e.stopPropagation();
                       if (offer?.url) {

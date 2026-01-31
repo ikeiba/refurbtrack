@@ -5,7 +5,7 @@ import { getProductDetail, getOfferHistory } from "@/services/api"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Card } from "@/components/ui/card"
-import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity, ExternalLink } from "lucide-react"
+import { Bell, TrendingDown, Info, Calendar, ArrowUp, ArrowDown, Activity, ExternalLink, Battery } from "lucide-react"
 import { ProductGallery } from "@/components/product-gallery"
 import PriceHistoryChart from "@/components/price-history-chart"
 import { ComparisonPopover } from "@/components/comparison-popover"
@@ -16,7 +16,7 @@ import { Header } from "@/components/header"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { t } from "@/lib/translations"
-import { format } from "date-fns"
+import { format, roundToNearestMinutes } from "date-fns"
 import { es } from "date-fns/locale"
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -181,8 +181,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     };
 
     const lastUpdateDate = activeOffer.last_updated 
-        ? format(new Date(activeOffer.last_updated), "d MMM, HH:mm", { locale: es })
+        ? format(
+            roundToNearestMinutes(new Date(activeOffer.last_updated), { nearestTo: 30 }),
+            "d MMM, HH:mm",
+            { locale: es }
+          )
         : "N/A";
+    
+    const bateria = activeOffer.battery_new
+        ? "Batería Nueva"
+        : "Batería Estándar";
 
     return {
         current: currentPrice,
@@ -191,7 +199,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         max: max30d,
         maxDate: formatDate(maxDate),
         avg: avg30d,
-        date: lastUpdateDate
+        date: lastUpdateDate,
+        battery: bateria
     };
   }, [activeOffer, chartData]);
 
@@ -377,7 +386,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <div>
                         <p className="text-sm text-muted-foreground">Configuración seleccionada</p>
                         <p className="mt-1 font-semibold text-lg">
-                            {product.name} · {selectedStorage}GB · {t(selectedColor)} · {t(selectedCondition)}
+                            {product.name} · {selectedStorage}GB · {t(selectedColor)} · {t(selectedCondition)} · {priceStats?.battery}
                         </p>
                     </div>
                   </div>
@@ -389,17 +398,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                 <p className="text-3xl font-bold text-emerald-600">
                                     {activeOffer.current_price}€
                                 </p>
-                                <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                    {activeOffer.battery_new ? (
-                                        <span className="text-emerald-600 font-medium">Batería Nueva (100%)</span>
-                                    ) : (
-                                        <span>Batería Estándar</span>
-                                    )}
-                                </span>
+                                {priceStats?.date && (
+                                    <span className="text-xs text-muted-foreground">
+                                        Registrado el {priceStats.date}
+                                    </span>
+                                )}
                               </div>
 
                               <Button 
-                                className="w-full h-11 text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all"
+                                className="w-full h-11 text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all cursor-pointer"
                                 onClick={() => {
                                     if (activeOffer?.url) {
                                         window.open(activeOffer.url, '_blank', 'noopener,noreferrer');
@@ -420,7 +427,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               <div>
                   <Button 
-                      className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700" 
+                      className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700 cursor-pointer" 
                       size="lg"
                       disabled={!activeSpec} 
                       onClick={() => setIsAlertOpen(true)}
