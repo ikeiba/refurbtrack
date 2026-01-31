@@ -39,7 +39,7 @@ export function FamilyGrid({ products }: FamilyGridProps) {
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="object-contain w-full h-full mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                    className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
                   <span className="text-6xl">📱</span>

@@ -35,8 +35,7 @@ export function ProductGallery({ images, onImageClick }: ProductGalleryProps) {
         <img
           src={images[selectedIndex]}
           alt="Product view"
-          // Mantengo tus clases originales
-          className="h-full w-full object-contain p-14 mix-blend-multiply transition-transform duration-500 hover:scale-105"
+          className="h-full w-full object-contain p-14 transition-transform duration-500 hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
         />
       </div>
 
@@ -57,7 +56,7 @@ export function ProductGallery({ images, onImageClick }: ProductGalleryProps) {
               <img
                 src={img}
                 alt={`Thumbnail ${idx + 1}`}
-                className="h-full w-full object-contain p-1 mix-blend-multiply"
+                className="h-full w-full object-contain p-1 mix-blend-multiply dark:mix-blend-normal"
               />
             </button>
           ))}
