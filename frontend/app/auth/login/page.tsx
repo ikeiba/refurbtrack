@@ -68,7 +68,7 @@ export default function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Contraseña</Label>
-              <Link href="#" className="text-sm text-emerald-600 hover:underline">
+              <Link href="/auth/forgot-password" className="text-sm text-emerald-600 hover:underline">
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>
@@ -81,7 +81,7 @@ export default function LoginPage() {
             />
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 mt-6">
           <Button 
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" 
             type="submit" 

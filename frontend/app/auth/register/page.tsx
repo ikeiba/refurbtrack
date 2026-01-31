@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, UserPlus } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -16,7 +17,8 @@ export default function RegisterPage() {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const { register } = useAuth()
+  const { register, login } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,8 +38,10 @@ export default function RegisterPage() {
 
     try {
       await register({ email, password })
-      // El contexto ya redirige o hace login automático, pero por si acaso:
-      // router.push("/") 
+      // Iniciar sesión automáticamente después del registro
+      await login({ email, password })
+      // Redirigir a la pantalla de inicio
+      router.push("/")
     } catch (err: any) {
       setError(err.message || "Error al crear la cuenta")
     } finally {
@@ -97,7 +101,7 @@ export default function RegisterPage() {
             />
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 mt-6">
           <Button 
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" 
             type="submit" 
