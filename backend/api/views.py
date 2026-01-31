@@ -107,16 +107,29 @@ class AlertListCreateView(generics.ListCreateAPIView):
 # --- NUEVA CLASE PARA EL CARRUSEL (Estilo Class-Based) ---
 class HistoricalLowOffersView(generics.ListAPIView):
     """
-    Devuelve las ofertas que están en su precio mínimo de los últimos 30 días.
+    Devuelve las ofertas 'TOP' (Deal Score >= 90) detectadas en las últimas 24 horas.
     """
-    serializer_class = HistoricalLowOfferSerializer # <--- Necesitamos crear esto
+    serializer_class = HistoricalLowOfferSerializer
 
     def get_queryset(self):
-        # La lógica de filtrado compleja va aquí
+        # 1. Calculamos el momento de corte (hace 24 horas)
+        time_threshold = timezone.now() - timedelta(hours=24)
+
         return Offer.objects.filter(
-            current_price__lte=F('min_price_30d'),
-            current_price__isnull=False
-        ).select_related('spec', 'spec__product').order_by('deal_score', 'current_price')[:15]
+            # CONDICIÓN 1: Calidad del chollo (0-100)
+            deal_score__gte=90, 
+            
+            # CONDICIÓN 2: Frescura (actualizado hoy)
+            last_updated__gte=time_threshold,
+            
+            # Seguridad extra: que tenga precio
+            current_price__isnull=False 
+        ).select_related(
+            'spec', 'spec__product'
+        ).order_by('?'
+            #'-deal_score' # Primero los de mayor puntuación (100, 99...)
+            #'current_price' # En caso de empate, el más barato primero
+        )[:15] # Limitamos a 15 para el carrusel
     
 
 #? TAMBIEN SE PODRIA HACER CON VIEWSET (FUNCTION BASED VIEW)

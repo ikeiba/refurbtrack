@@ -26,6 +26,18 @@ export const colorMap: Record<string, string> = {
   "Teal": "#008080",
   "Ultramarine": "#120a8f",
   "Desert": "#c19a6b",
+  "Deep Purple": "#301934",
+  "Space Black": "#2b2b2b",
+  "Space Gray": "#4a4a4c",
+  "Midnight Green": "#004d40",
+  "Pacific Blue": "#003366",
+  "Alpine Green": "#0b3d2e",
+  "Sierra Blue": "#6b8ba4",
+  "Blue Titanium": "#5a7d9a",
+  "Black Titanium": "#3b3b3b",
+  "White Titanium": "#d9d9d9",
+  "Natural Titanium": "#c0bcb3",
+  "Desert Titanium": "#c2a679",
   // Añade más según necesites
 };
 

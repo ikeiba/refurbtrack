@@ -141,7 +141,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="23011c7e-5396-4453-a726-d689e095aa5c", storage="256", color="Graphite")
         self.insert_spec(product_id=id, uuid="62ba5390-d2aa-4a8e-ae9c-23e0443fe229", storage="256", color="Gold")
         self.insert_spec(product_id=id, uuid="9a6ca30b-05f7-4a92-8165-c701c6913f5d", storage="256", color="Silver")
-        self.insert_spec(product_id=id, uuid="36fe3f9e-1731-4354-aaf1-c7440b7e396f", storage="512", color="Blue")
+        self.insert_spec(product_id=id, uuid="36fe3f9e-1731-4354-aaf1-c7440b7e396f", storage="512", color="Sierra Blue")
         self.insert_spec(product_id=id, uuid="c29f3de9-6589-4df7-9d12-fe7bf6746759", storage="512", color="Alpine Green")
         self.insert_spec(product_id=id, uuid="8c24e75f-8ee4-4c25-8e36-bb1a666747b8", storage="512", color="Graphite")
         self.insert_spec(product_id=id, uuid="c8e053a6-8fc3-4daa-b208-362e838b74a7", storage="512", color="Gold")
@@ -235,17 +235,17 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="7f5bdd13-8f4b-49ee-a94a-8b578deb328d", storage="128", color="Teal")
         self.insert_spec(product_id=id, uuid="ad6dc074-aa15-4f0a-bc2f-a4211fee9aec", storage="128", color="Ultramarine")
         self.insert_spec(product_id=id, uuid="4f4d578f-db15-44ac-b355-dc802c683750", storage="128", color="Pink")
-        self.insert_spec(product_id=id, uuid="ec59a99a-dd17-468a-b5aa-fbbddd1c87b5", storage="128", color="Starlight")
+        self.insert_spec(product_id=id, uuid="ec59a99a-dd17-468a-b5aa-fbbddd1c87b5", storage="128", color="White")
         self.insert_spec(product_id=id, uuid="e55d41fb-2b9b-4a57-83a9-5c557cb04fbc", storage="256", color="Black")
         self.insert_spec(product_id=id, uuid="1dc58f73-0074-40b6-be47-2312bb4b8a85", storage="256", color="Teal")
         self.insert_spec(product_id=id, uuid="ddb9ed29-5ce4-4e36-a920-a122578ad617", storage="256", color="Ultramarine")
         self.insert_spec(product_id=id, uuid="0ef61aea-3229-410a-9fa3-f0f992bf7b5f", storage="256", color="Pink")
-        self.insert_spec(product_id=id, uuid="aeca3f0b-6654-441d-9efc-1214b08e8c3a", storage="256", color="Starlight")
+        self.insert_spec(product_id=id, uuid="aeca3f0b-6654-441d-9efc-1214b08e8c3a", storage="256", color="White")
         self.insert_spec(product_id=id, uuid="-", storage="512", color="Black")
         self.insert_spec(product_id=id, uuid="5c25e285-47cf-483e-9e05-f36f5d9e4eef", storage="512", color="Teal")
         self.insert_spec(product_id=id, uuid="e646435a-0dbc-4def-8150-bcae4471dcb3", storage="512", color="Ultramarine")
         self.insert_spec(product_id=id, uuid="2e721825-ad6c-41a5-bc2b-47c8a2b139d0", storage="512", color="Pink")
-        self.insert_spec(product_id=id, uuid="d73b7a48-d424-40f4-86ce-8e7975e90fa5", storage="512", color="Starlight")
+        self.insert_spec(product_id=id, uuid="d73b7a48-d424-40f4-86ce-8e7975e90fa5", storage="512", color="White")
 
         self.insert_product(name="iPhone 16 Pro", type="Smartphone", image_path="products/iphone-16-pro-desert-titanium.avif")
         id = self.get_product_by_name(name="iPhone 16 Pro")[0]
@@ -328,6 +328,11 @@ class Command(BaseCommand):
             if not created and spec.image != image_path:
                 spec.image = image_path
                 spec.save()
+            
+            # Si la spec YA existía (created=False), actualizamos el color por si acaso cambió
+            if not created and spec.color != color:
+                spec.color = color
+                spec.save()
 
             # --- 3. Generar la Matriz de Ofertas (Offers) ---
             
@@ -371,9 +376,11 @@ class Command(BaseCommand):
                     
                     # IMPORTANTE: Si la oferta ya existía (created=False) pero no tenía URL
                     # (porque acabamos de añadir el campo), se la actualizamos ahora.
-                    if not created and not offer.url:
+                    if not created and offer.url != final_url:
                         offer.url = final_url
                         offer.save()
+
+
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error procesando {uuid}: {e}"))
