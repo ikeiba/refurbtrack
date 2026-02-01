@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta Creada - RefurbTrack</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b;
+            line-height: 1.5;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background-color: #ffffff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        
+        /* HEADER */
+        .header { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+            padding: 20px 25px; 
+            text-align: center; 
+            border-bottom: 3px solid #047857;
+        }
+        .header-logo { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: white; 
+            letter-spacing: -0.5px;
+        }
+        .header-subtitle { 
+            display: none;
+        }
+        
+        /* MAIN CONTENT */
+        .content { 
+            padding: 40px 30px;
+        }
+        .greeting { 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: #111827;
+            margin-bottom: 12px;
+        }
+        .intro-text { 
+            color: #64748b; 
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+        
+        /* PRODUCT SECTION */
+        .product-section { 
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 2px solid #d1fae5;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .product-header { 
+            display: flex; 
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .product-image {
+            flex-shrink: 0;
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .product-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .product-info { 
+            flex: 1;
+        }
+        .product-name { 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        .product-type { 
+            color: #64748b; 
+            font-size: 13px;
+            background: white;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        
+        /* PRICE HIGHLIGHT */
+        .price-box { 
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .target-price { 
+            font-size: 32px; 
+            font-weight: 800; 
+            color: #059669;
+        }
+        .price-label { 
+            font-size: 13px; 
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* FILTERS/CRITERIOS */
+        .criteria-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(209, 250, 229, 0.5);
+        }
+        .criteria-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #047857;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .criteria-item {
+            background: white;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .criteria-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #047857;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .criteria-value{
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        
+        /* ACTION BUTTONS */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .btn {
+            display: block;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #10b981;
+            color: white;
+            border: 2px solid #10b981;
+        }
+        .btn-primary:hover {
+            background-color: #059669;
+            border-color: #047857;
+        }
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+        
+        /* DIVIDER */
+        .divider {
+            margin: 30px 0;
+            height: 1px;
+            background-color: #e2e8f0;
+        }
+        
+        /* SECONDARY ACTIONS */
+        .secondary-actions {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .secondary-actions a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #10b981;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .secondary-actions a:hover {
+            text-decoration: underline;
+        }
+        
+        /* DANGER ACTION */
+        .danger-action {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #fecaca;
+        }
+        .danger-action a {
+            color: #dc2626;
+            text-decoration: none;
+            font-size: 12px;
+            border-bottom: 1px dashed #dc2626;
+        }
+        .danger-action a:hover {
+            color: #991b1b;
+        }
+        
+        /* FOOTER */
+        .footer { 
+            background-color: #f8fafc; 
+            padding: 25px 30px;
+            text-align: center; 
+            font-size: 12px; 
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer-links {
+            margin: 15px 0;
+        }
+        .footer-links a { 
+            color: #10b981; 
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .footer-copyright {
+            margin-top: 15px;
+            color: #94a3b8;
+            font-size: 11px;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .container { margin: 0; border-radius: 0; }
+            .content { padding: 25px 20px; }
+            .product-section { padding: 20px; }
+            .product-header { flex-direction: column; }
+            .product-image { width: 100%; }
+            .criteria-grid { grid-template-columns: 1fr; }
+            .target-price { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-logo">🛍️ RefurbTrack</div>
+            <div class="header-subtitle">Vigilamos los precios por ti</div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="content">
+            <h2 class="greeting">¡Alerta Activada! 🔔</h2>
+            <p class="intro-text">
+                Hemos creado tu alerta correctamente. Te notificaremos por email cuando encuentremos una oferta que cumpla con tus criterios. 
+                Guarda este email para eliminar la alerta en el futuro si lo deseas, o gestiona tus alertas desde tu panel de usuario.
+            </p>
+
+            <!-- PRODUCT BOX -->
+            <div class="product-section">
+                <div class="product-header">
+                    {% if product_image %}
+                    <div class="product-image">
+                        <img src="{{ product_image }}" alt="{{ product_name }}" loading="lazy">
+                    </div>
+                    {% endif %}
+                    <div class="product-info">
+                        <div class="product-name">{{ product_name }}</div>
+                        {% if product_type %}<div class="product-type">{{ product_type }}</div>{% endif %}
+                        <div class="price-box">
+                            <span class="target-price">{{ target_price }}€</span>
+                            <span class="price-label">Objetivo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALERT CRITERIA -->
+                {% if has_criteria %}
+                <div class="criteria-section">
+                    <div class="criteria-title">📋 Detalles de tu alerta</div>
+                    <div class="criteria-grid">
+                        {% if target_storages and target_storages != "Cualquiera" %}
+                        <div class="criteria-item">
+                            <div class="criteria-label">💾 Almacenamiento</div>
+                            <div class="criteria-value">{{ target_storages }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if target_colors and target_colors != "Cualquiera" %}
+                        <div class="criteria-item">
+                            <div class="criteria-label">🎨 Color</div>
+                            <div class="criteria-value">{{ target_colors }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if target_conditions and target_conditions != "Cualquiera" %}
+                        <div class="criteria-item">
+                            <div class="criteria-label">✨ Condición</div>
+                            <div class="criteria-value">{{ target_conditions }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if battery_new %}
+                        <div class="criteria-item">
+                            <div class="criteria-label">🔋 Batería</div>
+                            <div class="criteria-value">Nueva</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if country %}
+                        <div class="criteria-item">
+                            <div class="criteria-label">🌍 País</div>
+                            <div class="criteria-value">{{ country }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="actions">
+                <a href="{{ product_url }}" class="btn btn-primary">Ver Producto Completo</a>
+                <a href="{{ dashboard_url }}" class="btn btn-secondary">Gestionar mis Alertas</a>
+            </div>
+
+            <div class="secondary-actions">
+                <a href="{{ home_url }}">Crear más alertas</a>
+            </div>
+
+            <!-- DANGER ACTION -->
+            <div class="danger-action">
+                <a href="{{ unsubscribe_url }}">¿No quieres esta alerta? Eliminarla ahora</a>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>Estás recibiendo este correo porque creaste una alerta en RefurbTrack.</p>
+            <div class="footer-links">
+                <a href="{{ login_url }}">Iniciar Sesión</a> | 
+                <a href="{{ unsubscribe_all_url }}">Darse de baja de todas las alertas</a>
+            </div>
+            <div class="footer-copyright">
+                © 2026 RefurbTrack. Todos los derechos reservados.<br>
+                Mejoramos el mercado de tecnología reacondicionada.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

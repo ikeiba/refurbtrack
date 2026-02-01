@@ -44,9 +44,15 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 #! FIN COSAS RELACIONADAS CON LA SEGURIDAD Y ENTORNO
 
 
-# # Añadido por mi (Imprime los emails en la consola en lugar de enviarlos)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST_USER = 'test@example.com'
+# AÑADE LA CONFIGURACIÓN REAL SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'       # El servidor de Google
+EMAIL_PORT = 587                    # El puerto estándar para envío seguro
+EMAIL_USE_TLS = True                # Encriptación (Seguridad)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER # Quien envía el correo por defecto
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -56,10 +62,10 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '5/minute',  # Máximo 5 alertas por minuto para invitados
-        'user': '10/minute'  # Máximo 20 para logueados
-    }
+    #'DEFAULT_THROTTLE_RATES': {
+    #    'anon': '5/minute',  # Máximo 5 alertas por minuto para invitados
+    #    'user': '10/minute'  # Máximo 20 para logueados
+    #}
     # Mantén otras configuraciones si ya tenías (como paginación, etc.)
 }
 

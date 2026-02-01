@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Mail, ChevronLeft } from "lucide-react"
 import Link from "next/link"
+// IMPORTAMOS LA FUNCIÓN DEL SERVICIO
+import { requestPasswordReset } from "@/services/api"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -20,17 +22,8 @@ export default function ForgotPasswordPage() {
     setIsSubmitting(true)
 
     try {
-      // TODO: Conectar con el backend para enviar email de recuperación
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-
-      if (!response.ok) {
-        throw new Error("No se encontró una cuenta con ese email")
-      }
-
+      // USAMOS LA FUNCIÓN IMPORTADA (Mucho más limpio)
+      await requestPasswordReset(email)
       setSubmitted(true)
     } catch (err: any) {
       setError(err.message || "Error al enviar el email de recuperación")

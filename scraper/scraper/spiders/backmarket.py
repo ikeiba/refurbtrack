@@ -2,10 +2,14 @@ from decimal import Decimal
 from time import time
 from datetime import datetime, timedelta
 import scrapy
-from api.models import Spec, Offer, PriceHistory # Importamos los nuevos modelos
+from api.models import Spec, Offer, PriceHistory, Product # Importamos los nuevos modelos
 import json
 import random
 from scrapy.exceptions import IgnoreRequest
+# Usamos timezone de Django para evitar errores de comparación con la DB
+from django.utils import timezone
+
+from api.services import check_alerts_for_product
 
 class BackMarketSpider(scrapy.Spider):
     name = "backmarket"
@@ -16,6 +20,12 @@ class BackMarketSpider(scrapy.Spider):
         self.errores = 0
         self.exitosos = 0
         self.start_time = None
+
+        # --- NUEVO: PREPARACIÓN PARA ALERTAS SEGURAS ---
+        # 1. Guardamos la hora EXACTA de inicio (con zona horaria)
+        self.scrape_start_time = timezone.now()
+        # 2. Creamos un conjunto para guardar los IDs de los productos que toquemos
+        self.touched_product_ids = set()
 
     # Mapeo: Texto de la DB -> Código URL de BackMarket
     CONDITION_MAP = {
@@ -258,6 +268,14 @@ class BackMarketSpider(scrapy.Spider):
                     price=Decimal(str(final_price))
                 )
 
+                # --- NUEVO: SOLO APUNTAMOS EL ID ---
+                # No llamamos al servicio aquí para no frenar ni comparar datos sucios.
+                # Simplemente decimos: "He tocado este producto, revísalo luego".
+                try:
+                    self.touched_product_ids.add(offer.spec.product.id)
+                except Exception as e:
+                    self.logger.error(f"Error guardando ID producto: {e}")
+
             else:
                 # LOG DE FALLO (Sin precio)
                 self.logger.warning(
@@ -305,6 +323,21 @@ class BackMarketSpider(scrapy.Spider):
         
         self.logger.warning("=" * 60)
         self.logger.warning(f"🏁 SPIDER FINALIZADO: {reason}")
+        
+        for product_id in self.touched_product_ids:
+            try:
+                product = Product.objects.get(id=product_id)
+                
+                # Llamamos al servicio pasando la hora de inicio (cutoff_time).
+                # El servicio ignorará cualquier oferta que no se haya actualizado
+                # DESPUÉS de que empezó este scraper.
+                check_alerts_for_product(product, cutoff_time=self.scrape_start_time)
+                
+            except Exception as e:
+                self.logger.error(f"❌ Error procesando alertas finales para producto {product_id}: {e}")
+
+        self.logger.warning("✅ Ciclo de alertas completado.")
+
         self.logger.warning(f"⏰ Fin: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         self.logger.warning(f"⏱️  Tiempo total: {time_str}")
         self.logger.warning(f"📊 Total procesados: {self.contador}")

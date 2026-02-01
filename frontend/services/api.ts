@@ -152,3 +152,81 @@ export async function deleteAlert(id: number) {
   if (!res.ok) throw new Error("Error al eliminar alerta")
   return true
 }
+
+export async function unsubscribeAllAlerts() {
+  const res = await authenticatedFetch("/user/unsubscribe-all/", {
+    method: "DELETE",
+  })
+  if (!res.ok) throw new Error("Error al darse de baja")
+  return true
+}
+
+export async function deleteUserAccount() {
+  const res = await authenticatedFetch("/user/delete/", {
+    method: "DELETE",
+  })
+  if (!res.ok) throw new Error("Error al eliminar cuenta")
+  return true
+}
+
+// 1. Solicitar el email de recuperación
+export async function requestPasswordReset(email: string) {
+  const res = await fetch(`${API_URL}/auth/forgot-password/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  })
+
+  // Si el backend devuelve error (ej: 404), lanzamos excepción para que la capture el componente
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || "No se pudo enviar el correo")
+  }
+
+  return true
+}
+
+// 2. Confirmar el cambio de contraseña
+export async function confirmPasswordReset(data: { uid: string; token: string; password: string }) {
+  const res = await fetch(`${API_URL}/auth/reset-password/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.error || "El enlace ha caducado o es inválido")
+  }
+
+  return await res.json()
+}
+
+// 1. Darse de baja de UNA alerta específica (vía Email/Token)
+export async function unsubscribeAlert(token: string) {
+  const res = await fetch(`${API_URL}/alerts/unsubscribe/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  })
+
+  if (!res.ok) throw new Error("Error al eliminar la alerta")
+  return true
+}
+
+// 2. Darse de baja de TODO (vía Email/Token)
+export async function unsubscribeSubscriber(token: string) {
+  // Nota: Usamos la ruta 'alerts/unsubscribe-all' que definimos en urls.py
+  const res = await fetch(`${API_URL}/alerts/unsubscribe-all/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  })
+
+  if (!res.ok) throw new Error("Error al eliminar todas las alertas")
+  return true
+}

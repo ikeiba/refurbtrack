@@ -2,6 +2,11 @@ from rest_framework import serializers
 from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber
 from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
+from django.core.mail import send_mail # <--- 1. IMPORTAR ESTO
+from django.conf import settings # Para acceder al remitente por defecto
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.signing import TimestampSigner
 
 # --- 1. HISTÓRICO (Para la Gráfica) ---
 class PriceHistorySerializer(serializers.ModelSerializer):
@@ -132,6 +137,90 @@ class AlertSerializer(serializers.ModelSerializer):
             product=product,
             **validated_data
         )
+        
+        # ---------------------------------------------------------
+        # 3. ¡NUEVO! ENVÍO DE EMAIL HTML
+        # ---------------------------------------------------------
+        try:
+            # A. Preparamos los datos para "rellenar" el HTML
+            # Nota: product_url debería ser la URL de TU web (localhost:3000/product/...), 
+            # pero como estamos en local, a veces Gmail no deja hacer clic en localhost.
+            # Pondremos una variable genérica.
+
+            signer = TimestampSigner()
+            # TOKEN 1: Para borrar ESTA alerta específica
+            token_alert = signer.sign(alert.id)
+            # TOKEN 2: Para borrar al SUSCRIPTOR (y todas sus alertas)
+            token_subscriber = signer.sign(subscriber.id)
+            
+            # Base URL del frontend
+            base_url = "http://localhost:3000" # En producción usar env var
+
+            # --- CORRECCIÓN DE LA IMAGEN ---
+            # 1. Primero comprobamos si existe imagen (porque es opcional en el modelo)
+            # 2. Convertimos el objeto ImageField a string para sacar la ruta
+            final_image_url = ""
+            if product.image:
+                img_path = str(product.image)  # Esto nos da "products/foto.jpg"
+                
+                # Ahora sí podemos usar startswith porque img_path es texto
+                if img_path.startswith("http"):
+                    final_image_url = img_path
+                else:
+                    # Construimos la URL completa para que Gmail pueda descargarla (si fuera pública)
+                    # o para que el link funcione.
+                    final_image_url = f"{base_url}/{img_path}"
+            else:
+                # Imagen por defecto si el producto no tiene foto
+                final_image_url = f"{base_url}/placeholder.jpg"
+
+            context = {
+                'product_name': product.name,
+                'product_type': product.type if hasattr(product, 'type') else '',
+                'target_price': alert.price_threshold,
+                'product_image': final_image_url, # <--- Usamos la variable segura
+                
+                # DETALLES DE LA ALERTA
+                'target_storages': ', '.join(alert.target_storages) if alert.target_storages else 'Cualquiera',
+                'target_colors': ', '.join(alert.target_colors) if alert.target_colors else 'Cualquiera',
+                'target_conditions': ', '.join(alert.target_conditions) if alert.target_conditions else 'Cualquiera',
+                'battery_new': alert.battery_new,
+                'country': alert.country,
+                'has_criteria': bool(alert.target_storages or alert.target_colors or alert.target_conditions or alert.battery_new),
+                
+                # LINKS DE ACCIÓN
+                'product_url': f"{base_url}/product/{product.id}",
+                'home_url': base_url,
+                'dashboard_url': f"{base_url}/dashboard",
+                'login_url': f"{base_url}/auth/login",
+                # LINK 1: Borrar solo esta (Botón rojo cuerpo del correo)
+                'unsubscribe_url': f"{base_url}/alerts/unsubscribe?token={token_alert}",
+                
+                # LINK 2: Borrar TODO (Footer) - Apunta a una página NUEVA
+                'unsubscribe_all_url': f"{base_url}/alerts/unsubscribe-all?token={token_subscriber}"
+            }
+
+            # B. Renderizamos el HTML
+            html_message = render_to_string('emails/alert_confirmation.html', context)
+            
+            # C. Creamos la versión de texto plano (quitando etiquetas HTML)
+            plain_message = strip_tags(html_message)
+            
+            # D. Enviamos el correo (Fíjate en los parámetros nuevos)
+            send_mail(
+                subject=f'🔔 Alerta activada: {product.name}',
+                message=plain_message, # Versión texto plano (obligatoria)
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_message, # Versión HTML (la bonita)
+                fail_silently=True
+            )
+            
+            print(f"📧 Email HTML enviado a {email}")
+
+        except Exception as e:
+            print(f"❌ Error enviando email: {e}")
+
         return alert
     
 

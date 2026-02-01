@@ -134,6 +134,7 @@ def update_product_min_price(sender, instance, **kwargs):
         product.save()
 
 # --- NIVEL 4: SISTEMA DE ALERTAS ---
+'''
 @receiver(post_save, sender=PriceHistory)
 def check_alerts(sender, instance, created, **kwargs):
     """
@@ -221,3 +222,4 @@ def check_alerts(sender, instance, created, **kwargs):
                 
             except Exception as e:
                 print(f"❌ Error enviando email: {e}")
+'''

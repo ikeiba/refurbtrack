@@ -12,6 +12,19 @@ import Link from "next/link"
 import { Header } from "@/components/header"
 import { t } from "@/lib/translations"
 import { type AlertItem } from "@/lib/types"
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { unsubscribeAllAlerts, deleteUserAccount } from "@/services/api"
+import { LogOut, UserX, AlertTriangle } from "lucide-react" // Iconos nuevos
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
@@ -24,10 +37,32 @@ export default function DashboardPage() {
   const { toast } = useToast()
   const router = useRouter()
 
-    const handleHeaderSearch = (query: string) => {
-        const trimmed = query.trim()
-        router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/")
+  const handleHeaderSearch = (query: string) => {
+    const trimmed = query.trim()
+    router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/")
+  }
+
+  // 2. FUNCIONES MANEJADORAS
+  const handleUnsubscribeAll = async () => {
+    try {
+        await unsubscribeAllAlerts()
+        setAlerts([]) // Limpiamos la lista visualmente
+        toast({ title: "Baja completada", description: "Has dejado de seguir todos los productos." })
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo procesar la baja", variant: "destructive" })
     }
+  }
+
+  const handleDeleteAccount = async () => {
+    try {
+        await deleteUserAccount()
+        // Forzamos logout manual
+        localStorage.clear()
+        window.location.href = "/" // Redirigir a home recargando
+    } catch (error) {
+        toast({ title: "Error", description: "No se pudo eliminar la cuenta", variant: "destructive" })
+    }
+  }
 
   // 1. CARGAR DATOS
   useEffect(() => {
@@ -72,7 +107,7 @@ export default function DashboardPage() {
   }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="bg-background">
             <Header
                 selectedCountry={selectedCountry}
                 onCountryChange={setSelectedCountry}
@@ -215,7 +250,91 @@ export default function DashboardPage() {
             ))}
         </div>
       )}
-            </div>
+
+      {/* --- ZONA DE PELIGRO --- */}
+      <div className="mt-28 pt-6 border-t">
+        <h3 className="text-sm font-semibold mb-6 text-slate-900 dark:text-slate-100 flex items-center justify-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+            Zona de Peligro
+        </h3>
+        
+        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            
+            {/* TARJETA 1: BAJA DE ALERTAS */}
+            <Card className="border-orange-200 bg-orange-50/30 dark:bg-orange-950/20 dark:border-orange-900/50 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                        Detener Notificaciones
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                        Elimina todas tus alertas sin borrar tu cuenta.
+                    </p>
+                    
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-100 text-xs h-9">
+                                Eliminar alertas
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esto eliminará tus {alerts.length} alertas activas.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleUnsubscribeAll} className="bg-orange-600 hover:bg-orange-700">
+                                    Sí, eliminar
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </CardContent>
+            </Card>
+
+            {/* TARJETA 2: ELIMINAR CUENTA */}
+            <Card className="border-red-200 bg-red-50/30 dark:bg-red-950/20 dark:border-red-900/50 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-red-700 dark:text-red-400">
+                        Eliminar Cuenta
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                        Borra permanentemente tu cuenta y todos tus datos.
+                    </p>
+                    
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="destructive" className="w-full bg-red-600 hover:bg-red-700 text-xs h-9">
+                                Eliminar cuenta
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar cuenta permanentemente?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esto borrará tu usuario <strong>{user}</strong> y todos tus datos. No se puede deshacer.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700">
+                                    Sí, eliminar
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </CardContent>
+            </Card>
+
         </div>
+      </div>
+    </div>
+  </div>
   )
 }

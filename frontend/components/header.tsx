@@ -123,7 +123,7 @@ export function Header({
           
           {/* Selector de País */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild id="country-menu-trigger">
               <Button variant="outline" size="sm" className="gap-2 bg-transparent border-transparent hover:border-border">
                 <span className="text-base">{currentCountry?.flag}</span>
                 <span className="hidden sm:inline">{currentCountry?.code}</span>
@@ -144,12 +144,12 @@ export function Header({
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             <span className="sr-only">Toggle theme</span>
           </Button>
-
-          {/* CAMPANA DE NOTIFICACIONES */}
+          
+          {/* CAMPANA DE NOTIFICACIONES (COMENTADA)
           {isAuthenticated ? (
             // CASO A: LOGUEADO -> Ve notificaciones (Simulado)
             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger asChild id="bell-menu-trigger">
                     <Button variant="ghost" size="icon" className="relative">
                         <Bell className="h-5 w-5" />
                         <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-medium text-white">
@@ -162,7 +162,7 @@ export function Header({
                     <DropdownMenuSeparator />
                     <div className="p-4 text-center text-sm text-muted-foreground">
                         <p>¡El iPhone 13 ha bajado de precio!</p>
-                        {/* Aquí conectaremos las notificaciones reales más adelante */}
+                        {/* Aquí conectaremos las notificaciones reales más adelante 
                     </div>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -170,7 +170,7 @@ export function Header({
             // CASO B: INVITADO -> Tooltip invitando a entrar
             <TooltipProvider>
                 <Tooltip>
-                    <TooltipTrigger asChild>
+                    <TooltipTrigger asChild id="bell-menu-trigger">
                         <Button variant="ghost" size="icon" className="text-muted-foreground/60">
                             <Bell className="h-5 w-5" />
                         </Button>
@@ -181,10 +181,10 @@ export function Header({
                 </Tooltip>
             </TooltipProvider>
           )}
-
+          */}
           {/* MENÚ DE USUARIO */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild id="user-menu-trigger">
               <Button variant="ghost" size="icon" className={isAuthenticated ? "text-emerald-600" : ""}>
                 <User className="h-5 w-5" />
                 <span className="sr-only">User menu</span>

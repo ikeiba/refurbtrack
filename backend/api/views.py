@@ -6,7 +6,13 @@ from datetime import timedelta
 # Añade F para comparar columnas
 from django.db.models import F 
 
-from .models import Alert, Product, Spec, Offer, PriceHistory
+# Para el unsuscribe seguro
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from rest_framework.views import APIView
+from rest_framework import status
+
+
+from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber
 from .serializers import (
     AlertSerializer,
     ProductListSerializer, 
@@ -16,8 +22,18 @@ from .serializers import (
     UserRegistrationSerializer
 )
 
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth import get_user_model
+
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
+
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 
 
 # --- 1. VIEWSET PRINCIPAL (Catálogo) ---
@@ -187,3 +203,160 @@ class AlertDetailView(generics.RetrieveDestroyAPIView):
         acceder o borrar alertas vinculadas a su email.
         """
         return Alert.objects.filter(subscriber__email=self.request.user.email)
+    
+
+class AlertUnsubscribeView(APIView):
+    permission_classes = [] # Pública, porque la seguridad está en el token
+
+    def post(self, request):
+        token = request.data.get('token')
+        signer = TimestampSigner()
+
+        try:
+            # 1. Intentamos descifrar el token (Validez: 30 días para borrar)
+            # Esto devuelve el ID de la alerta si la firma es correcta
+            alert_id = signer.unsign(token, max_age=60 * 60 * 24 * 30) 
+            
+            # 2. Borramos la alerta
+            alert = Alert.objects.get(id=alert_id)
+            alert.delete()
+            
+            return Response({"status": "deleted"}, status=status.HTTP_200_OK)
+
+        except (BadSignature, SignatureExpired):
+            return Response({"error": "Link inválido o caducado"}, status=status.HTTP_400_BAD_REQUEST)
+        except Alert.DoesNotExist:
+            # Si ya estaba borrada, decimos que ok para no confundir
+            return Response({"status": "deleted"}, status=status.HTTP_200_OK)
+        
+
+# backend/api/views.py
+
+class SubscriberUnsubscribeView(APIView):
+    """
+    Borra al suscriptor completo y todas sus alertas en cascada.
+    Requiere confirmación en frontend, pero aquí ejecutamos la acción.
+    """
+    permission_classes = []
+
+    def post(self, request):
+        token = request.data.get('token')
+        signer = TimestampSigner()
+
+        try:
+            # 1. Validamos el token (usamos un "namespace" diferente para no mezclar tokens)
+            # El token debe contener el ID del SUSCRIPTOR, no de la alerta.
+            subscriber_id = signer.unsign(token, max_age=60 * 60 * 24 * 60) # 60 días de validez
+            
+            # 2. Borramos al suscriptor
+            # Al tener on_delete=models.CASCADE en el modelo Alert, esto borra TODAS sus alertas.
+            subscriber = Subscriber.objects.get(id=subscriber_id)
+            subscriber.delete()
+            
+            return Response({"status": "deleted"}, status=status.HTTP_200_OK)
+
+        except (BadSignature, SignatureExpired):
+            return Response({"error": "Link inválido o caducado"}, status=status.HTTP_400_BAD_REQUEST)
+        except Subscriber.DoesNotExist:
+            # Si ya no existe, damos el OK igual (idempotencia)
+            return Response({"status": "deleted"}, status=status.HTTP_200_OK)
+
+
+# 1. VISTA PARA DARSE DE BAJA DE ALERTAS (Mantiene la cuenta de usuario)
+class UnsubscribeUserView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        email = request.user.email
+        try:
+            # Buscamos al suscriptor por el email del usuario logueado
+            subscriber = Subscriber.objects.get(email=email)
+            subscriber.delete() # Esto borra todas las alertas en cascada
+            return Response({"message": "Alertas eliminadas"}, status=status.HTTP_200_OK)
+        except Subscriber.DoesNotExist:
+            return Response({"message": "No tenías suscripciones activas"}, status=status.HTTP_200_OK)
+
+# 2. VISTA PARA ELIMINAR CUENTA (Borra Usuario + Suscriptor + Alertas)
+class DeleteAccountView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        email = user.email
+        
+        # A. Borramos datos de suscripción si existen
+        Subscriber.objects.filter(email=email).delete()
+        
+        # B. Borramos el usuario de login
+        user.delete()
+        
+        return Response({"message": "Cuenta eliminada permanentemente"}, status=status.HTTP_200_OK)
+    
+User = get_user_model()
+
+# 1. SOLICITAR EL LINK (Lo que llama tu página actual)
+class PasswordResetRequestView(APIView):
+    permission_classes = [] # Pública
+
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generamos los componentes del link seguro
+            # uid: ID del usuario encriptado en base64
+            # token: Token temporal que caduca y usa la contraseña vieja como "salt"
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            
+            # URL del Frontend (Ajusta localhost:3000 si es necesario)
+            reset_link = f"http://localhost:3000/auth/reset-password/{uid}/{token}"
+            
+            # Renderizamos el email
+            context = {
+                'user': user,
+                'reset_link': reset_link
+            }
+            html_msg = render_to_string('emails/password_reset.html', context)
+            plain_msg = strip_tags(html_msg)
+            
+            send_mail(
+                subject='🔐 Recuperar contraseña - RefurbTrack',
+                message=plain_msg,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_msg,
+                fail_silently=False
+            )
+            
+            return Response({"message": "Email enviado"}, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            # POR SEGURIDAD: En producción, deberías devolver 200 OK aunque no exista
+            # para no revelar qué emails están registrados. Pero en desarrollo devolvemos 404 para ayudarte.
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+# 2. CONFIRMAR EL CAMBIO (Cuando el usuario envía la nueva pass)
+class PasswordResetConfirmView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        uidb64 = request.data.get('uid')
+        token = request.data.get('token')
+        password = request.data.get('password')
+
+        try:
+            # Decodificamos el ID
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            
+            # Verificamos si el token es válido
+            if default_token_generator.check_token(user, token):
+                user.set_password(password)
+                user.save()
+                return Response({"message": "Contraseña cambiada exitosamente"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "El enlace ha caducado o es inválido"}, status=status.HTTP_400_BAD_REQUEST)
+                
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Enlace inválido"}, status=status.HTTP_400_BAD_REQUEST)

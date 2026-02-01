@@ -1,11 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (HistoricalLowOffersView, 
+from .views import (DeleteAccountView, HistoricalLowOffersView, PasswordResetRequestView, 
                     ProductViewSet, 
                     OfferHistoryView, 
-                    AlertListCreateView, 
+                    AlertListCreateView, SubscriberUnsubscribeView, UnsubscribeUserView, 
                     UserRegistrationView, 
-                    AlertDetailView)
+                    AlertDetailView,
+                    AlertUnsubscribeView, PasswordResetConfirmView)
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -37,4 +38,21 @@ urlpatterns = [
     path('auth/register/', UserRegistrationView.as_view(), name='register'),
     path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # Da el token
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # Renueva el token
+
+    # Acción: Borrar una alerta específica
+    path('alerts/unsubscribe/', AlertUnsubscribeView.as_view(), name='alert-unsubscribe'),
+    # Acción: Borrar TODAS las alertas (baja del suscriptor)
+    path('alerts/unsubscribe-all/', SubscriberUnsubscribeView.as_view(), name='subscriber-unsubscribe'),
+
+    # --- RUTAS PRIVADAS (Requieren Login/Session) ---
+    # Acción: Limpiar alertas de la cuenta actual
+    path('user/unsubscribe-all/', UnsubscribeUserView.as_view(), name='user-unsubscribe-all'),
+    # Acción: Borrar cuenta completa
+    path('user/delete/', DeleteAccountView.as_view(), name='user-delete'),
+    
+    # backend/api/urls.py
+
+    path('auth/forgot-password/', PasswordResetRequestView.as_view()),
+    path('auth/reset-password/', PasswordResetConfirmView.as_view()),
+
 ]

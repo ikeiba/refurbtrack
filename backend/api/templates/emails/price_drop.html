@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bajada de Precio! - RefurbTrack</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b;
+            line-height: 1.5;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background-color: #ffffff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        
+        /* HEADER */
+        .header { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+            padding: 20px 25px; 
+            text-align: center; 
+            border-bottom: 3px solid #b91c1c;
+        }
+        .header-logo { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: white; 
+            letter-spacing: -0.5px;
+        }
+        
+        /* MAIN CONTENT */
+        .content { 
+            padding: 40px 30px;
+        }
+        .greeting { 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: #111827;
+            margin-bottom: 12px;
+        }
+        .intro-text { 
+            color: #64748b; 
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+        
+        /* PRODUCT SECTION */
+        .product-section { 
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #fecaca;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .product-header { 
+            display: flex; 
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .product-image {
+            flex-shrink: 0;
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .product-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .product-info { 
+            flex: 1;
+        }
+        .product-name { 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        .product-type { 
+            color: #64748b; 
+            font-size: 13px;
+            background: white;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        
+        /* PRICE HIGHLIGHT */
+        .price-box { 
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+            margin-top: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #fecaca;
+        }
+        .current-price { 
+            font-size: 32px; 
+            font-weight: 800; 
+            color: #dc2626;
+        }
+        .price-label { 
+            font-size: 13px; 
+            color: #991b1b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .old-price {
+            margin-left: auto;
+            text-align: right;
+        }
+        .old-price-value {
+            text-decoration: line-through;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .old-price-label{
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        
+        /* FILTERS/CRITERIOS */
+        .criteria-section{
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(254, 202, 202, 0.5);
+        }
+        .criteria-title{
+            font-size: 12px;
+            font-weight: 700;
+            color: #991b1b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+        .criteria-grid{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .criteria-item{
+            background: white;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .criteria-label{
+            font-size: 11px;
+            font-weight: 600;
+            color: #991b1b;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .criteria-value{
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        
+        /* ACTION BUTTONS */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .btn {
+            display: block;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #dc2626;
+            color: white;
+            border: 2px solid #dc2626;
+        }
+        .btn-primary:hover {
+            background-color: #b91c1c;
+            border-color: #991b1b;
+        }
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+        
+        /* SECONDARY ACTIONS */
+        .secondary-actions {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .secondary-actions a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #dc2626;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .secondary-actions a:hover {
+            text-decoration: underline;
+        }
+        
+        /* DANGER ACTION */
+        .danger-action {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #fecaca;
+        }
+        .danger-action a {
+            color: #dc2626;
+            text-decoration: none;
+            font-size: 12px;
+            border-bottom: 1px dashed #dc2626;
+        }
+        .danger-action a:hover {
+            color: #991b1b;
+        }
+        
+        /* FOOTER */
+        .footer { 
+            background-color: #f8fafc; 
+            padding: 25px 30px;
+            text-align: center; 
+            font-size: 12px; 
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer-links {
+            margin: 15px 0;
+        }
+        .footer-links a { 
+            color: #dc2626; 
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .footer-copyright {
+            margin-top: 15px;
+            color: #94a3b8;
+            font-size: 11px;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .container { margin: 0; border-radius: 0; }
+            .content { padding: 25px 20px; }
+            .product-section { padding: 20px; }
+            .product-header { flex-direction: column; }
+            .product-image { width: 100%; }
+            .criteria-grid { grid-template-columns: 1fr; }
+            .current-price { font-size: 28px; }
+            .price-box { flex-direction: column; }
+            .old-price { margin-left: 0; text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-logo">🔥 RefurbTrack - ¡Oferta Encontrada!</div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="content">
+            <h2 class="greeting">¡Lo tenemos! 🎯</h2>
+            <p class="intro-text">
+                El precio ha bajado y cumple con todos tus criterios. ¡Corre antes de que vuele!
+            </p>
+
+            <!-- PRODUCT BOX -->
+            <div class="product-section">
+                <div class="product-header">
+                    {% if product_image %}
+                    <div class="product-image">
+                        <img src="{{ product_image }}" alt="{{ product_name }}" loading="lazy">
+                    </div>
+                    {% endif %}
+                    <div class="product-info">
+                        <div class="product-name">{{ product_name }}</div>
+                        {% if product_type %}<div class="product-type">{{ product_type }}</div>{% endif %}
+                        <div class="product-type">{{ storage }} · {{ color }} · {{ condition }}</div>
+                    </div>
+                </div>
+
+                <!-- PRICE HIGHLIGHT -->
+                <div class="price-box">
+                    <div>
+                        <div class="current-price">{{ current_price }}€</div>
+                        <div class="price-label">Precio Actual</div>
+                    </div>
+                    {% if old_price %}
+                    <div class="old-price">
+                        <div class="old-price-value">{{ old_price }}€</div>
+                        <div class="old-price-label">Precio Anterior</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- ALERT CRITERIA -->
+                {% if has_criteria %}
+                <div class="criteria-section">
+                    <div class="criteria-title">📋 Tu Alerta</div>
+                    <div class="criteria-grid">
+                        {% if target_price %}
+                        <div class="criteria-item">
+                            <div class="criteria-label">💰 Objetivo</div>
+                            <div class="criteria-value">{{ target_price }}€</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if country %}
+                        <div class="criteria-item">
+                            <div class="criteria-label">🌍 País</div>
+                            <div class="criteria-value">{{ country }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="actions">
+                <a href="{{ offer_url }}" class="btn btn-primary">Comprar Ahora</a>
+                <a href="{{ dashboard_url }}" class="btn btn-secondary">Gestionar mis Alertas</a>
+                <a href="{{ home_url }}" class="btn btn-secondary">Crear más Alertas</a>
+            </div>
+
+            <!-- DANGER ACTION -->
+            <div class="danger-action">
+                <a href="{{ unsubscribe_url }}">¿No te interesa? Eliminar esta alerta</a>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>Estás recibiendo este correo porque creaste una alerta en RefurbTrack.</p>
+            <div class="footer-links">
+                <a href="{{ login_url }}">Iniciar Sesión</a> | 
+                <a href="{{ unsubscribe_all_url }}">Darse de baja de todas las alertas</a>
+            </div>
+            <div class="footer-copyright">
+                © 2026 RefurbTrack. Todos los derechos reservados.<br>
+                Mejoramos el mercado de tecnología reacondicionada.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
