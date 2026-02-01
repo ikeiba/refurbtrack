@@ -12,21 +12,66 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+
+#! AQUI LAS COSAS RELACIONADAS CON LA SEGURIDAD Y ENTORNO
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '***ELIMINADO***'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
 
-ALLOWED_HOSTS = []
+# SECURITY WARNING: define the correct hosts in production!
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
+
+# Añadido por mi (CORS)
+CORS_ALLOWED_ORIGINS = os.getenv(
+    'DJANGO_CORS_ALLOWED_ORIGINS', 
+    'http://localhost:3000,http://127.0.0.1:3000' # Valor por defecto si falla el .env
+).split(',')
+
+#! FIN COSAS RELACIONADAS CON LA SEGURIDAD Y ENTORNO
+
+
+# # Añadido por mi (Imprime los emails en la consola en lugar de enviarlos)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST_USER = 'test@example.com'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '5/minute',  # Máximo 5 alertas por minuto para invitados
+        'user': '10/minute'  # Máximo 20 para logueados
+    }
+    # Mantén otras configuraciones si ya tenías (como paginación, etc.)
+}
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # El token de acceso dura 1 hora
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # El de refresco dura 7 días (para "recordar sesión")
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
+# CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS # Si usas CSRF (token en cookies), confía en los mismos orígenes que CORS
 
 
 # Application definition
@@ -122,32 +167,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# AÑADE ESTO (Necesario para el comando 'python manage.py collectstatic' en producción)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Añadido por mi (CORS)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", # Puerto estándar de Next.js (Vite/React es 5173)
-    "http://127.0.0.1:3000",
-]
-
-# # Añadido por mi (Imprime los emails en la consola en lugar de enviarlos)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST_USER = 'test@example.com'
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    # Mantén otras configuraciones si ya tenías (como paginación, etc.)
-}
-
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # El token de acceso dura 1 hora
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # El de refresco dura 7 días (para "recordar sesión")
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-}
