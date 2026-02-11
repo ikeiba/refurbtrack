@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,12 +26,13 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 
+
 #! AQUI LAS COSAS RELACIONADAS CON LA SEGURIDAD Y ENTORNO
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG') == 'True'
+DEBUG = os.getenv('DJANGO_DEBUG', "False") == 'True'
 
 # SECURITY WARNING: define the correct hosts in production!
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
@@ -43,16 +45,28 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 
 #! FIN COSAS RELACIONADAS CON LA SEGURIDAD Y ENTORNO
 
+# 2. CONFIGURACIÓN DE STATIC
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles' # Donde se guardarán al desplega
+
+# 3. ACTIVAR ALMACENAMIENTO COMPRIMIDO Y CACHÉ
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # AÑADE LA CONFIGURACIÓN REAL SMTP
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'       # El servidor de Google
+EMAIL_HOST = 'smtp.resend.com'       # El servidor de Google
 EMAIL_PORT = 587                    # El puerto estándar para envío seguro
 EMAIL_USE_TLS = True                # Encriptación (Seguridad)
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER # Quien envía el correo por defecto
-
+EMAIL_HOST_USER = 'resend'
+EMAIL_HOST_PASSWORD = os.getenv('RESEND_API_KEY')
+DEFAULT_FROM_EMAIL = 'RefurbTrack <onboarding@resend.dev>' # Quien envía el correo por defecto
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -93,11 +107,29 @@ INSTALLED_APPS = [
     'rest_framework',  # <--- Necesario para la API
     'api',             # <--- Tu nueva app
     'corsheaders',   # <--- AÑADIR ESTO
+    'django_celery_beat', # AÑADIR ESTO
 ]
+
+# CELERY SETTINGS
+CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
+CELERY_TIMEZONE = "Europe/Madrid"
+
+# CELERY BEAT SCHEDULE
+# Aquí definimos cada cuánto se lanza el orquestador
+CELERY_BEAT_SCHEDULE = {
+    'run-scraper-every-hour': {
+        'task': 'api.tasks.run_spiders_manager',
+        'schedule': 7200.0, # Ejecutar cada 7200 segundos (2 horas)
+        # O usar crontab para horas específicas:
+        # 'schedule': crontab(minute=0, hour='*/1'), 
+    },
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # <--- AÑADIR ESTO PRIMERO
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -129,12 +161,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # TU CONFIGURACIÓN ACTUAL LOCAL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -166,15 +208,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = 'static/'
-
-# AÑADE ESTO (Necesario para el comando 'python manage.py collectstatic' en producción)
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

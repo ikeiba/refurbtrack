@@ -72,6 +72,9 @@ class Spec(models.Model):
     class Meta:
         # Evitamos duplicados: No puede haber dos 'iPhone 13 128GB Azul'
         unique_together = ('product', 'storage', 'color')
+        indexes = [
+            models.Index(fields=['back_market_uuid']), # Buscamos mucho por UUID al scrapear
+        ]
 
     def __str__(self):
         return f"{self.product.name} ({self.storage} - {self.color})"
@@ -120,6 +123,7 @@ class Offer(models.Model):
         indexes = [
             models.Index(fields=['current_price']), # Para ordenar por precio rápido
             models.Index(fields=['deal_score']),    # Para filtrar "Chollos"
+            models.Index(fields=['last_updated']),  # Filtramos por fecha para saber si está "fresca"
         ]
 
     def __str__(self):
@@ -136,6 +140,9 @@ class PriceHistory(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['offer', '-timestamp']), # Para gráficas de precio de una oferta
+        ]
 
 
 # --- ALERTAS FLEXIBLES (Corregido) ---
@@ -174,6 +181,13 @@ class Alert(models.Model):
     notified = models.BooleanField(default=False)
     repeat = models.BooleanField(default=False)
     last_notified = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        # AÑADIR ESTO:
+        indexes = [
+            models.Index(fields=['notified']), # Buscamos notified=False constantemente
+            models.Index(fields=['product']),  # Buscamos alertas por producto
+        ]
 
     def __str__(self):
         return f"Alerta {self.product.name} < {self.price_threshold}€ ({self.subscriber.email})"

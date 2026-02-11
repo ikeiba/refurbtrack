@@ -1,0 +1,89 @@
+services:
+  # 1. BASE DE DATOS (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=refurbtrack
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=***ELIMINADO***  # ¡CAMBIA ESTO!
+    networks:
+      - app-network
+
+  # 2. REDIS (Cola de mensajes)
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - app-network
+
+  # 3. BACKEND (Django API)
+  web:
+    build: .
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    restart: always
+    volumes:
+      # Montamos el código para no tener que reconstruir si cambias algo pequeño (opcional en prod)
+      - ./backend:/app/backend
+      - ./scraper:/app/scraper
+      - static_volume:/app/backend/staticfiles
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=CAMBIA_ESTO_POR_UNA_LARGA_Y_SEGURA
+      - DJANGO_ALLOWED_HOSTS=tudominio.com,localhost,127.0.0.1,web
+      - DATABASE_URL=postgres://admin:***ELIMINADO***@db:5432/refurbtrack
+      - REDIS_URL=redis://redis:6379/0
+      - RESEND_API_KEY=re_123456... # TU API KEY REAL
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,https://tudominio.com
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+    ports:
+      - "8000:8000"
+
+  # 4. CELERY WORKER (Ejecuta el scraper)
+  celery_worker:
+    build: .
+    # OJO: Aquí le decimos que arranque el worker en vez de gunicorn
+    command: celery -A config worker --loglevel=info --concurrency=2
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=CAMBIA_ESTO_POR_UNA_LARGA_Y_SEGURA
+      - DATABASE_URL=postgres://admin:***ELIMINADO***@db:5432/refurbtrack
+      - REDIS_URL=redis://redis:6379/0
+      - RESEND_API_KEY=re_123456...
+    depends_on:
+      - db
+      - redis
+      - web
+    networks:
+      - app-network
+
+  # 5. CELERY BEAT (El reloj)
+  celery_beat:
+    build: .
+    command: celery -A config beat --loglevel=info
+    restart: always
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=CAMBIA_ESTO_POR_UNA_LARGA_Y_SEGURA
+      - DATABASE_URL=postgres://admin:***ELIMINADO***@db:5432/refurbtrack
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - web
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  static_volume:
+
+networks:
+  app-network:
+    driver: bridge
