@@ -33,8 +33,13 @@ COPY scraper /app/scraper
 # 3. PREPARAMOS EL ENTORNO
 WORKDIR /app/backend
 
-# ---> SOLO DAMOS PERMISOS (No copiamos de nuevo, ni usamos sed) <---
-RUN chmod +x /app/backend/entrypoint.sh
+# CAMBIO 1: Copiamos el entrypoint A LA RAIZ (/app/), no a backend
+COPY backend/entrypoint.sh /app/entrypoint.sh
+
+# 4. Corregimos el formato Windows (CRLF -> LF) y damos permisos
+# El comando 'sed' elimina los caracteres de retorno de carro invisibles
+RUN sed -i 's/\r$//g' /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
 
 # Recolectamos estáticos (Fingimos claves para que no falle al buildear)
 RUN SECRET_KEY=dummy DATABASE_URL=sqlite:///db.sqlite3 python manage.py collectstatic --noinput
@@ -43,7 +48,7 @@ RUN SECRET_KEY=dummy DATABASE_URL=sqlite:///db.sqlite3 python manage.py collects
 EXPOSE 8000
 
 # Definimos el Entrypoint
-ENTRYPOINT ["/app/backend/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Script de entrada (Se sobreescribe en docker-compose, pero este es el default)
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]

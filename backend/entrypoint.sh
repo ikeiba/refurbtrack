@@ -1,55 +1,9 @@
-
-
-# 1. Migraciones
-echo "--> Aplicando migraciones..."
-python manage.py migrate --noinput
-
-# 2. Carga de datos iniciales
-# IMPORTANTE: Asegúrate de que tu script 'importar_variantes' controle duplicados
-# internamente, o ponle un '|| true' al final para que no rompa el deploy si falla.
-echo "--> Cargando datos iniciales..."
-python manage.py importar_variantes || echo "⚠️ Advertencia: Error al importar variantes o ya existen."
-
-# Recopilamos estáticos (CSS/JS)
-echo "--> Recopilando archivos estáticos..."
-python manage.py collectstatic --noinput
-
-# 3. Crear Superusuario (DE FORMA SEGURA)
-# Usamos un script de python inline para verificar si existe antes de crear.
-# Esto evita que falle la segunda vez que arrancas.
-echo "--> Verificando superusuario..."
-python << END
-import os
-import django
-from django.contrib.auth import get_user_model
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
-
-User = get_user_model()
-username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
-email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
-password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
-
-if not User.objects.filter(username=username).exists():
-    print(f"Creando superusuario {username}...")
-    User.objects.create_superuser(username, email, password)
-else:
-    print(f"El superusuario {username} ya existe. Omitiendo.")
-END
-
-# 4. Arrancar servidor
-echo "--> Arrancando comando: $@"
-exec "$@"
-
-
 #!/bin/sh
 
 # Si algún comando falla, salir inmediatamente
 set -e
 
 # --- 1. ESPERA A LA BASE DE DATOS (Esto lo hacen TODOS) ---
-# Todos necesitan la BD, así que esto se queda fuera del if
 echo "--> Esperando a la base de datos..."
 
 python << END
@@ -105,10 +59,10 @@ django.setup()
 
 User = get_user_model()
 username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
-email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
+email = os.environ.get("DJANGO_SUPERUSER_EMAIL", "admin@example.com")
 password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
 
-if username and password and email:
+if username and password:
     if not User.objects.filter(username=username).exists():
         print(f"Creando superusuario {username}...")
         User.objects.create_superuser(username, email, password)
