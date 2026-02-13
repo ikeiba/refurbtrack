@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { Header } from "@/components/header"
 import { HomeHero } from "@/components/home-hero"
 import { FamilyGrid } from "@/components/family-grid"
@@ -11,7 +11,7 @@ import type { ProductSummary, OfferSummary } from "@/lib/types"
 import { useRouter, useSearchParams } from "next/navigation"
 import { WhyRefurbished } from "@/components/why-refurbished"
 
-export default function HomePage() {
+function HomePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -112,5 +112,18 @@ export default function HomePage() {
 
       <Toaster />
     </div>
+  )
+}
+
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Cargando...</div>
+      </div>
+    }>
+      <HomePageContent />
+    </Suspense>
   )
 }

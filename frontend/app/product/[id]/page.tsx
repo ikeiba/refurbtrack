@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, use, useMemo } from "react"
+import { useEffect, useState, use, useMemo, Suspense } from "react"
 import { getProductDetail, getOfferHistory, getHistoricalLowOffers } from "@/services/api"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -20,8 +20,7 @@ import { t } from "@/lib/translations"
 import { format, roundToNearestMinutes } from "date-fns"
 import { es } from "date-fns/locale"
 
-export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+function ProductPageContent({ id }: { id: string }) {  // ← AÑADIR PROP
     
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -569,5 +568,22 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           )}
       </div>
     </div>
+  )
+}
+
+// ============================================
+// COMPONENTE PRINCIPAL (wrapper con Suspense)
+// ============================================
+export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)  // ← Desenvolver la Promise
+  
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Cargando producto...</div>
+      </div>
+    }>
+      <ProductPageContent id={resolvedParams.id} />  {/* ← Pasar el id */}
+    </Suspense>
   )
 }
