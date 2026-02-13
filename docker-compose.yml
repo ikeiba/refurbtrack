@@ -2,13 +2,11 @@ services:
   # 1. BASE DE DATOS (PostgreSQL)
   db:
     image: postgres:15-alpine
+    env_file:
+      - .env
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=refurbtrack
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=***ELIMINADO***  # ¡CAMBIA ESTO!
     networks:
       - app-network
 
@@ -22,6 +20,8 @@ services:
   # 3. BACKEND (Django API)
   web:
     build: .
+    env_file:
+      - .env
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
     restart: always
     volumes:
@@ -30,33 +30,28 @@ services:
       - ./scraper:/app/scraper
       - static_volume:/app/backend/staticfiles
     environment:
-      - DEBUG=False
-      - SECRET_KEY=CAMBIA_ESTO_POR_UNA_LARGA_Y_SEGURA
-      - DJANGO_ALLOWED_HOSTS=tudominio.com,localhost,127.0.0.1,web
-      - DATABASE_URL=postgres://admin:***ELIMINADO***@db:5432/refurbtrack
-      - REDIS_URL=redis://redis:6379/0
-      - RESEND_API_KEY=re_123456... # TU API KEY REAL
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,https://tudominio.com
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     depends_on:
       - db
       - redis
     networks:
       - app-network
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
   # 4. CELERY WORKER (Ejecuta el scraper)
   celery_worker:
     build: .
     # OJO: Aquí le decimos que arranque el worker en vez de gunicorn
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app/backend
+      - ./scraper:/app/scraper
     command: celery -A config worker --loglevel=info --concurrency=2
     restart: always
     environment:
-      - DEBUG=False
-      - SECRET_KEY=CAMBIA_ESTO_POR_UNA_LARGA_Y_SEGURA
-      - DATABASE_URL=postgres://admin:***ELIMINADO***@db:5432/refurbtrack
-      - REDIS_URL=redis://redis:6379/0
-      - RESEND_API_KEY=re_123456...
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     depends_on:
       - db
       - redis
@@ -67,13 +62,15 @@ services:
   # 5. CELERY BEAT (El reloj)
   celery_beat:
     build: .
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app/backend
+      - ./scraper:/app/scraper
     command: celery -A config beat --loglevel=info
     restart: always
     environment:
-      - DEBUG=False
-      - SECRET_KEY=CAMBIA_ESTO_POR_UNA_LARGA_Y_SEGURA
-      - DATABASE_URL=postgres://admin:***ELIMINADO***@db:5432/refurbtrack
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     depends_on:
       - redis
       - web

@@ -11,22 +11,20 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     python3-dev \
     git \
+    libjpeg-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Directorio de trabajo
 WORKDIR /app
 
 # 1. INSTALAMOS DEPENDENCIAS (Copiamos primero requirements para aprovechar caché de Docker)
-# Copiamos requirements del backend
+# Copiamos requirements del backend y scraper
 COPY backend/requirements.txt /app/backend/requirements.txt
-# Copiamos requirements del scraper (si tienes uno específico, si no usa el mismo)
-# COPY scraper/requirements.txt /app/scraper/requirements.txt
 
 # Instalamos todo
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /app/backend/requirements.txt && \
-    # Instalamos Scrapy y sus dependencias si no estaban en el txt del backend
-    pip install --no-cache-dir scrapy scrapy-impersonate crochet
+    pip install --no-cache-dir -r /app/backend/requirements.txt 
 
 # 2. COPIAMOS EL CÓDIGO
 COPY backend /app/backend
@@ -35,11 +33,17 @@ COPY scraper /app/scraper
 # 3. PREPARAMOS EL ENTORNO
 WORKDIR /app/backend
 
+# ---> SOLO DAMOS PERMISOS (No copiamos de nuevo, ni usamos sed) <---
+RUN chmod +x /app/backend/entrypoint.sh
+
 # Recolectamos estáticos (Fingimos claves para que no falle al buildear)
 RUN SECRET_KEY=dummy DATABASE_URL=sqlite:///db.sqlite3 python manage.py collectstatic --noinput
 
 # Exponemos el puerto de Django
 EXPOSE 8000
+
+# Definimos el Entrypoint
+ENTRYPOINT ["/app/backend/entrypoint.sh"]
 
 # Script de entrada (Se sobreescribe en docker-compose, pero este es el default)
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]

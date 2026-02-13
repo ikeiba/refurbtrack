@@ -16,11 +16,12 @@ import os
 from dotenv import load_dotenv
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Definir la ruta base
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file
+# Intentar cargar el .env (Genial para local, inocuo para Docker)
 load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR.parent / '.env') # Por si está en la raíz
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -117,6 +118,7 @@ CELERY_TIMEZONE = "Europe/Madrid"
 
 # CELERY BEAT SCHEDULE
 # Aquí definimos cada cuánto se lanza el orquestador
+
 CELERY_BEAT_SCHEDULE = {
     'run-scraper-every-hour': {
         'task': 'api.tasks.run_spiders_manager',
@@ -161,22 +163,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if os.environ.get("DATABASE_URL"):
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-else:
-    # TU CONFIGURACIÓN ACTUAL LOCAL
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+# Database
+DATABASES = {
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3', # Si no encuentra la variable DATABASE_URL, usa esto (Local)
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
 
 
 # Password validation
