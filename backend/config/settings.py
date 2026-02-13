@@ -44,6 +44,9 @@ CORS_ALLOWED_ORIGINS = os.getenv(
     'http://localhost:3000,http://127.0.0.1:3000' # Valor por defecto si falla el .env
 ).split(',')
 
+# Permitir envío de cookies/credenciales
+CORS_ALLOW_CREDENTIALS = True
+
 #! FIN COSAS RELACIONADAS CON LA SEGURIDAD Y ENTORNO
 
 # 2. CONFIGURACIÓN DE STATIC
@@ -77,10 +80,10 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
     ],
-    #'DEFAULT_THROTTLE_RATES': {
-    #    'anon': '5/minute',  # Máximo 5 alertas por minuto para invitados
-    #    'user': '10/minute'  # Máximo 20 para logueados
-    #}
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',   # 100 peticiones/hora para anónimos
+        'user': '1000/hour'   # 1000 peticiones/hora para autenticados
+    }
     # Mantén otras configuraciones si ya tenías (como paginación, etc.)
 }
 
@@ -92,7 +95,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-# CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS # Si usas CSRF (token en cookies), confía en los mismos orígenes que CORS
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS # Si usas CSRF (token en cookies), confía en los mismos orígenes que CORS
 
 
 # Application definition

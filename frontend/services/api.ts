@@ -3,8 +3,8 @@ import { ProductSummary, AlertData, OfferSummary } from "@/lib/types";
 import { authService } from "./auth" // <--- 1. Importamos el servicio de auth
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
-export const API_URL = "http://127.0.0.1:8000/api"; 
-
+// CAMBIO: En producción usará /api, en desarrollo 127.0.0.1:8000
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
 
 export const getProducts = async (): Promise<ProductSummary[]> => {

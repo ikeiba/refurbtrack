@@ -6,7 +6,7 @@ from .views import (DeleteAccountView, HistoricalLowOffersView, PasswordResetReq
                     AlertListCreateView, SubscriberUnsubscribeView, UnsubscribeUserView, 
                     UserRegistrationView, 
                     AlertDetailView,
-                    AlertUnsubscribeView, PasswordResetConfirmView)
+                    AlertUnsubscribeView, PasswordResetConfirmView, health_check)
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -54,5 +54,8 @@ urlpatterns = [
 
     path('auth/forgot-password/', PasswordResetRequestView.as_view()),
     path('auth/reset-password/', PasswordResetConfirmView.as_view()),
+
+    # Healthcheck para Docker
+    path('api/health/', health_check, name='health-check'),  # 👈 AÑADE ESTO
 
 ]

@@ -2,28 +2,41 @@ services:
   # 1. BASE DE DATOS (PostgreSQL)
   db:
     image: postgres:15-alpine
+    container_name: postgres_db
     env_file:
       - .env
-    restart: always
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # 2. REDIS (Cola de mensajes)
   redis:
     image: redis:7-alpine
-    restart: always
+    container_name: redis_cache
+    restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   # 3. BACKEND (Django API)
   web:
     build: .
+    container_name: django_backend
     env_file:
       - .env
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
-    restart: always
+    restart: unless-stopped
     volumes:
       # Montamos el código para no tener que reconstruir si cambias algo pequeño (opcional en prod)
       - ./backend:/app/backend
@@ -32,50 +45,121 @@ services:
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - app-network
-    ports:
-      - "127.0.0.1:8000:8000"
+    healthcheck:  # 👈 AÑADIR TODO ESTO
+        test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+        start_period: 40s
+    # ports:
+    #  - "127.0.0.1:8000:8000"
 
   # 4. CELERY WORKER (Ejecuta el scraper)
   celery_worker:
     build: .
-    # OJO: Aquí le decimos que arranque el worker en vez de gunicorn
+    container_name: celery_worker
     env_file:
       - .env
     volumes:
       - ./backend:/app/backend
       - ./scraper:/app/scraper
     command: celery -A config worker --loglevel=info --concurrency=2
-    restart: always
+    restart: unless-stopped
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     depends_on:
-      - db
-      - redis
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - app-network
 
   # 5. CELERY BEAT (El reloj)
   celery_beat:
     build: .
+    container_name: celery_beat
     env_file:
       - .env
     volumes:
       - ./backend:/app/backend
       - ./scraper:/app/scraper
     command: celery -A config beat --loglevel=info
-    restart: always
+    restart: unless-stopped
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     depends_on:
-      - redis
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - app-network
+
+# ========================================
+# FRONTEND (Next.js)
+# ========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nextjs_frontend
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      # Para el navegador (client-side) - ruta relativa
+      - NEXT_PUBLIC_API_URL=/api
+      # Para SSR (server-side) - URL interna
+      - INTERNAL_API_URL=http://web:8000
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      
+# ========================================
+# NGINX (Proxy Inverso)
+# ========================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"  # ✅ ÚNICO puerto expuesto a internet
+      # - "443:443"  # Descomentar cuando configures SSL
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - static_volume:/var/www/static:ro
+      # Para SSL (descomentar cuando lo configures)
+      # - ./certbot/conf:/etc/letsencrypt:ro
+      # - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      web:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:

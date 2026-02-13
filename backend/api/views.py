@@ -35,6 +35,9 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 
+from django.http import JsonResponse
+from django.db import connection
+
 
 # --- 1. VIEWSET PRINCIPAL (Catálogo) ---
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -360,3 +363,25 @@ class PasswordResetConfirmView(APIView):
                 
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({"error": "Enlace inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+def health_check(request):
+    """
+    Endpoint de healthcheck para Docker.
+    Verifica que Django está corriendo y puede conectar a la DB.
+    """
+    try:
+        # Intenta hacer una query simple a la DB
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        
+        return JsonResponse({
+            'status': 'healthy',
+            'database': 'connected'
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({
+            'status': 'unhealthy',
+            'error': str(e)
+        }, status=503)  # 503 = Service Unavailable
