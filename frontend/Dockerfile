@@ -26,8 +26,8 @@ COPY --from=base /app/node_modules ./node_modules
 COPY . .
 
 # Variables de entorno para build (opcionales)
-# ARG NEXT_PUBLIC_API_URL
-# ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_API_URL=/api
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # Desactivamos telemetría y construimos
 ENV NEXT_TELEMETRY_DISABLED=1

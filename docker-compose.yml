@@ -115,13 +115,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+      NEXT_PUBLIC_API_URL: /api  # ← Configurable aquí
     container_name: nextjs_frontend
     restart: unless-stopped
     networks:
       - app-network
     environment:
       # Para el navegador (client-side) - ruta relativa
-      - NEXT_PUBLIC_API_URL=/api
       # Para SSR (server-side) - URL interna
       - INTERNAL_API_URL=http://web:8000
     depends_on:
