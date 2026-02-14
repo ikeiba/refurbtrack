@@ -116,7 +116,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-      NEXT_PUBLIC_API_URL: /api  # ← Configurable aquí
+        NEXT_PUBLIC_API_URL: /api  # ← Configurable aquí
     container_name: nextjs_frontend
     restart: unless-stopped
     networks:
