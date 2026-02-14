@@ -56,6 +56,6 @@ urlpatterns = [
     path('auth/reset-password/', PasswordResetConfirmView.as_view()),
 
     # Healthcheck para Docker
-    path('api/health/', health_check, name='health-check'),  # 👈 AÑADE ESTO
+    path('health/', health_check, name='health-check'),  # 👈 AÑADE ESTO
 
 ]
