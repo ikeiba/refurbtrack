@@ -108,7 +108,7 @@ class Command(BaseCommand):
         self.insert_spec(product_id=id, uuid="56bc27b8-3299-4836-9c77-15694bbd55c1", storage="512", color="Gold")
         self.insert_spec(product_id=id, uuid="5bbdb839-fe7e-481e-b747-538a588b4636", storage="512", color="Silver")
         
-        self.insert_product(name="iPhone 13",    type="Smartphone", image_path="products/iphone-13-alpine-green.avif")
+        self.insert_product(name="iPhone 13",    type="Smartphone", image_path="products/iphone-13-green.avif")
         id = self.get_product_by_name(name="iPhone 13")[0]
         self.insert_spec(product_id=id, uuid="ef5660d2-6883-4b81-b47d-86e5720687ef", storage="128", color="Midnight")
         self.insert_spec(product_id=id, uuid="e621dc7f-2574-42f4-8e7d-220dcc6cc851", storage="128", color="Red")
