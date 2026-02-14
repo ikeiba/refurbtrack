@@ -51,8 +51,10 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    ports:
+    - "127.0.0.1:8000:8000"  # ELIMINAR EN PRODUCCION, SOLO PARA DESARROLLO (EN PROD NGINX SE ENCARGA DE EXPONERLO)
     healthcheck:  # 👈 AÑADIR TODO ESTO
-        test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+        test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000/api/health/ || exit 1"]
         interval: 30s
         timeout: 10s
         retries: 3
