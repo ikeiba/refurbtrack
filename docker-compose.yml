@@ -51,8 +51,8 @@ services:
         condition: service_healthy
     networks:
       - app-network
-    ports:
-    - "127.0.0.1:8000:8000"  # ELIMINAR EN PRODUCCION, SOLO PARA DESARROLLO (EN PROD NGINX SE ENCARGA DE EXPONERLO)
+    #ports:
+    #- "127.0.0.1:8000:8000"  # ELIMINAR EN PRODUCCION, SOLO PARA DESARROLLO (EN PROD NGINX SE ENCARGA DE EXPONERLO)
     healthcheck:  # 👈 AÑADIR TODO ESTO
         test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000/api/health/ || exit 1"]
         interval: 30s
@@ -105,6 +105,23 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
+    networks:
+      - app-network
+  
+  # 6. FLOWER (Monitor de Celery)
+  flower:
+    image: mher/flower
+    container_name: celery_flower
+    restart: unless-stopped
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    # Le decimos a Flower que va a vivir detrás de este endpoint específico
+    command: celery flower --url_prefix=/monitor-flower
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery_worker:
+        condition: service_started
     networks:
       - app-network
 

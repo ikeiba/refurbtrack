@@ -47,6 +47,10 @@ if [ "$1" = "gunicorn" ]; then
     echo "    Loading initial data..."
     python manage.py importar_variantes || echo "⚠️ Advertencia: Error al importar variantes o ya existen."
 
+    # -> NUEVO: Configurar el reloj de Celery
+    echo "    Seeding Celery Beat schedule..."
+    python manage.py seed_schedule || echo "⚠️ Advertencia: Error al crear el horario de Celery."
+
     # D. Crear Superusuario
     echo "    Checking superuser..."
     python << END

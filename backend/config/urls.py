@@ -18,6 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('07022019-manage/', admin.site.urls),
     path('api/', include('api.urls')), # <--- Todo lo que venga a /api/ va a tu app
 ]
