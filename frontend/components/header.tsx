@@ -101,8 +101,8 @@ export function Header({
           
           {/* 2. Estilizamos el texto para darle identidad de marca */}
           <span className="hidden text-xl tracking-tight sm:inline-block">
-            <span className="font-extrabold text-foreground">refurb</span>
-            <span className="font-semibold text-emerald-600">track</span>
+            <span className="font-extrabold text-foreground">Refurb</span>
+            <span className="font-semibold text-emerald-600">Track</span>
           </span>
         </button>
 
