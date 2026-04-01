@@ -3,9 +3,14 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
-import { Footer } from "@/components/footer" // <--- 1. Importar
-import { AuthProvider } from "@/context/auth-context" // <--- Importar el AuthProvider
+import { Footer } from "@/components/footer" 
+import { AuthProvider } from "@/context/auth-context" 
 
+// <--- 1. Importar el proveedor y el componente del banner de cookies
+import { ConsentProvider } from "@/context/ConsentContext"
+import { CookieBanner } from "@/components/CookieBanner"
+
+import { AnalyticsScripts } from "@/components/AnalyticsScripts"
 
 const _inter = Inter({ subsets: ["latin"] })
 
@@ -14,13 +19,10 @@ export const metadata: Metadata = {
   description:
     "Track prices from Back Market and other refurbished tech marketplaces. Find the best deals on iPhones, iPads, and more.",
   generator: "v0.app",
-  // 1. Añadimos el manifest
   manifest: "/site.webmanifest",
-  // 2. Añadimos el título para aplicaciones web de Apple (PWA)
   appleWebApp: {
     title: "refurbtrack",
   },
-  // 3. Sustituimos los iconos antiguos por los nuevos de tu paquete
   icons: {
     icon: [
       { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
@@ -41,11 +43,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${_inter.className} font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-          <Footer />
-          <Toaster />
-        </AuthProvider>
+        
+        {/* <--- 2. Envolver toda la aplicación con el ConsentProvider */}
+        <ConsentProvider>
+          <AuthProvider>
+            {children}
+            <Footer />
+            <Toaster />
+          </AuthProvider>
+          
+          {/* <--- 3. Renderizar el Banner al final del body */}
+          <CookieBanner />
+          <AnalyticsScripts /> {/* <--- Añade esta línea aquí */}
+        </ConsentProvider>
+
       </body>
     </html>
   )
