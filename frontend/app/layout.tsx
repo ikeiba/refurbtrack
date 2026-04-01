@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     "Track prices from Back Market and other refurbished tech marketplaces. Find the best deals on iPhones, iPads, and more.",
   generator: "v0.app",
   manifest: "/site.webmanifest",
+  verification: {
+    google: "cdvImXJDTi0mo4J1NSj6wCfbuMkBB6ybvInJn2UwI9A", 
+  },
   appleWebApp: {
     title: "refurbtrack",
   },
