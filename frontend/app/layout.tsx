@@ -14,22 +14,22 @@ export const metadata: Metadata = {
   description:
     "Track prices from Back Market and other refurbished tech marketplaces. Find the best deals on iPhones, iPads, and more.",
   generator: "v0.app",
+  // 1. Añadimos el manifest
+  manifest: "/site.webmanifest",
+  // 2. Añadimos el título para aplicaciones web de Apple (PWA)
+  appleWebApp: {
+    title: "refurbtrack",
+  },
+  // 3. Sustituimos los iconos antiguos por los nuevos de tu paquete
   icons: {
     icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    apple: "/apple-icon.png",
+    shortcut: ["/favicon.ico"],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 }
 

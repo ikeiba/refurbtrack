@@ -92,10 +92,18 @@ export function Header({
           onClick={() => router.push("/")} 
           className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-primary-foreground">
-            <span className="text-sm font-bold text-white">R</span>
-          </div>
-          <span className="hidden text-xl font-semibold tracking-tight sm:inline-block">RefurbTrack</span>
+          {/* 1. Inyectamos el SVG directamente desde la carpeta public */}
+          <img 
+            src="/favicon.svg" 
+            alt="Logo de RefurbTrack" 
+            className="h-8 w-8" 
+          />
+          
+          {/* 2. Estilizamos el texto para darle identidad de marca */}
+          <span className="hidden text-xl tracking-tight sm:inline-block">
+            <span className="font-extrabold text-foreground">refurb</span>
+            <span className="font-semibold text-emerald-600">track</span>
+          </span>
         </button>
 
         {/* === ZONA CENTRAL === */}
