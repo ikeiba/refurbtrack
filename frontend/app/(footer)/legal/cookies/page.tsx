@@ -173,7 +173,7 @@ export default function CookiesPage() {
         Si tienes preguntas sobre nuestra política de cookies, puedes contactarnos en:
       </p>
       <ul className="list-none space-y-2 my-4">
-        <li><strong>Email:</strong> privacidad@refurbtrack.com</li>
+        <li><strong>Formulario de contacto:</strong> <a href="/company/contact" className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
         <li><strong>Consulta también:</strong> <a href="/legal/privacy" className="text-emerald-600 hover:underline">Política de Privacidad</a></li>
       </ul>
 

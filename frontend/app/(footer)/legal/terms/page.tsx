@@ -169,7 +169,7 @@ export default function TermsPage() {
         Para preguntas sobre estos Términos y Condiciones, puedes contactarnos en:
       </p>
       <ul className="list-none space-y-2 my-4">
-        <li><strong>Formulario de contacto:</strong> <a href="/company/contact" className="text-emerald-600 hover:underline">refurbtrack.com/company/contact</a></li>
+        <li><strong>Formulario de contacto:</strong> <a href="/company/contact" className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
       </ul>
     </div>
   )

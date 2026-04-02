@@ -121,7 +121,7 @@ export default function PrivacyPage() {
         Si tienes dudas sobre cómo tratamos tus datos o deseas presentar una queja:
       </p>
       <ul className="list-disc pl-5 space-y-2 my-4">
-        <li><strong>Email:</strong> privacidad@refurbtrack.com</li>
+        <li><strong>Formulario de contacto:</strong> <a href="/company/contact" className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
         <li><strong>Autoridad de Control:</strong> Tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) en <a href="https://www.aepd.es" target="_blank" rel="noopener" className="text-emerald-600 hover:underline">www.aepd.es</a></li>
       </ul>
 
