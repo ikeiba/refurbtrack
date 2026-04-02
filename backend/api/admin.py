@@ -1,18 +1,18 @@
 # backend/api/admin.py
 
 from django.contrib import admin
-from .models import Subscriber, Product, Spec, Offer, PriceHistory, Alert
+# ¡AÑADIDO ClickEvent a las importaciones!
+from .models import Subscriber, Product, Spec, Offer, PriceHistory, Alert, ClickEvent
 from django.utils.html import format_html
 from django.urls import reverse
 
 # --- UTILIDAD PARA IMÁGENES ---
-# Función helper para no repetir código en Product y Spec
 def image_preview_helper(image_field):
     if image_field:
         return format_html('<img src="{}" style="width: 40px; height: 40px; object-fit: contain;" />', image_field.url)
     return "-"
 
-# --- SUSCRIPTORES (Antes no tenía configuración) ---
+# --- SUSCRIPTORES ---
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin):
     list_display = ('email', 'created_at')
@@ -27,9 +27,9 @@ class ProductAdmin(admin.ModelAdmin):
         'name', 
         'type', 
         'min_price_cached', 
-        'lowest_ever_price', # Nuevo: Récord histórico
-        'last_updated',       # Nuevo: Cuándo se actualizó
-        'market_price'      # Nuevo: Precio de mercado aproximado
+        'lowest_ever_price',
+        'last_updated',      
+        'market_price'      
     )
     search_fields = ('name',)
     list_filter = ('type',)
@@ -42,7 +42,7 @@ class ProductAdmin(admin.ModelAdmin):
 # --- NIVEL 2: SPEC (Variante Técnica) ---
 @admin.register(Spec)
 class SpecAdmin(admin.ModelAdmin):
-    list_select_related = ('product',) # Optimización DB
+    list_select_related = ('product',) 
     
     list_display = (
         'image_preview',
@@ -51,7 +51,7 @@ class SpecAdmin(admin.ModelAdmin):
         'color', 
         'back_market_uuid', 
         'min_price_cached',
-        'lowest_ever_price' # Nuevo: Récord de esta variante
+        'lowest_ever_price' 
     )
     search_fields = ('product__name', 'back_market_uuid')
     list_filter = ('product__type', 'storage', 'color')
@@ -62,7 +62,6 @@ class SpecAdmin(admin.ModelAdmin):
     get_product_name.admin_order_field = 'product__name'
 
     def image_preview(self, obj):
-        # Si la spec no tiene foto, intenta mostrar la del producto padre
         img = obj.image if obj.image else obj.product.image
         return image_preview_helper(img)
     image_preview.short_description = 'Img'
@@ -70,29 +69,27 @@ class SpecAdmin(admin.ModelAdmin):
 # --- NIVEL 3: OFFER (La Ficha Comercial) ---
 @admin.register(Offer)
 class OfferAdmin(admin.ModelAdmin):
-    # Traemos datos del padre (Spec) y del abuelo (Product) para que no vaya lento
     list_select_related = ('spec', 'spec__product')
     
     list_display = (
-        'link_to_spec',         # Link al Spec
-        'get_storage',          # Del padre Spec
-        'get_color',            # Del padre Spec
-        'battery_status',       # Icono visual
-        'get_colored_condition',# Colores adaptados
+        'link_to_spec',         
+        'get_storage',          
+        'get_color',            
+        'battery_status',       
+        'get_colored_condition',
         'current_price',
-        'min_price_30d',        # Nuevo: Mínimo mensual
-        'all_time_min_price',   # Nuevo: Mínimo histórico absoluto
-        'all_time_max_price',   # Nuevo: Máximo histórico absoluto
         'deal_score',
-        'go_to_backmarket',     # Nuevo: Botón para ir a la web real
+        'go_to_backmarket',     
+        'test_tracking_link',   # ¡NUEVO! Botón para probar la redirección
         'last_updated'
     )
     
     list_filter = ('condition', 'battery_new', 'country', 'spec__product')
-    search_fields = ('spec__product__name', 'spec__back_market_uuid', 'url')
+    search_fields = ('spec__product__name', 'spec__back_market_uuid', 'url', 'uuid') # Añadido 'uuid' al buscador
     
-    # Campos que no se deben tocar manualmente en el admin, solo ver
+    # ¡NUEVO! Añadido 'uuid' a los campos de solo lectura
     readonly_fields = (
+        'uuid',
         'min_price_30d', 'min_price_30d_date', 
         'max_price_30d', 'max_price_30d_date',
         'all_time_min_price', 'all_time_min_date',
@@ -100,14 +97,12 @@ class OfferAdmin(admin.ModelAdmin):
         'last_updated'
     )
 
-    # --- DATOS HEREDADOS ---
     def get_storage(self, obj): return obj.spec.storage
     get_storage.short_description = 'GB'
 
     def get_color(self, obj): return obj.spec.color
     get_color.short_description = 'Color'
 
-    # --- BATERÍA VISUAL ---
     def battery_status(self, obj):
         if obj.battery_new:
             return format_html('<span style="color:green; font-weight:bold;">🔋 Nueva</span>')
@@ -115,40 +110,93 @@ class OfferAdmin(admin.ModelAdmin):
     battery_status.short_description = 'Batería'
     battery_status.admin_order_field = 'battery_new'
 
-    # --- LINK EXTERNO ---
     def go_to_backmarket(self, obj):
         if obj.url:
-            return format_html('<a href="{}" target="_blank" style="background-color:#000; color:#fff; padding:3px 8px; border-radius:4px; text-decoration:none;">Ver ↗</a>', obj.url)
+            return format_html('<a href="{}" target="_blank" style="background-color:#000; color:#fff; padding:3px 8px; border-radius:4px; text-decoration:none;">BM ↗</a>', obj.url)
         return "-"
-    go_to_backmarket.short_description = 'Link'
+    go_to_backmarket.short_description = 'Directo'
 
-    # --- COLORES DE CONDICIÓN ---
+    # --- NUEVO: BOTÓN DE PRUEBA DE REDIRECCIÓN ---
+    def test_tracking_link(self, obj):
+        if hasattr(obj, 'uuid') and obj.uuid:
+            # Apunta a la ruta de tu API. Ajusta si tienes otro prefijo.
+            url = f"/api/out/{obj.uuid}/"
+            return format_html('<a href="{}" target="_blank" style="color:#3498db; font-weight:bold;">Tracking ↗</a>', url)
+        return "-"
+    test_tracking_link.short_description = 'Track'
+
     def get_colored_condition(self, obj):
         colors = {
-            'Premium': '#2ecc71',   # Verde
-            'Excellent': '#3498db', # Azul
-            'Good': '#f39c12',      # Naranja
-            'Fair': '#e74c3c',      # Rojo
+            'Premium': '#2ecc71',   
+            'Excellent': '#3498db', 
+            'Good': '#f39c12',      
+            'Fair': '#e74c3c',      
         }
         color_code = colors.get(obj.condition, 'black')
-        # Usamos get_display para que si en BD es 'Fair', muestre 'Fair' (o su traducción si la tuvieras)
         label = obj.get_condition_display()
         return format_html('<strong style="color: {};">{}</strong>', color_code, label)
     get_colored_condition.short_description = 'Estado'
     get_colored_condition.admin_order_field = 'condition'
 
-    # --- LINK INTERNO ---
     def link_to_spec(self, obj):
         link = reverse("admin:api_spec_change", args=[obj.spec.id])
         return format_html('<a href="{}">{}</a>', link, str(obj.spec.product.name))
     link_to_spec.short_description = 'Producto'
+
+
+# --- NUEVO: TELEMETRÍA DE CLICS ---
+@admin.register(ClickEvent)
+class ClickEventAdmin(admin.ModelAdmin):
+    list_select_related = ('offer', 'offer__spec', 'offer__spec__product')
+    
+    list_display = (
+        'get_product_name',
+        'get_offer_details',
+        'timestamp',
+        'referer_short',
+        'ip_hash_short'
+    )
+    
+    list_filter = ('timestamp', 'offer__spec__product')
+    search_fields = ('ip_hash', 'referer', 'offer__spec__product__name')
+    date_hierarchy = 'timestamp'
+    
+    # Bloqueamos la modificación manual por integridad de datos
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+        
+    def get_product_name(self, obj):
+        return obj.offer.spec.product.name
+    get_product_name.short_description = 'Producto'
+    get_product_name.admin_order_field = 'offer__spec__product__name'
+
+    def get_offer_details(self, obj):
+        return f"{obj.offer.spec.storage}GB | {obj.offer.get_condition_display()}"
+    get_offer_details.short_description = 'Detalle'
+
+    def referer_short(self, obj):
+        if not obj.referer:
+            return format_html('<span style="color:gray;">Directo / Desconocido</span>')
+        return obj.referer[:40] + "..." if len(obj.referer) > 40 else obj.referer
+    referer_short.short_description = 'Origen'
+
+    def ip_hash_short(self, obj):
+        if obj.ip_hash:
+            # Mostramos solo los primeros 10 caracteres del hash para identificar usuarios únicos sin ocupar toda la tabla
+            return f"{obj.ip_hash[:10]}..."
+        return "-"
+    ip_hash_short.short_description = 'IP Hash'
+
 
 # --- HISTÓRICO DE PRECIOS ---
 @admin.register(PriceHistory)
 class PriceHistoryAdmin(admin.ModelAdmin):
     list_select_related = ('offer', 'offer__spec', 'offer__spec__product')
     list_display = ('get_offer_str', 'price', 'timestamp')
-    date_hierarchy = 'timestamp' # Añade navegación por fechas arriba
+    date_hierarchy = 'timestamp' 
     list_filter = ('timestamp',) 
     
     def get_offer_str(self, obj):
@@ -164,8 +212,8 @@ class AlertAdmin(admin.ModelAdmin):
         'price_threshold', 
         'show_targets', 
         'notified', 
-        'last_notified', # Nuevo: Cuándo se avisó
-        'repeat'         # Nuevo: Si es repetitiva
+        'last_notified', 
+        'repeat'         
     )
     list_filter = ('notified', 'repeat', 'product')
     search_fields = ('subscriber__email', 'product__name')
