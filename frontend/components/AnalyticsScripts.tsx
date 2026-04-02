@@ -1,21 +1,20 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { useConsent } from '@/context/ConsentContext'
 
-export function AnalyticsScripts() {
+// 1. Movemos toda la lógica a un componente interno
+function AnalyticsContent() {
   const { consent } = useConsent()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // 1. Interceptor de Navegación SPA para Awin
-  // Al cambiar la ruta o los parámetros (ej. filtros), notificamos al Master Tag
+  // Interceptor de Navegación SPA para Awin
   useEffect(() => {
     if (consent?.marketing && typeof window !== 'undefined') {
-      // Usamos any para saltar el tipado estricto temporalmente sobre el objeto global de Awin
       const awinWindow = window as any
       if (awinWindow.AWIN?.Tracking?.run) {
         awinWindow.AWIN.Tracking.run()
@@ -23,7 +22,6 @@ export function AnalyticsScripts() {
     }
   }, [pathname, searchParams, consent?.marketing])
 
-  // Eliminamos el early return para evaluar cada bloque de forma independiente
   return (
     <>
       {/* ─── BLOQUE DE ANALÍTICA (GA4 & Clarity) ─── */}
@@ -52,7 +50,6 @@ export function AnalyticsScripts() {
         <Script
           id="awin-master-tag"
           strategy="afterInteractive"
-          // URL corregida para el Publisher Master Tag
           src="https://www.dwin2.com/pub.2838864.min.js"
           onLoad={() => {
             const awinWindow = window as any
@@ -63,5 +60,14 @@ export function AnalyticsScripts() {
         />
       )}
     </>
+  )
+}
+
+// 2. Exportamos el componente envuelto en Suspense
+export function AnalyticsScripts() {
+  return (
+    <Suspense fallback={null}>
+      <AnalyticsContent />
+    </Suspense>
   )
 }
