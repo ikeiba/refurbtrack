@@ -182,7 +182,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                   <a 
                     href={offer.url}
                     target="_blank"
-                    rel="sponsored noopener noreferrer"
+                    rel="sponsored noopener"
                     onClick={(e) => e.stopPropagation()} // Evita que se dispare el onClick de la tarjeta
                     className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0 group transition-colors"
                   >
@@ -294,7 +294,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                 <a
                   href={offer.url} // Ahora contiene /api/out/tu-uuid/
                   target="_blank"
-                  rel="sponsored noopener noreferrer" // 'sponsored' es obligatorio para SEO de afiliación
+                  rel="sponsored noopener" // 'sponsored' es obligatorio para SEO de afiliación
                   onClick={(e) => e.stopPropagation()} // Evita que se disparen eventos del contenedor padre
                   className="w-full flex justify-center items-center px-4 py-2 text-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm transition-colors rounded-md group/btn font-medium"                >
                   Ver en Back Market <ExternalLink className="ml-4 w-4 h-4 opacity-70 group-hover/btn:opacity-100" />

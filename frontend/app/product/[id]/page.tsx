@@ -270,19 +270,26 @@ function ProductPageContent({ id }: { id: string }) {  // ← AÑADIR PROP
         <div className="grid md:grid-cols-2 items-start">
           
           <div className="h-fit w-full max-w-[550px] mx-auto lg:ml-auto">
-              <ProductGallery 
-                images={[finalImage]} 
-                onImageClick={() => {
-                    if (activeOffer) {
-                        if (activeOffer?.url) {
-                            window.open(activeOffer.url, '_blank', 'noopener,noreferrer');
-                            console.log("Redirigiendo a Back Market desde la imagen...")
-                        } else {
-                            console.warn("Esta oferta no tiene link");
-                        }
-                    }
-                }}
-            />
+            {activeOffer?.url ? (
+                // Si hay URL, envolvemos la galería en un enlace semántico
+                <a
+                href={activeOffer.url}
+                target="_blank"
+                // ⛔️ HEMOS QUITADO 'noreferrer' para arreglar la telemetría del backend
+                // ✅ Mantenemos 'sponsored' (SEO) y 'noopener' (seguridad)
+                rel="sponsored noopener" 
+                title="Ver oferta en Back Market" // Mejor UX y Accesibilidad
+                className="block cursor-pointer transition-opacity hover:opacity-95"
+                >
+                {/* Eliminamos la prop onImageClick ya que la navegación 
+                    la maneja el elemento padre <a> 
+                */}
+                <ProductGallery images={[finalImage]} />
+                </a>
+            ) : (
+                // Si no hay oferta activa o URL, mostramos la galería normal sin enlace
+                <ProductGallery images={[finalImage]} />
+            )}
           </div>
 
           <div className="flex flex-col gap-3 mt-12">
@@ -417,7 +424,7 @@ function ProductPageContent({ id }: { id: string }) {  // ← AÑADIR PROP
                                 <a
                                     href={activeOffer.url}
                                     target="_blank"
-                                    rel="sponsored noopener noreferrer"
+                                    rel="sponsored noopener"
                                     className="w-full h-11 inline-flex items-center justify-center rounded-md text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all cursor-pointer"
                                 >
                                     Ver oferta en Back Market
