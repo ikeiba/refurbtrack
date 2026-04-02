@@ -413,19 +413,24 @@ function ProductPageContent({ id }: { id: string }) {  // ← AÑADIR PROP
                                 )}
                               </div>
 
-                              <Button 
-                                className="w-full h-11 text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all cursor-pointer"
-                                onClick={() => {
-                                    if (activeOffer?.url) {
-                                        window.open(activeOffer.url, '_blank', 'noopener,noreferrer');
-                                    } else {
-                                        console.warn("Esta oferta no tiene link");
-                                    }
-                                }}
-                              >
-                                Ver oferta en Back Market
-                                <ExternalLink className="ml-2 w-4 h-4 opacity-80" />
-                              </Button>
+                              {activeOffer?.url ? (
+                                <a
+                                    href={activeOffer.url}
+                                    target="_blank"
+                                    rel="sponsored noopener noreferrer"
+                                    className="w-full h-11 inline-flex items-center justify-center rounded-md text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all cursor-pointer"
+                                >
+                                    Ver oferta en Back Market
+                                    <ExternalLink className="ml-4 w-5 h-5 opacity-80" />
+                                </a>
+                                ) : (
+                                <button 
+                                    disabled
+                                    className="w-full h-11 inline-flex items-center justify-center rounded-md text-base font-medium shadow-sm bg-gray-200 text-gray-500 cursor-not-allowed transition-all"
+                                >
+                                    Sin enlace disponible
+                                </button>
+                                )}
                           </div>
                       ) : (
                           <p className="text-xl text-muted-foreground py-2">Sin stock para esta combinación</p>

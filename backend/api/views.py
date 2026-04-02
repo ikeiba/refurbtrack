@@ -435,10 +435,19 @@ def redirect_to_store(request, offer_uuid):
         # Si falla la BD por algo raro, imprimimos pero NO cortamos la redirección
         print(f"Error registrando clic: {e}")
     
-    # 4. Generamos el link de afiliado y redirigimos
-    affiliate_url = build_awin_url(offer.url)
+    # ---------------------------------------------------------
+    # 2. INTERRUPTOR DE MONETIZACIÓN (Bypass temporal)
+    # ---------------------------------------------------------
+    # Cambia esto a True el día que Back Market te apruebe en Awin
+    AWIN_APPROVED = False 
     
-    response = redirect(affiliate_url)
-    # Cabecera crítica: Evita que el navegador cachee el 302 y se salte nuestra BD en clics futuros
+    if AWIN_APPROVED:
+        # Modo Monetización: Redirige a través de Awin
+        final_url = build_awin_url(offer.url)
+    else:
+        # Modo Espera: Enlace directo y limpio a Back Market
+        final_url = offer.url 
+        
+    response = redirect(final_url)
     response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response

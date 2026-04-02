@@ -178,17 +178,25 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                 </div>
 
                 {/* COLUMNA DERECHA: Botón Link */}
-                <Button 
-                    size="sm" 
-                    className="h-9 px-4 bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0"
-                    onClick={(e) => {
-                        e.stopPropagation(); // Evita que se dispare el onClick de la tarjeta
-                        // Aquí pondremos el link real más tarde
-                        console.log("Ir a Back Market"); 
-                    }}
-                >
-                    Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover:opacity-100" />
-                </Button>
+                {offer?.url ? (
+                  <a 
+                    href={offer.url}
+                    target="_blank"
+                    rel="sponsored noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()} // Evita que se dispare el onClick de la tarjeta
+                    className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0 group transition-colors"
+                  >
+                    Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                ) : (
+                  <button 
+                    disabled
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-200 text-gray-500 shadow-sm shrink-0 cursor-not-allowed"
+                  >
+                    No disponible
+                  </button>
+                )}
             </div>
         </div>
     </div>
@@ -282,20 +290,23 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
               </div>
   
               {/* FILA INFERIOR: Botón Ancho */}
-              <Button 
-                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm group/btn"
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      if (offer?.url) {
-                          window.open(offer.url, '_blank', 'noopener,noreferrer');
-                      } else {
-                          console.warn("Esta oferta no tiene link");
-                          // Fallback opcional: Ir a la home de Back Market
-                      }
-                  }}
-              >
-                  Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover/btn:opacity-100" />
-              </Button>
+              {offer?.url ? (
+                <a
+                  href={offer.url} // Ahora contiene /api/out/tu-uuid/
+                  target="_blank"
+                  rel="sponsored noopener noreferrer" // 'sponsored' es obligatorio para SEO de afiliación
+                  onClick={(e) => e.stopPropagation()} // Evita que se disparen eventos del contenedor padre
+                  className="w-full flex justify-center items-center px-4 py-2 text-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm transition-colors rounded-md group/btn font-medium"                >
+                  Ver en Back Market <ExternalLink className="ml-4 w-4 h-4 opacity-70 group-hover/btn:opacity-100" />
+                </a>
+              ) : (
+                <button 
+                  disabled
+                  className="w-full px-4 py-2 bg-gray-200 text-gray-500 cursor-not-allowed rounded-md"
+                >
+                  Sin enlace disponible
+                </button>
+              )}
           </div>
       </div>
     )
