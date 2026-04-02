@@ -82,10 +82,6 @@ export function Header({
       <div className="flex h-16 items-center gap-4 px-4 lg:px-6">
         
         {/* === ZONA IZQUIERDA === */}
-        <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
-        </Button>
 
         {/* LOGO - Botón para volver a home sin filtros */}
         <button 

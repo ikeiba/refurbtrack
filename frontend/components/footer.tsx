@@ -12,12 +12,17 @@ export function Footer() {
           {/* COLUMNA 1: MARCA */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              {/* Logo "R" en caja verde */}
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                R
-              </div>
-              <span className="font-bold text-xl tracking-tight text-foreground">
-                RefurbTrack
+              {/* 1. Inyectamos el SVG directamente desde la carpeta public */}
+              <img 
+                src="/favicon.svg" 
+                alt="Logo de RefurbTrack" 
+                className="h-8 w-8" 
+              />
+              
+              {/* 2. Estilizamos el texto para darle identidad de marca */}
+              <span className="hidden text-xl tracking-tight sm:inline-block">
+                <span className="font-extrabold text-foreground">Refurb</span>
+                <span className="font-semibold text-emerald-600">Track</span>
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
