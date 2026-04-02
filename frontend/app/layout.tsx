@@ -36,6 +36,9 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+  other: {
+    'awin': 'Awin' // <--- Añade esto
+  }
 }
 
 export default function RootLayout({
