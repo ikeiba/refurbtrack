@@ -25,6 +25,9 @@ class OfferSerializer(serializers.ModelSerializer):
     Sustituye a la lógica mezclada que tenías en Variant anteriormente.
     """
 
+    # Declaramos el campo como MethodField para calcularlo nosotros
+    url = serializers.SerializerMethodField()
+
     class Meta:
         model = Offer
         fields = [
@@ -41,6 +44,13 @@ class OfferSerializer(serializers.ModelSerializer):
             'max_price_30d',
             'max_price_30d_date'
         ]
+
+    def get_url(self, obj):
+        """
+        Retorna la URL de redirección interna usando el UUID.
+        """
+        # Esto devolverá: /api/out/550e8400-e29b-41d4-a716-446655440000/
+        return f"/api/out/{obj.uuid}/"
 
 # --- 3. NIVEL 2: LA SPEC (El Configurador) ---
 class SpecSerializer(serializers.ModelSerializer):
@@ -231,6 +241,9 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
     storage = serializers.CharField(source='spec.storage')
     color = serializers.CharField(source='spec.color')
     condition = serializers.CharField(source='get_condition_display')
+
+    # Sobrescribimos el campo url aquí también
+    url = serializers.SerializerMethodField()
     
     # CAMBIO CLAVE: Usamos SerializerMethodField pero devolvemos STRING, no URL
     image = serializers.SerializerMethodField()
@@ -259,6 +272,12 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
             return str(img_field)
             
         return None
+    
+    def get_url(self, obj):
+        """
+        Apunta a nuestro nuevo endpoint de tracking.
+        """
+        return f"/api/out/{obj.uuid}/"
     
 class UserRegistrationSerializer(serializers.ModelSerializer):
     # 1. Hacemos el email OBLIGATORIO y ÚNICO (Django por defecto no lo exige)

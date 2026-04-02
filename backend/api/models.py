@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 # api/models.py
 
 class Subscriber(models.Model):
@@ -117,6 +118,11 @@ class Offer(models.Model):
     all_time_max_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     all_time_max_date = models.DateTimeField(null=True, blank=True)
 
+    # --- AÑADIMOS ESTO PARA LA MONETIZACIÓN ---
+    # Usamos default=uuid.uuid4 para que Django lo asigne solo al crear nuevas ofertas.
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    # ------------------------------------------
+
     class Meta:
         # Solo una oferta activa por cada combinación de Estado+Batería+País para esa Spec
         unique_together = ('spec', 'condition', 'battery_new', 'country')
@@ -191,3 +197,18 @@ class Alert(models.Model):
 
     def __str__(self):
         return f"Alerta {self.product.name} < {self.price_threshold}€ ({self.subscriber.email})"
+    
+# --- NUEVO MODELO DE TELEMETRÍA ---
+class ClickEvent(models.Model):
+    """Registra cada vez que un usuario hace clic en "Comprar en BackMarket"."""
+    offer = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name='clicks')
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    referer = models.CharField(max_length=500, blank=True, null=True)
+    user_agent = models.CharField(max_length=500, blank=True, null=True)
+    
+    # RGPD: No guardamos IPs, guardamos un hash
+    ip_hash = models.CharField(max_length=64, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']

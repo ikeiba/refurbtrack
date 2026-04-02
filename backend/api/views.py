@@ -6,13 +6,18 @@ from datetime import timedelta
 # Añade F para comparar columnas
 from django.db.models import F 
 
+import hashlib
+from urllib.parse import urlencode
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_GET
+
 # Para el unsuscribe seguro
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from rest_framework.views import APIView
 from rest_framework import status
 
 
-from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber
+from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Offer, ClickEvent
 from .serializers import (
     AlertSerializer,
     ProductListSerializer, 
@@ -385,3 +390,55 @@ def health_check(request):
             'status': 'unhealthy',
             'error': str(e)
         }, status=503)  # 503 = Service Unavailable
+    
+def hash_ip(ip_address):
+    """Hashea la IP para RGPD. Usar salt en producción es ideal."""
+    if not ip_address:
+        return ""
+    return hashlib.sha256(ip_address.encode('utf-8')).hexdigest()
+
+def build_awin_url(destination_url):
+    """Construye el enlace de afiliado."""
+    # Tu Publisher ID de Awin
+    AWIN_PUBLISHER_ID = "2838864" 
+    
+    # IMPORTANTE: Sustituye esto por el ID del programa de Back Market
+    # Lo verás en el panel de Awin cuando te acepten.
+    AWIN_ADVERTISER_ID = "TU_ID_DE_BACKMARKET_AQUI" 
+
+    base_url = "https://www.awin1.com/cread.php"
+    params = {
+        'awinmid': AWIN_ADVERTISER_ID,
+        'awinaffid': AWIN_PUBLISHER_ID,
+        'ued': destination_url
+    }
+    return f"{base_url}?{urlencode(params)}"
+
+@require_GET
+def redirect_to_store(request, offer_uuid):
+    # 1. Buscamos la oferta usando el UUID seguro, no el ID autoincremental
+    offer = get_object_or_404(Offer, uuid=offer_uuid)
+    
+    # 2. Si la oferta no tiene URL por algún motivo, redirigimos a una fallback
+    if not offer.url:
+        return redirect("https://www.backmarket.es")
+
+    # 3. Guardamos la telemetría síncronamente (rápido en PostgreSQL)
+    try:
+        ClickEvent.objects.create(
+            offer=offer,
+            referer=request.META.get('HTTP_REFERER', '')[:500],
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+            ip_hash=hash_ip(request.META.get('REMOTE_ADDR', ''))
+        )
+    except Exception as e:
+        # Si falla la BD por algo raro, imprimimos pero NO cortamos la redirección
+        print(f"Error registrando clic: {e}")
+    
+    # 4. Generamos el link de afiliado y redirigimos
+    affiliate_url = build_awin_url(offer.url)
+    
+    response = redirect(affiliate_url)
+    # Cabecera crítica: Evita que el navegador cachee el 302 y se salte nuestra BD en clics futuros
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
