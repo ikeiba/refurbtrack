@@ -174,7 +174,7 @@ class ClickEventAdmin(admin.ModelAdmin):
     get_product_name.admin_order_field = 'offer__spec__product__name'
 
     def get_offer_details(self, obj):
-        return f"{obj.offer.spec.storage}GB | {obj.offer.get_condition_display()}"
+        return f"{obj.offer.spec.color} | {obj.offer.spec.storage}GB | {obj.offer.get_condition_display()} | {obj.offer.battery_new}"
     get_offer_details.short_description = 'Detalle'
 
     def referer_short(self, obj):
