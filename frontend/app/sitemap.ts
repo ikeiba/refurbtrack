@@ -1,6 +1,7 @@
+// app/sitemap.ts
 import { MetadataRoute } from 'next'
 
-// Definimos el tipo de datos que viene de Django
+// 1. Tipado robusto para el escalado
 interface SitemapItem {
   product__category__slug: string;
   product__brand__slug: string;
@@ -9,42 +10,69 @@ interface SitemapItem {
   last_updated: string;
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://refurbtrack.com'
-  let productEntries: MetadataRoute.Sitemap = []
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com'
 
-  // Usamos la URL interna de la red de Docker: http://nombre_servicio:puerto
-  // Probablemente sea http://web:8000/api o http://localhost:8000/api si no usas red interna
-  const API_URL = "http://web:8000/api";  
+// Simulación de los slugs del blog (Podrías traerlos de una API o constante)
+const blogSlugs = [
+  'guia-compradores-refurbished',
+  'impacto-ambiental-reacondicionado',
+  'diferencias-entre-marketplaces',
+  'estrategia-ahorro-temporal',
+  'falsos-mitos-reacondicionados',
+  'tendencias-mercado-refurbished-2026'
+]
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // --- ZONA 1: RUTAS ESTÁTICAS Y DE EMPRESA ---
+  const mainRoutes: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/es`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
+    {url: `${baseUrl}/es/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 }
+  ]
+
+  // --- ZONA 2: RUTAS DEL BLOG (SEO Content) ---
+  const blogRoutes: MetadataRoute.Sitemap = blogSlugs.map(slug => ({
+    url: `${baseUrl}/es/blog/${slug}`,
+    lastModified: new Date(), // En el futuro, traer de la fecha real del post
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }))
+
+  // --- 2. RUTAS LEGALES (Opcional, pero ayudan a la confianza/E-E-A-T) ---
+  const legalRoutes: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/es/cookies`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+    { url: `${baseUrl}/es/how-it-works`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
+    { url: `${baseUrl}/es/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
+    { url: `${baseUrl}/es/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+    { url: `${baseUrl}/es/privacy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+    { url: `${baseUrl}/es/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+  ]
+
+  // --- ZONA 3: PRODUCTOS DINÁMICOS (Tier 1 + Tier 2) ---
+  let productEntries: MetadataRoute.Sitemap = []
+  
+  // OJO: Usamos la URL de Docker interna si estamos en el build de producción
+  const API_URL = "http://web:8000/api"
 
   try {
     const response = await fetch(`${API_URL}/products/sitemap-data/`, {
-      next: { revalidate: 86400 }
+      next: { revalidate: 86400 } // Cacheamos la lista de URLs por 24h
     })
 
-    // VALIDACIÓN: Si no es 200 OK, lanzamos error para ir al catch
-    if (!response.ok) {
-        console.error(`Sitemap error: Backend respondió con status ${response.status}`);
-    } else {
-        const data = await response.json();
-        
-        // COMPROBACIÓN EXTRA: ¿Es realmente un array?
-        if (Array.isArray(data)) {
-            productEntries = data.map((item: SitemapItem) => ({
-                url: `${baseUrl}/es/${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}/${item.slug}`,
-                lastModified: new Date(item.last_updated),
-                changeFrequency: 'daily' as const,
-                priority: 0.8,
-            }));
-        }
+    if (response.ok) {
+      const data = await response.json()
+      if (Array.isArray(data)) {
+        productEntries = data.map((item: SitemapItem) => ({
+          url: `${baseUrl}/es/${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}/${item.slug}`,
+          lastModified: new Date(item.last_updated),
+          changeFrequency: 'daily',
+          // Los productos tienen más peso que un login pero menos que la home
+          priority: 0.8, 
+        }))
+      }
     }
   } catch (error) {
-    console.error("Error generating sitemap entries:", error)
+    console.error("❌ Error generando sitemap de productos:", error)
   }
 
-  return [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: 'always', priority: 1 },
-    { url: `${baseUrl}/es`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    ...productEntries,
-  ]
+  return [...mainRoutes, ...blogRoutes, ...legalRoutes, ...productEntries]
 }
