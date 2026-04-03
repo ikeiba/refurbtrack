@@ -3,6 +3,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface ProductGalleryProps {
   images: string[]
@@ -24,18 +25,20 @@ export function ProductGallery({ images, onImageClick }: ProductGalleryProps) {
     <div className="flex flex-col gap-4 pt-12">
       {/* IMAGEN PRINCIPAL */}
       <div 
-        // 2. Añadimos el evento onClick al contenedor
         onClick={onImageClick}
         className={cn(
-            "relative aspect-square overflow-hidden rounded-2xl bg-muted/60",
-            // 3. Si hay función de click, cambiamos el cursor y añadimos efecto visual
-            onImageClick && "cursor-pointer transition-opacity active:scale-95"
+          "relative aspect-square overflow-hidden rounded-2xl bg-muted/60",
+          onImageClick && "cursor-pointer transition-opacity active:scale-95"
         )}
       >
-        <img
+        {/* 2. Sustituimos <img> por <Image> con priority */}
+        <Image
           src={images[selectedIndex]}
           alt="Product view"
-          className="h-full w-full object-contain p-14 transition-transform duration-500 hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
+          fill // Hace que ocupe todo el contenedor relativo padre
+          priority // MAGIA LCP: Pre-carga la imagen inmediatamente
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 550px"
+          className="object-contain p-14 transition-transform duration-500 hover:scale-105 mix-blend-multiply dark:mix-blend-normal"
         />
       </div>
 
