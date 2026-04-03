@@ -4,8 +4,37 @@ import { authService } from "./auth" // <--- 1. Importamos el servicio de auth
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
 // CAMBIO: En producción usará /api, en desarrollo 127.0.0.1:8000
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+// export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
+// frontend/services/api.ts
+
+// frontend/services/api.ts
+const IS_SERVER = typeof window === 'undefined';
+
+const getBaseUrl = () => {
+  // 1. Cogemos la URL de las variables de entorno o usamos los fallbacks
+  let url = IS_SERVER 
+    ? (process.env.INTERNAL_API_URL || "http://web:8000") 
+    : (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000");
+
+  // 2. Le quitamos la barra final si la tiene para evitar "http://web:8000//api"
+  if (url.endsWith('/')) {
+    url = url.slice(0, -1);
+  }
+
+  // 3. Garantizamos que SIEMPRE termine en /api
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
+  }
+
+  return url;
+};
+
+// Esta constante ahora es 100% segura. Siempre será "http://web:8000/api" o "http://127.0.0.1:8000/api"
+export const API_URL = getBaseUrl();
+// ¡Asegúrate de cambiar API_URL por API_URL_SAFE en tus fetch!
+
+// ... resto de tus funciones ...
 
 export const getProducts = async (): Promise<ProductSummary[]> => {
   try {
@@ -230,3 +259,35 @@ export async function unsubscribeSubscriber(token: string) {
   if (!res.ok) throw new Error("Error al eliminar todas las alertas")
   return true
 }
+
+// frontend/services/api.ts
+
+export const getProductBySlugs = async (category: string, brand: string, product: string, spec: string) => {
+  const params = new URLSearchParams({
+    cat: category,
+    brand: brand,
+    prod: product,
+    spec: spec
+  });
+
+  const urlToFetch = `${API_URL}/products/resolve/?${params.toString()}`;
+  console.log("🚀 [NEXT.JS FETCH] Intentando llamar a:", urlToFetch); // <-- EL CHIVATO
+
+  try {
+    const res = await fetch(urlToFetch, {
+      //next: { revalidate: 1800, tags: ['products'] }
+      cache:'no-store'
+    });
+
+    console.log("✅ [NEXT.JS RESPONSE] Status:", res.status); // <-- EL RESULTADO
+
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Error del servidor: ${res.status}`);
+    }
+    return res.json();
+  } catch (error) {
+    console.error("❌ [NEXT.JS ERROR FATAL]", error);
+    throw error;
+  }
+};

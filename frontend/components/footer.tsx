@@ -35,7 +35,7 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Productos</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es" className="hover:text-emerald-600 transition-colors">
                   iPhones
                 </Link>
               </li>
@@ -61,22 +61,22 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Compañía</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/company/about" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/about" className="hover:text-emerald-600 transition-colors">
                   Sobre Nosotros
                 </Link>
               </li>
               <li>
-                <Link href="/company/how-it-works" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/how-it-works" className="hover:text-emerald-600 transition-colors">
                   Cómo funciona
                 </Link>
               </li>
               <li>
-                <Link href="/company/blog" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/blog" className="hover:text-emerald-600 transition-colors">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link href="/company/contact" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/contact" className="hover:text-emerald-600 transition-colors">
                   Contacto
                 </Link>
               </li>
@@ -88,17 +88,17 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/legal/privacy" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/privacy" className="hover:text-emerald-600 transition-colors">
                   Privacidad
                 </Link>
               </li>
               <li>
-                <Link href="/legal/terms" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/terms" className="hover:text-emerald-600 transition-colors">
                   Términos
                 </Link>
               </li>
               <li>
-                <Link href="/legal/cookies" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/cookies" className="hover:text-emerald-600 transition-colors">
                   Cookies
                 </Link>
               </li>
@@ -116,7 +116,7 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               Podemos ganar una comisión cuando entras en los enlaces para hacer una compra.
               Haz clic {" "}
-              <a href="/company/how-it-works" className="text-emerald-600 hover:underline">
+              <a href="/es/how-it-works" className="text-emerald-600 hover:underline">
               aquí 
               </a>
               {" "} para saber con mas detalle cómo ganamos dinero. 

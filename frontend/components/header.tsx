@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Search, Bell, User, Menu, Moon, Sun, LogOut, LayoutDashboard, LogIn, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -84,8 +85,8 @@ export function Header({
         {/* === ZONA IZQUIERDA === */}
 
         {/* LOGO - Botón para volver a home sin filtros */}
-        <button 
-          onClick={() => router.push("/")} 
+        <Link 
+          href="/es" 
           className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
           {/* 1. Inyectamos el SVG directamente desde la carpeta public */}
@@ -100,7 +101,7 @@ export function Header({
             <span className="font-extrabold text-foreground">Refurb</span>
             <span className="font-semibold text-emerald-600">Track</span>
           </span>
-        </button>
+        </Link>
 
         {/* === ZONA CENTRAL === */}
         {showSearch ? (
@@ -207,9 +208,11 @@ export function Header({
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+                    <DropdownMenuItem asChild>
+                      <Link href="/es/dashboard" className="flex w-full items-center cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         <span>Mi Panel</span>
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
@@ -222,13 +225,18 @@ export function Header({
                     {/* MENÚ PARA INVITADO */}
                     <DropdownMenuLabel>Acceso Usuarios</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push("/auth/login")}>
+                    <DropdownMenuItem asChild>
+                      <Link href={`/es/login`} className="flex w-full items-center cursor-pointer">
                         <LogIn className="mr-2 h-4 w-4" />
                         <span>Iniciar Sesión</span>
+                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/auth/register")}>
+
+                    <DropdownMenuItem asChild>
+                      <Link href={`/es/register`} className="flex w-full items-center cursor-pointer">
                         <UserPlus className="mr-2 h-4 w-4" />
                         <span>Registrarse</span>
+                      </Link>
                     </DropdownMenuItem>
                 </>
               )}

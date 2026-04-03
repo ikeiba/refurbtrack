@@ -81,8 +81,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',   # 100 peticiones/hora para anónimos
-        'user': '1000/hour'   # 1000 peticiones/hora para autenticados
+        'anon': '10000/minute', # Límite altísimo para que Next.js respire
+        'user': '10000/minute'
     }
     # Mantén otras configuraciones si ya tenías (como paginación, etc.)
 }
@@ -97,6 +97,22 @@ SIMPLE_JWT = {
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS # Si usas CSRF (token en cookies), confía en los mismos orígenes que CORS
 
+# 2. Inyección de reglas locales SOLO si estamos en desarrollo
+if DEBUG:
+    # Añadimos los hosts locales a la lista de permitidos
+    ALLOWED_HOSTS.extend([
+        "localhost",
+        "127.0.0.1",
+        "web",  # El nombre de tu contenedor Docker
+    ])
+    
+    # Añadimos los orígenes locales para evitar el error 403 del CSRF
+    CSRF_TRUSTED_ORIGINS.extend([
+        "http://localhost",
+        "https://localhost",
+        "http://127.0.0.1",
+        "https://127.0.0.1",
+    ])
 
 # Application definition
 

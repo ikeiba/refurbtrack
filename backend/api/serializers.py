@@ -70,66 +70,156 @@ class SpecSerializer(serializers.ModelSerializer):
             'color',
             'image', # <--- AÑADIR ESTO
             'min_price_cached', 
-            'offers' # Anidamos las ofertas disponibles
+            'offers', # Anidamos las ofertas disponibles
+            'slug'
         ]
 
 # --- 4. NIVEL 1: EL PRODUCTO (La Familia) ---
 
 # A. Para la HOME (Vista Ligera)
+# backend/api/serializers.py
+
 class ProductListSerializer(serializers.ModelSerializer):
     """
     Equivale a tu antiguo 'ProductListSerializer' pero usando el caché.
     """
-    image = serializers.CharField(read_only=True) # <--- AÑADIR ESTO
+    image = serializers.CharField(read_only=True)
+    
+    # NUEVOS CAMPOS SEO
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
+    brand_slug = serializers.CharField(source='brand.slug', read_only=True)
+    # Calculamos cuál es el slug de la spec más barata para usarlo de enlace por defecto
+    default_spec_slug = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
-        fields = ['id', 'name', 'type', 'image', 'min_price_cached', 'market_price']
+        fields = [
+            'id', 'name', 'type', 'image', 'min_price_cached', 'market_price', 'slug',
+            'category_slug', 'brand_slug', 'default_spec_slug' # <-- Añadidos
+        ]
+
+    def get_default_spec_slug(self, obj):
+        # Buscamos la primera Spec que tenga el mismo min_price_cached que el producto
+        # Si no la encontramos, devolvemos la primera spec que tenga
+        spec = obj.specs.filter(min_price_cached=obj.min_price_cached).first()
+        if not spec:
+            spec = obj.specs.first()
+        
+        return spec.slug if spec else None
 
 # B. Para el DETALLE (Vista Pesada)
+# backend/api/serializers.pyH
+
 class ProductDetailSerializer(serializers.ModelSerializer):
-    """
-    Carga TODO el árbol: Producto -> Specs -> Offers.
-    Sustituye a tu antiguo 'ProductDetailSerializer'.
-    """
     specs = SpecSerializer(many=True, read_only=True)
-    image = serializers.CharField(read_only=True) # <--- AÑADIR ESTO
+    image = serializers.CharField(read_only=True)
+    
+    # NUEVOS: Slugs de jerarquía superior
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
+    brand_slug = serializers.CharField(source='brand.slug', read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'type', 'image', 'specs']
+        # Añade los nuevos campos a la lista
+        fields = ['id', 'name', 'type', 'image', 'specs', 'category_slug', 'brand_slug', 'slug']
 
 
 # backend/api/serializers.py
 
 class AlertSerializer(serializers.ModelSerializer):
     # Campos de escritura (Input)
-    product_id = serializers.IntegerField(write_only=True)
-    email = serializers.EmailField(write_only=True)
+    #product_id = serializers.IntegerField(write_only=True)
+    #email = serializers.EmailField(write_only=True)
     
     # Campos de lectura (Output para el Dashboard)
-    product_name = serializers.CharField(source='product.name', read_only=True)
+    #product_name = serializers.CharField(source='product.name', read_only=True)
     # AÑADIDO: Devolvemos el ID real del producto para poder hacer links
-    product = serializers.PrimaryKeyRelatedField(read_only=True)
+    #product = serializers.PrimaryKeyRelatedField(read_only=True)
 
     # AÑADIDO: Recuperamos la imagen del producto relacionado
+    #product_image = serializers.CharField(source='product.image', read_only=True)
+
+    # ---> NUEVOS CAMPOS SEO <---
+    product_name = serializers.CharField(source='product.name', read_only=True)
     product_image = serializers.CharField(source='product.image', read_only=True)
+    
+    category_slug = serializers.CharField(source='product.category.slug', read_only=True)
+    brand_slug = serializers.CharField(source='product.brand.slug', read_only=True)
+    product_slug = serializers.CharField(source='product.slug', read_only=True)
+    
+    # Campo inteligente para la URL
+    target_path = serializers.SerializerMethodField()
+    target_affiliate_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Alert
         fields = [
-            'id',
-            'email',            # Ahora sí funciona porque lo declaramos arriba
-            'price_threshold', 
-            'product_id',   # Entrada (Write)
-            'product',      # Salida (Read) -> ID del producto
-            'product_name', # Salida (Read) -> Nombre
-            'product_image',# Salida (Read) -> Imagen 
-            'target_colors', 
-            'target_storages', 
-            'target_conditions', 
-            'battery_new',
-            'country'
+            'id', 'price_threshold', 'product_name', 'product_image',
+            'category_slug', 'brand_slug', 'product_slug', 'target_path', 
+            'target_affiliate_url', 'target_conditions', 'target_storages', 
+            'target_colors', 'battery_new'
         ]
+    
+    def get_target_path(self, obj):
+        # 1. Comprobar si es una alerta específica (Solo 1 opción de cada)
+        is_specific = (
+            len(obj.target_storages or []) == 1 and 
+            len(obj.target_colors or []) == 1
+        )
+
+        if is_specific:
+            # Buscamos la spec exacta
+            spec = obj.product.specs.filter(
+                storage=obj.target_storages[0],
+                color=obj.target_colors[0]
+            ).first()
+        else:
+            # Si es general, buscamos la spec más barata actualmente
+            spec = obj.product.specs.order_by('min_price_cached').first()
+
+        if spec:
+            # Construimos la ruta base
+            path = f"/{obj.product.category.slug}/{obj.product.brand.slug}/{obj.product.slug}/{spec.slug}"
+            
+            # Añadimos los parámetros de estado/batería si son específicos
+            params = []
+            if len(obj.target_conditions or []) == 1:
+                params.append(f"condition={obj.target_conditions[0]}")
+            if obj.battery_new is not None:
+                params.append(f"battery={'new' if obj.battery_new else 'standard'}")
+            
+            query = f"?{'&'.join(params)}" if params else ""
+            return path + query
+        
+        return None
+
+    def get_target_affiliate_url(self, obj):
+        # 1. Empezamos con todas las ofertas de ese producto
+        # (Ajusta la relación según tu modelo, asumo que Offer -> Spec -> Product)
+        qs = Offer.objects.filter(spec__product=obj.product)
+
+        # 2. Aplicamos los filtros de la alerta
+        if obj.target_storages:
+            qs = qs.filter(spec__storage__in=obj.target_storages)
+        
+        if obj.target_colors:
+            qs = qs.filter(spec__color__in=obj.target_colors)
+            
+        if obj.target_conditions:
+            qs = qs.filter(condition__in=obj.target_conditions)
+            
+        if obj.battery_new is not None:
+            qs = qs.filter(battery_new=obj.battery_new)
+
+        # 3. Ordenamos por el mejor precio actual
+        best_offer = qs.order_by('current_price').first()
+
+        # 4. Devolvemos tu URL de redirección segura con UUID
+        if best_offer:
+            return f"/api/out/{best_offer.uuid}/"
+        
+        # Fallback si no hay stock que cumpla los filtros
+        return "https://www.backmarket.es"
 
     def create(self, validated_data):
         # Extraemos el ID del producto y el email
@@ -250,11 +340,19 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
     
     old_price = serializers.DecimalField(source='all_time_max_price', max_digits=10, decimal_places=2)
 
+    # ---> ¡NUEVO PARA EL SEO! <---
+    category_slug = serializers.CharField(source='spec.product.category.slug', read_only=True)
+    brand_slug = serializers.CharField(source='spec.product.brand.slug', read_only=True)
+    product_slug = serializers.CharField(source='spec.product.slug', read_only=True)
+    spec_slug = serializers.CharField(source='spec.slug', read_only=True)
+
     class Meta:
         model = Offer
         fields = [
             'id', 'product_id', 'name', 'storage', 'color', 'url',
-            'condition', 'battery_new', 'current_price', 'old_price', 'image'
+            'condition', 'battery_new', 'current_price', 'old_price', 'image',
+            # Añadimos los campos a la lista:
+            'category_slug', 'brand_slug', 'product_slug', 'spec_slug'
         ]
 
     def get_image(self, obj):

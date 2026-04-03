@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 # ¡AÑADIDO ClickEvent a las importaciones!
-from .models import Subscriber, Product, Spec, Offer, PriceHistory, Alert, ClickEvent
+from .models import Subscriber, Product, Spec, Offer, PriceHistory, Alert, ClickEvent, Category, Brand
 from django.utils.html import format_html
 from django.urls import reverse
 
@@ -19,47 +19,75 @@ class SubscriberAdmin(admin.ModelAdmin):
     search_fields = ('email',)
     ordering = ('-created_at',)
 
-# --- NIVEL 1: PRODUCTO ---
+# --- NUEVO: CATEGORÍAS (SEO Nivel 0) ---
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug_display')
+    prepopulated_fields = {"slug": ("name",)} # Ayuda a crear slugs a mano
+    
+    def slug_display(self, obj):
+        return format_html('<code>/{}</code>', obj.slug)
+    slug_display.short_description = 'URL Path'
+
+# --- NUEVO: MARCAS (SEO Nivel 0) ---
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug_display')
+    prepopulated_fields = {"slug": ("name",)}
+
+    def slug_display(self, obj):
+        return format_html('<code>/{}</code>', obj.slug)
+    slug_display.short_description = 'URL Path'
+
+# --- NIVEL 1: PRODUCTO (Actualizado para SEO) ---
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    list_select_related = ('category', 'brand') # Optimización SQL
     list_display = (
         'image_preview', 
         'name', 
-        'type', 
+        'brand',      # <--- AÑADIDO
+        'category',   # <--- AÑADIDO
+        'full_slug_path', # <--- AÑADIDO (Ver ruta SEO)
         'min_price_cached', 
-        'lowest_ever_price',
-        'last_updated',      
         'market_price'      
     )
-    search_fields = ('name',)
-    list_filter = ('type',)
+    search_fields = ('name', 'slug')
+    list_filter = ('category', 'brand') # <--- ACTUALIZADO
     readonly_fields = ('last_updated', 'lowest_ever_price', 'lowest_ever_date')
 
     def image_preview(self, obj):
         return image_preview_helper(obj.image)
     image_preview.short_description = 'Img'
 
-# --- NIVEL 2: SPEC (Variante Técnica) ---
+    def full_slug_path(self, obj):
+        return format_html('<small style="color:gray;">/{}/{}/</small><strong>{}</strong>', 
+                           obj.category.slug, obj.brand.slug, obj.slug)
+    full_slug_path.short_description = 'Jerarquía SEO'
+
+# --- NIVEL 2: SPEC (Actualizado para SEO) ---
 @admin.register(Spec)
 class SpecAdmin(admin.ModelAdmin):
-    list_select_related = ('product',) 
+    list_select_related = ('product', 'product__brand', 'product__category') 
     
     list_display = (
         'image_preview',
         'get_product_name', 
         'storage', 
         'color', 
-        'back_market_uuid', 
+        'spec_slug_display', # <--- AÑADIDO
         'min_price_cached',
-        'lowest_ever_price' 
     )
-    search_fields = ('product__name', 'back_market_uuid')
-    list_filter = ('product__type', 'storage', 'color')
+    search_fields = ('product__name', 'slug', 'back_market_uuid')
+    list_filter = ('product__brand', 'storage', 'color')
     
     def get_product_name(self, obj):
         return obj.product.name
     get_product_name.short_description = 'Producto'
-    get_product_name.admin_order_field = 'product__name'
+
+    def spec_slug_display(self, obj):
+        return format_html('<code style="color:#8e44ad;">{}</code>', obj.slug)
+    spec_slug_display.short_description = 'Slug Final'
 
     def image_preview(self, obj):
         img = obj.image if obj.image else obj.product.image

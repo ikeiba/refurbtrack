@@ -32,7 +32,7 @@ echo "--> Base de datos disponible."
 
 # --- 2. TAREAS DE MANTENIMIENTO (SOLO CONTENEDOR WEB) ---
 # Comprobamos si el primer argumento del comando es 'gunicorn'
-if [ "$1" = "gunicorn" ]; then
+if [ "$1" = "gunicorn" ] || { [ "$1" = "python" ] && [ "$2" = "manage.py" ] && [ "$3" = "runserver" ]; }; then
     echo "--> Detectado contenedor WEB (Master). Iniciando mantenimiento..."
 
     # A. Migraciones

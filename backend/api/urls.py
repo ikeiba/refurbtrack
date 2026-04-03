@@ -6,7 +6,8 @@ from .views import (DeleteAccountView, HistoricalLowOffersView, PasswordResetReq
                     AlertListCreateView, SubscriberUnsubscribeView, UnsubscribeUserView, 
                     UserRegistrationView, 
                     AlertDetailView,
-                    AlertUnsubscribeView, PasswordResetConfirmView, health_check, redirect_to_store)
+                    AlertUnsubscribeView, PasswordResetConfirmView, health_check, redirect_to_store, 
+                    ProductResolveBySlugView, sitemap_data)
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -19,6 +20,12 @@ router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
 
 urlpatterns = [
+
+    # 1. EL RESOLVER (Prioridad máxima para el SEO)
+    path('products/resolve/', ProductResolveBySlugView.as_view(), name='product-resolve'),
+
+    path('products/sitemap-data/', sitemap_data, name='sitemap_data'),
+
     # Rutas automáticas del router
     path('', include(router.urls)),
 
@@ -58,6 +65,5 @@ urlpatterns = [
     path('health/', health_check, name='health-check'),  # 👈 AÑADE ESTO
 
     # Añade esta línea a tu urlpatterns existente:
-    path('out/<uuid:offer_uuid>/', redirect_to_store, name='redirect_to_store'),
-
+    path('out/<uuid:offer_uuid>/', redirect_to_store, name='redirect_to_store')
 ]

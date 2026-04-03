@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from api.models import Product, Spec, Offer
+from api.models import Product, Spec, Offer, Category, Brand
 from django.utils.text import slugify
 
 class Command(BaseCommand):
@@ -29,6 +29,36 @@ class Command(BaseCommand):
         "iPhone 16": 859.00,
         "iPhone 16 Pro": 1219.00,
         # Añade más según necesites
+    }
+
+    COLOR_TO_ES = {
+    "Black": "Negro",
+    "White": "Blanco",
+    "Red": "Rojo",
+    "Blue": "Azul",
+    "Green": "Verde",
+    "Yellow": "Amarillo",
+    "Purple": "Púrpura",
+    "Pink": "Rosa",
+    "Gold": "Oro",
+    "Silver": "Plata",
+    "Space Gray": "Gris Espacial",
+    "Midnight": "Medianoche",
+    "Midnight Green": "Verde Medianoche",
+    "Pacific Blue": "Azul Pacífico",
+    "Graphite": "Grafito",
+    "Alpine Green": "Verde Alpino",
+    "Sierra Blue": "Azul Alpino",
+    "Starlight": "Blanco Estrella",
+    "Deep Purple": "Morado Oscuro",
+    "Space Black": "Negro Espacial",
+    "Black Titanium": "Titanio Negro",
+    "Blue Titanium": "Titanio Azul",
+    "Natural Titanium": "Titanio Natural",
+    "White Titanium": "Titanio Blanco",
+    "Desert Titanium": "Titanio Desierto",
+    "Teal": "Verde Azulado",
+    "Ultramarine": "Azul Ultramar"
     }
 
     def handle(self, *args, **kwargs):
@@ -272,23 +302,42 @@ class Command(BaseCommand):
 
     # --- FUNCIONES ADAPTADORAS ---
     
-    def insert_product(self, name, image_path, type):
-        if type == "Smartphone":
-            type = "Smartphone"
+    def insert_product(self, name, image_path, type="Smartphone", brand_name="Apple"):
+        # 1. Crear o recuperar Categoría y Marca
+        category_slug = slugify(type)
+        category, _ = Category.objects.get_or_create(
+            name=type, 
+            defaults={'slug': category_slug}
+        )
 
-        # Buscamos el precio en nuestro diccionario
+        brand_slug = slugify(brand_name)
+        brand, _ = Brand.objects.get_or_create(
+            name=brand_name, 
+            defaults={'slug': brand_slug}
+        )
+
+        # 2. Generar el slug del producto (ej: "iphone-11")
+        product_slug = slugify(name)
+
         official_price = self.OFFICIAL_MSRP.get(name, None)
-        print(official_price)
 
-        Product.objects.get_or_create(name=name, defaults={'type': type, 'image': image_path, 'market_price': official_price})
-
-                    # --- 2. Crear o recuperar la Spec ---
-        product, created = Product.objects.get_or_create(name=name, defaults={'type': type, 'image': image_path, 'market_price': official_price})
+        # 3. Insertar producto con los nuevos campos obligatorios
+        product, created = Product.objects.get_or_create(
+            name=name, 
+            defaults={
+                'category': category,
+                'brand': brand,
+                'slug': product_slug,
+                'image': image_path, 
+                'market_price': official_price
+            }
+        )
 
         if not created and product.market_price != official_price:
             product.market_price = official_price
             product.save()
-        self.stdout.write(f"Producto procesado: {name} (PVP Nuevo: {official_price}€)")
+            
+        self.stdout.write(f"Producto procesado: {name}")
 
     def get_product_by_name(self, name):
         try:
@@ -299,28 +348,29 @@ class Command(BaseCommand):
             return [None]
 
     def insert_spec(self, product_id, uuid, storage, color):
-        """
-        Crea la Spec, le asigna la IMAGEN AUTOMÁTICA y genera la matriz de ofertas.
-        """
         if product_id is None: return
 
         try:
             product = Product.objects.get(id=product_id)
             
-            # --- 1. LÓGICA DE IMAGEN (Integrada) ---
-            # Calculamos la ruta esperada: "products/iphone-13-blue.avif"
-            product_slug = slugify(product.name)
+            product_slug_str = slugify(product.name)
             color_slug = slugify(color)
-            image_path = f"products/{product_slug}-{color_slug}.avif"
+            image_path = f"products/{product_slug_str}-{color_slug}.avif"
             
-            # --- 2. Crear o recuperar la Spec ---
+            # --- NUEVO: Generar el slug del Spec ---
+            # Ejemplo: "reacondicionado-64gb-black"
+            # En insert_spec:
+            color_es = self.COLOR_TO_ES.get(color, color.lower())
+            spec_slug = slugify(f"reacondicionado-{storage}gb-{color_es}")
+            
             spec, created = Spec.objects.get_or_create(
                 back_market_uuid=uuid, 
                 defaults={
                     'product': product,
                     'storage': storage,
                     'color': color,
-                    'image': image_path  # <--- Se guarda al crear
+                    'slug': spec_slug, # <--- Insertamos el slug aquí
+                    'image': image_path  
                 }
             )
 

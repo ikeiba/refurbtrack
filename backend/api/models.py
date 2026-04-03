@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from django.db.models import UniqueConstraint
 # api/models.py
 
 class Subscriber(models.Model):
@@ -11,6 +12,22 @@ class Subscriber(models.Model):
 
     def __str__(self):
         return self.email
+
+# 1. NUEVA ENTIDAD: Categoría (Ej: Móviles, Smartphones)
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, db_index=True) # modeltranslation creará slug_es, slug_en
+
+    def __str__(self):
+        return self.name
+
+# 2. NUEVA ENTIDAD: Marca (Ej: Apple, Samsung)
+class Brand(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, db_index=True)
+
+    def __str__(self):
+        return self.name
 
 # --- NIVEL 1: LA FAMILIA DE PRODUCTOS (Para la Home) ---
 class Product(models.Model):
@@ -24,6 +41,11 @@ class Product(models.Model):
         SMARTWATCH = 'Smartwatch', 'Smartwatch'
         CONSOLE = 'Console', 'Console'
         OTHER = 'Other', 'Other'
+
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
+    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products')
+    # El slug principal del producto (Ej: iphone-13-pro)
+    slug = models.SlugField(db_index=True) # modeltranslation creará slug_es, slug_en...
 
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=ProductType.choices, default=ProductType.OTHER)
@@ -41,6 +63,11 @@ class Product(models.Model):
     # NUEVO CAMPO: Precio de mercado oficial (del modelo base) para mostrar tachado
     market_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
+    class Meta:
+        # Un producto es único por marca y slug. Ej: No puede haber dos "iphone-13-pro" de "Apple"
+        constraints = [
+            UniqueConstraint(fields=['brand', 'slug'], name='unique_brand_product_slug')
+        ]
 
     def __str__(self):
         return self.name
@@ -50,6 +77,9 @@ class Spec(models.Model):
     """
     Aquí es donde el usuario elige características en la página de detalle (Ej: 'iPhone 13, 128, Azul, 12345aeiou, 300€').
     """
+    # NUEVO: Slug de la especificación (Ej: reacondicionado-256gb-oro)
+    slug = models.SlugField(db_index=True) # modeltranslation creará slug_es, slug_en...
+
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specs')
     
     # ID único de Back Market (o tu fuente) para identificar esta config exacta
@@ -75,6 +105,9 @@ class Spec(models.Model):
         unique_together = ('product', 'storage', 'color')
         indexes = [
             models.Index(fields=['back_market_uuid']), # Buscamos mucho por UUID al scrapear
+        ]
+        constraints = [
+            UniqueConstraint(fields=['product', 'slug'], name='unique_product_spec_slug')
         ]
 
     def __str__(self):

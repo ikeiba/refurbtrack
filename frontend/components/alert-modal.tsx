@@ -156,7 +156,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
         description: `Te avisaremos en ${email} cuando baje de precio.`,
         className: "bg-emerald-50 border-emerald-200 text-emerald-800",
         action: (
-          <ToastAction altText="Ir a mi panel" onClick={() => router.push("/dashboard")}>
+          <ToastAction altText="Ir a mi panel" onClick={() => router.push("/es/dashboard")}>
             Ir a mi panel
           </ToastAction>
         )

@@ -8,9 +8,14 @@
 export interface ProductSummary {
   id: number;
   name: string;
-  image: string | null;
-  min_price_cached: number;
-  market_price: number | null; // <--- NUEVO CAMPO
+  slug: string; // El slug del producto en sí
+  image: string;
+  min_price_cached: number | null;
+  market_price: number | null;
+  // Nuevos campos SEO
+  category_slug?: string;
+  brand_slug?: string;
+  default_spec_slug?: string;
 }
 
 //? ESTO ES LO QUE RECIBIMOS PARA VER EL GRÁFICO DE HISTORIAL DE PRECIOS
@@ -80,6 +85,12 @@ export interface OfferSummary {
   old_price?: number // Puede ser null
   image?: string
   url?: string;
+
+  // ---> NUEVOS CAMPOS SEO <---
+  category_slug: string;
+  brand_slug: string;
+  product_slug: string;
+  spec_slug: string;
 }
 
 //? ESTO ES LO QUE RECIBIMOS EN LA PÁGINA PRINCIPAL PARA VER EL CARRUSEL

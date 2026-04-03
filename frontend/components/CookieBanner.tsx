@@ -28,7 +28,7 @@ export function CookieBanner() {
             <p className="text-sm">
               Utilizamos cookies propias y de terceros para analizar nuestro tráfico y mejorar tu experiencia. 
               Puedes aceptar todas las cookies, rechazarlas o configurar tus preferencias. Lee nuestra{' '}
-              <Link href="/legal/cookies" className="underline font-semibold text-blue-600">Política de Cookies</Link>.
+              <Link href="/es/cookies" className="underline font-semibold text-blue-600">Política de Cookies</Link>.
             </p>
             <div className="flex flex-wrap gap-2 shrink-0">
               <button onClick={() => setShowConfig(true)} className="text-sm px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium">

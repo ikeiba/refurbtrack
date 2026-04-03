@@ -1,0 +1,514 @@
+"use client"
+
+import { useMemo, useState, useEffect } from "react"
+import { useRouter, useParams, useSearchParams, usePathname } from "next/navigation"
+import { getOfferHistory } from "@/services/api"
+import { cn, getColorHex, CHART_COLORS } from "@/lib/utils"
+import { t } from "@/lib/translations"
+import { format, roundToNearestMinutes } from "date-fns"
+import { es } from "date-fns/locale"
+
+import { Header } from "@/components/header"
+import { ProductGallery } from "@/components/product-gallery"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Card } from "@/components/ui/card"
+import {
+  Bell, TrendingDown, Calendar, ArrowUp, ArrowDown,
+  Activity, ExternalLink, Sparkles
+} from "lucide-react"
+import PriceHistoryChart from "@/components/price-history-chart"
+import { ComparisonPopover } from "@/components/comparison-popover"   // FIX 4: restored
+import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
+import { AlertModal } from "@/components/alert-modal"
+import type { Offer } from "@/lib/types"
+
+interface ProductViewClientProps {
+  initialProduct: any;
+  initialHotOffers: any[];
+  lang: string;
+}
+
+// NOTE (FIX 1): This component calls useSearchParams(), so the parent server
+// page.tsx must wrap it in <Suspense> to avoid a build error:
+//
+//   import { Suspense } from "react"
+//   <Suspense fallback={<div>Cargando...</div>}>
+//     <ProductViewClient ... />
+//   </Suspense>
+
+export default function ProductViewClient({ initialProduct, initialHotOffers, lang }: ProductViewClientProps) {
+  const router = useRouter()
+  const params = useParams()
+  const searchParams = useSearchParams()
+  const pathname = usePathname() // <--- NUEVO: Nos da la ruta base actual
+
+  // ─── SPEC ACTIVA (por slug de URL) ───────────────────────────────────────
+  const activeSpec = useMemo(() => {
+    return initialProduct.specs.find((s: any) => s.slug === params.spec) || initialProduct.specs[0]
+  }, [initialProduct, params.spec])
+
+  // ─── ESTADOS INTERNOS (no indexables → query params) ─────────────────────
+  const [selectedCondition, setSelectedCondition] = useState(searchParams.get("condition") || "Fair")
+  const [selectedBattery, setSelectedBattery]     = useState(searchParams.get("battery") === "new")
+  const [chartData, setChartData]                 = useState<{ name: string; color?: string; data: any[] }[]>([])
+  const [isAlertOpen, setIsAlertOpen]             = useState(false)
+  const [country, setCountry]                     = useState("ES")
+  const [searchQuery, setSearchQuery]             = useState("")
+
+  const handleHeaderSearch = (query: string) => {
+    const trimmed = query.trim()
+    router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/")
+  }
+
+  // ─── NAVEGACIÓN SEO (color y storage cambian el slug de URL) ─────────────
+  const navigateToSpec = (newStorage: string, newColor: string) => {
+    const targetSpec = initialProduct.specs.find(
+      (s: any) => s.storage === newStorage && s.color === newColor
+    )
+    if (targetSpec) {
+      const path  = `/${lang}/${initialProduct.category_slug}/${initialProduct.brand_slug}/${initialProduct.slug}/${targetSpec.slug}`
+      const query = `?condition=${selectedCondition}${selectedBattery ? "&battery=new" : ""}`
+      router.push(path + query, { scroll: false })
+    }
+  }
+
+  // NUEVA FUNCIÓN: Actualiza la URL sin recargar la página
+  const updateUrlParams = (key: string, value: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()))
+    if (value) current.set(key, value)
+    else current.delete(key)
+    
+    const search = current.toString()
+    const query = search ? `?${search}` : ""
+    // Usamos replace para no ensuciar el historial del botón "Atrás" del navegador
+    router.replace(`${pathname}${query}`, { scroll: false })
+  }
+
+  // Modificamos los manejadores para que actualicen el estado Y la URL
+  const handleConditionChange = (cond: string) => {
+    setSelectedCondition(cond)
+    updateUrlParams("condition", cond)
+  }
+
+  const handleBatteryChange = (isNew: boolean) => {
+    setSelectedBattery(isNew)
+    updateUrlParams("battery", isNew ? "new" : "standard")
+  }
+
+  // ─── OFERTA ACTIVA ────────────────────────────────────────────────────────
+  const activeOffer = useMemo(() => {
+    return activeSpec?.offers.find(
+      (o: any) => o.condition === selectedCondition && o.battery_new === selectedBattery
+    )
+  }, [activeSpec, selectedCondition, selectedBattery])
+
+  // ─── HISTORIAL DEL GRÁFICO ────────────────────────────────────────────────
+  useEffect(() => {
+    if (activeOffer) {
+      getOfferHistory(activeOffer.id).then((history) => {
+        setChartData([{
+          name:  `${initialProduct.name} ${t(activeSpec.color)} ${activeSpec.storage}GB - ${t(selectedCondition)}`,
+          data:  history,
+          color: CHART_COLORS[0]
+        }])
+      })
+    }
+  }, [activeOffer, activeSpec, selectedCondition, initialProduct.name])
+
+  // ─── FIX 4: COMPARACIÓN ───────────────────────────────────────────────────
+  // Restored ComparisonPopover + handleAddComparison + handleRemoveSeries,
+  // which were silently dropped in the refactor.
+  const handleAddComparison = async (targetOffer: Offer, label: string) => {
+    if (activeOffer && targetOffer.id === activeOffer.id) return
+    if (chartData.length >= 6) return
+    if (chartData.some((s) => s.name === label)) return
+
+    try {
+      const history = await getOfferHistory(targetOffer.id)
+      if (history.length > 0) {
+        setChartData((prev) => [
+          ...prev,
+          { name: label, data: history, color: CHART_COLORS[prev.length] || "#888888" }
+        ])
+      }
+    } catch (e) {
+      console.error("Error cargando comparativa", e)
+    }
+  }
+
+  const handleRemoveSeries = (seriesName: string) => {
+    setChartData((prev) => prev.filter((s) => s.name !== seriesName))
+  }
+
+  // ─── FIX 3: ESTADÍSTICAS ──────────────────────────────────────────────────
+  // Restored the original logic: avg is computed from real chart points,
+  // and min/max are corrected against the history if the API cache is stale.
+  const priceStats = useMemo(() => {
+    if (!activeOffer) return null
+
+    const currentPrice = Number(activeOffer.current_price) || 0
+
+    let min30d   = Number(activeOffer.min_price_30d)
+    let max30d   = Number(activeOffer.max_price_30d)
+    let minDate  = activeOffer.min_price_30d_date
+    let maxDate  = activeOffer.max_price_30d_date
+
+    if (!min30d || isNaN(min30d)) min30d = currentPrice
+    if (!max30d || isNaN(max30d)) max30d = currentPrice
+
+    let avg30d = 0
+    const historyPoints = chartData.find((s) => s.color === CHART_COLORS[0])?.data || []
+
+    if (historyPoints.length > 0) {
+      // Real average from history points
+      const sum = historyPoints.reduce((acc: number, curr: any) => acc + Number(curr.price), 0)
+      avg30d = Math.round(sum / historyPoints.length)
+
+      // Correct min/max if API cache is stale
+      const historyMax = Math.max(...historyPoints.map((p: any) => Number(p.price)))
+      const historyMin = Math.min(...historyPoints.map((p: any) => Number(p.price)))
+
+      if (historyMax > max30d) {
+        max30d = historyMax
+        const point = historyPoints.find((p: any) => Number(p.price) === historyMax)
+        if (point) maxDate = point.timestamp
+      }
+      if (historyMin < min30d && historyMin > 0) {
+        min30d = historyMin
+        const point = historyPoints.find((p: any) => Number(p.price) === historyMin)
+        if (point) minDate = point.timestamp
+      }
+    } else {
+      // Fallback until history loads
+      avg30d = Math.round((min30d + max30d) / 2)
+    }
+
+    const formatDate = (d: string | null) => {
+      if (!d) return "N/A"
+      try { return format(new Date(d), "d MMM", { locale: es }) }
+      catch { return "N/A" }
+    }
+
+    const lastUpdateDate = activeOffer.last_updated
+      ? format(
+          roundToNearestMinutes(new Date(activeOffer.last_updated), { nearestTo: 30 }),
+          "d MMM, HH:mm",
+          { locale: es }
+        )
+      : "N/A"
+
+    return {
+      current:  currentPrice,
+      min:      min30d,
+      minDate:  formatDate(minDate),
+      max:      max30d,
+      maxDate:  formatDate(maxDate),
+      avg:      avg30d,
+      date:     lastUpdateDate,
+      battery:  activeOffer.battery_new ? "Batería Nueva" : "Batería Estándar"
+    }
+  }, [activeOffer, chartData])
+
+  // ─── IMAGEN ACTIVA ────────────────────────────────────────────────────────
+  const finalImage = useMemo(() => {
+    const img = activeSpec?.image || initialProduct.image || "/placeholder.jpg"
+    return img.startsWith("/") ? img : `/${img}`
+  }, [activeSpec, initialProduct.image])
+
+  const colors   = Array.from(new Set(initialProduct.specs.map((s: any) => s.color))) as string[]
+  const storages = Array.from(new Set(initialProduct.specs.map((s: any) => s.storage))) as string[]
+
+  const getMinPriceForStorage = (storageSize: string) => {
+    // Usamos initialProduct, que es la prop que viene del servidor
+    const specs = initialProduct.specs.filter((s: any) => s.storage === storageSize);
+    if (specs.length === 0) return "---";
+    const prices = specs.map((s: any) => Number(s.min_price_cached || 999999));
+    const min = Math.min(...prices);
+    return min === 999999 ? "---" : min;
+  }
+
+  // ─── RENDER ───────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <Header
+        selectedCountry={country}
+        onCountryChange={setCountry}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearchSubmit={handleHeaderSearch}
+      />
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid md:grid-cols-2 gap- items-start">
+
+          {/* GALERÍA */}
+          <div className="h-fit w-full max-w-[550px] mx-auto lg:ml-auto">
+            {activeOffer?.url ? (
+              <a href={activeOffer.url} target="_blank" rel="sponsored noopener"
+                 className="block transition-opacity hover:opacity-95">
+                <ProductGallery images={[finalImage]} />
+              </a>
+            ) : (
+              <ProductGallery images={[finalImage]} />
+            )}
+          </div>
+
+          {/* PANEL DERECHO */}
+          <div className="flex flex-col gap-2 mt-12">
+            <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">{initialProduct.name}</h1>
+            <Separator />
+
+            {/* ALMACENAMIENTO */}
+            <div>
+              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Almacenamiento</h3>
+              <div className="flex flex-wrap gap-2">
+                {storages.map((storage) => {
+                  // 1. Ahora leemos la selección directamente de la URL (activeSpec)
+                  const isSelected = activeSpec.storage === storage;
+                  const price = getMinPriceForStorage(storage);
+                  
+                  return (
+                    <button
+                      key={storage}
+                      // 2. Usamos nuestra nueva función de navegación SEO
+                      onClick={() => navigateToSpec(storage, activeSpec.color)}
+                      className={cn(
+                        "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all h-10 rounded-md gap-1.5 px-4 min-w-fit border",
+                        isSelected 
+                          ? "bg-emerald-600 text-background border-emerald-600" 
+                          : "bg-background shadow-sm hover:bg-accent hover:text-accent-foreground border-input"
+                      )}
+                    >
+                      <span className="font-semibold">{storage}GB</span>
+                      <span className={cn("ml-2 text-xs", isSelected ? "opacity-90" : "opacity-60")}>
+                        (desde {price}€)
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* COLOR */}
+            <div>
+              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Color</h3>
+              <div className="flex flex-wrap gap-3">
+                {colors.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => navigateToSpec(activeSpec.storage, c)}
+                    className={cn(
+                      "h-10 w-10 rounded-full border-2 transition-all shadow-sm",
+                      activeSpec.color === c
+                        ? "border-foreground ring-2 ring-offset-2 ring-foreground"
+                        : "border-transparent hover:scale-110 hover:border-border"
+                    )}
+                    style={{ backgroundColor: getColorHex(c) }}
+                    title={t(c)}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-xs font-medium text-muted-foreground">{t(activeSpec.color)}</p>
+            </div>
+
+            {/* ESTADO + BATERÍA */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Estado</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Fair", "Good", "Excellent", "Premium"].map((cond) => (
+                    <Button
+                      key={cond}
+                      variant={selectedCondition === cond ? "default" : "outline"}
+                      onClick={() => handleConditionChange(cond)}
+                      disabled={!activeSpec.offers.some((o: any) => o.condition === cond)}
+                      className={cn("h-8 text-xs", selectedCondition === cond ? "bg-emerald-600 hover:bg-emerald-700" : "")}
+                    >
+                      {t(cond)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Batería</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={!selectedBattery ? "default" : "outline"}
+                    onClick={() => handleBatteryChange(false)}
+                    className={cn("h-8 text-xs", !selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
+                  >
+                    {t("standard")}
+                  </Button>
+                  <Button
+                    variant={selectedBattery ? "default" : "outline"}
+                    onClick={() => handleBatteryChange(true)}
+                    className={cn("h-8 text-xs", selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
+                  >
+                    {t("new")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* CAJA DE PRECIO */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Configuración seleccionada</p>
+                <p className="mt-1 font-semibold text-lg">
+                  {initialProduct.name} · {activeSpec.storage}GB · {t(activeSpec.color)} · {t(selectedCondition)} · {priceStats?.battery}
+                </p>
+              </div>
+              <div className="mt-3">
+                {activeOffer ? (
+                  <div className="space-y-3">
+                    <div className="flex items-baseline gap-3">
+                      <p className="text-3xl font-bold text-emerald-600">{activeOffer.current_price}€</p>
+                      {priceStats?.date && (
+                        <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                            Registrado el {priceStats.date}
+                        </span>
+                      )}
+                    </div>
+                    <a
+                      href={activeOffer.url}
+                      target="_blank"
+                      rel="sponsored noopener"
+                      className="w-full h-11 inline-flex items-center justify-center rounded-md text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all"
+                    >
+                      Ver oferta en Back Market
+                      <ExternalLink className="ml-4 w-5 h-5 opacity-80" />
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-xl text-muted-foreground py-2">Sin stock para esta combinación</p>
+                )}
+              </div>
+            </div>
+
+            {/* ALERTA */}
+            <Button
+              className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700"
+              size="lg"
+              disabled={!activeSpec}
+              onClick={() => setIsAlertOpen(true)}
+            >
+              <Bell className="w-5 h-5" /> Alerta
+            </Button>
+          </div>
+        </div>
+
+        {/* HISTÓRICO */}
+        <div className="mt-20">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <TrendingDown className="w-6 h-6 text-primary" /> Histórico de Precios
+            </h2>
+            {/* FIX 4: ComparisonPopover restored */}
+            <div className="ml-auto">
+              <ComparisonPopover onCompare={handleAddComparison} />
+            </div>
+          </div>
+
+          {/* STATS CARDS */}
+          {priceStats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <Card className="p-4 border shadow-sm bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
+                    <Calendar className="w-3 h-3" /> Último Registro
+                  </span>
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{priceStats.current}€</span>
+                  <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
+                    {priceStats.date}
+                  </span>
+                </div>
+              </Card>
+              <Card className="p-4 border shadow-sm">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
+                    <ArrowDown className="w-3 h-3 text-green-600" /> Mínimo (30d)
+                  </span>
+                  <span className="text-2xl font-bold mt-1">{priceStats.min}€</span>
+                  {/* En la tarjeta de Mínimo */}
+                  <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
+                    {priceStats.minDate !== "N/A" ? `Registrado el ${priceStats.minDate}` : ""}
+                  </span>
+                </div>
+              </Card>
+              <Card className="p-4 border shadow-sm">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-blue-600" /> Media (30d)
+                  </span>
+                  <span className="text-2xl font-bold mt-1">{priceStats.avg}€</span>
+                  <span className="text-[10px] text-muted-foreground mt-1">Calculado sobre registros</span>
+                </div>
+              </Card>
+              <Card className="p-4 border shadow-sm">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3 text-red-600" /> Máximo (30d)
+                  </span>
+                  <span className="text-2xl font-bold mt-1">{priceStats.max}€</span>
+                    {/* En la tarjeta de Máximo */}
+                    <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
+                    {priceStats.maxDate !== "N/A" ? `Registrado el ${priceStats.maxDate}` : ""}
+                    </span>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          <Card className="p-6 bg-card border shadow-sm h-[450px]">
+            {chartData.length > 0 ? (
+              // FIX 4: onRemoveSeries restored
+              <PriceHistoryChart series={chartData} onRemoveSeries={handleRemoveSeries} />
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                <TrendingDown className="w-10 h-10 mb-2 opacity-20" />
+                <p>No hay historial suficiente para esta configuración.</p>
+              </div>
+            )}
+          </Card>
+
+          {/* CARRUSEL */}
+          {initialHotOffers.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold flex items-center gap-2 mb-6">
+                <Sparkles className="w-6 h-6 text-primary" /> También te podría interesar
+              </h2>
+              {/* FIX 2: Internal navigation restored — pushes to the product route,
+                  not directly to o.url (which is an external Back Market link). */}
+              <HistoricalLowsCarousel
+                offers={initialHotOffers}
+                onOfferClick={(o) => {
+                  const batteryParam = o.battery_new ? "new" : "standard"
+                  router.push(
+                    `/${lang}/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${o.spec_slug}` +
+                    `?condition=${o.condition}&battery=${batteryParam}`
+                  )
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {activeOffer && (
+        <AlertModal
+          isOpen={isAlertOpen}
+          onClose={() => setIsAlertOpen(false)}
+          product={initialProduct}
+          currentConfig={{
+            color:      activeSpec.color,
+            storage:    activeSpec.storage,
+            condition:  selectedCondition,
+            batteryNew: selectedBattery,
+            price:      activeOffer.current_price || 0
+          }}
+        />
+      )}
+    </div>
+  )
+}

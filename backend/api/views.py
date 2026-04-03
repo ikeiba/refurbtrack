@@ -16,6 +16,8 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from rest_framework.views import APIView
 from rest_framework import status
 
+from rest_framework.decorators import api_view
+
 
 from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Offer, ClickEvent
 from .serializers import (
@@ -451,3 +453,57 @@ def redirect_to_store(request, offer_uuid):
     response = redirect(final_url)
     response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response
+
+class ProductResolveBySlugView(APIView):
+    """
+    Cerebro del SEO: Resuelve la jerarquía de slugs y devuelve el detalle.
+    URL: /api/resolve-slugs/?cat=...&brand=...&prod=...&spec=...
+    """
+    permission_classes = [] # Pública para SEO
+
+    def get(self, request):
+        # 1. Capturamos los slugs de la URL
+        category_slug = request.query_params.get('cat')
+        brand_slug = request.query_params.get('brand')
+        product_slug = request.query_params.get('prod')
+        spec_slug = request.query_params.get('spec')
+
+        # 2. La consulta maestra (O(log n) gracias a los índices B-Tree)
+        # Usamos select_related para evitar el problema de N+1 consultas.
+        # Filtramos por los 4 niveles para asegurar que la jerarquía es válida.
+        spec = get_object_or_404(
+            Spec.objects.select_related(
+                'product', 
+                'product__brand', 
+                'product__category'
+            ).prefetch_related('offers'),
+            slug=spec_slug,
+            product__slug=product_slug,
+            product__brand__slug=brand_slug,
+            product__category__slug=category_slug
+        )
+
+        # 3. Serializamos (usamos el pesado porque es la vista de detalle)
+        # IMPORTANTE: Pasamos el 'product' al serializer porque el detalle
+        # espera la estructura desde el nivel de producto hacia abajo.
+        serializer = ProductDetailSerializer(spec.product)
+        
+        # 4. Inyectamos datos extra útiles para el frontend
+        data = serializer.data
+        data['current_spec_id'] = spec.id # Para que Next.js sepa qué Spec marcar como activa
+        
+        return Response(data)
+    
+
+@api_view(['GET'])
+def sitemap_data(request):
+    # Traemos solo los slugs necesarios para construir las URLs
+    # Usamos values() para que la consulta a la DB sea ultra ligera (solo strings)
+    specs = Spec.objects.select_related('product', 'product__category', 'product__brand').values(
+        'product__category__slug',
+        'product__brand__slug',
+        'product__slug',
+        'slug',
+        'last_updated'
+    )
+    return Response(list(specs))

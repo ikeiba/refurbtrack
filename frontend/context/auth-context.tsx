@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("userEmail")
     setUser(null)
     setIsAuthenticated(false)
-    router.push("/") // Volver a home
+    router.push("/es") // Volver a home
     router.refresh()
   }
 
