@@ -77,21 +77,76 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { lang, category, brand, product: productSlug, spec: specSlug } = await params;
   
-  // Fetch en paralelo para optimizar el tiempo de carga
   const [productData, hotOffers] = await Promise.all([
     getProductBySlugs(category, brand, productSlug, specSlug),
     getHistoricalLowOffers()
   ]);
 
   if (!productData) {
-    notFound(); // Lanza el 404 de Next.js si Django no encuentra los slugs
+    notFound(); 
   }
+
+  // 1. ENCONTRAR LA SPEC ACTIVA
+  // Gracias a tu vista en Django, sabemos exactamente qué spec de la lista es la de esta URL
+// 1. ENCONTRAR LA SPEC ACTIVA
+const specDetails = productData.specs?.find(
+  (s: any) => s.id === productData.current_spec_id
+);
+
+if (!specDetails) return notFound();
+
+// 2. EXTRACCIÓN Y LIMPIEZA DE PRECIOS (Mentalidad de Datos)
+const activeOffers = specDetails.offers || [];
+
+// Filtramos solo precios válidos y mayores que 0 para evitar fallos de Google
+const validPrices = activeOffers
+  .map((o: any) => parseFloat(o.current_price))
+  .filter((p: number) => !isNaN(p) && p > 0);
+
+const offerCount = validPrices.length;
+
+// Definimos los precios con fallbacks seguros
+// Si no hay ofertas activas, usamos el min_price_cached de la base de datos
+const fallbackPrice = parseFloat(specDetails.min_price_cached) || 0;
+
+const finalLowPrice = offerCount > 0 ? Math.min(...validPrices) : fallbackPrice;
+const finalHighPrice = offerCount > 0 ? Math.max(...validPrices) : fallbackPrice;
+
+// 3. CONSTRUCCIÓN DEL JSON-LD REFORZADO
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": `${productData.name} (${specDetails.storage} - ${specDetails.color})`,
+  "image": specDetails.image || productData.image, // URL simple
+  "description": `Compara precios de Back Market para el ${productData.name} ${specDetails.storage} ${specDetails.color}.`,
+  "brand": {
+    "@type": "Brand",
+    "name": "Apple" // O productData.brand_name
+  },
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": "EUR",
+    // IMPORTANTE: Forzamos que sean strings con 2 decimales para Google
+    "lowPrice": finalLowPrice.toFixed(2),
+    "highPrice": finalHighPrice.toFixed(2),
+    "offerCount": offerCount > 0 ? offerCount : 1,
+    "itemCondition": "https://schema.org/RefurbishedCondition",
+    "availability": offerCount > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    "seller": {
+      "@type": "Organization",
+      "name": "Back Market"
+    }
+  }
+};
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Pasamos los datos al componente de cliente. 
-         A partir de aquí, el usuario ya puede interactuar con los estados.
-      */}
+      {/* EL CHIVATO SEO PARA GOOGLEBOT */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <ProductViewClient 
         initialProduct={productData} 
         initialHotOffers={hotOffers}
