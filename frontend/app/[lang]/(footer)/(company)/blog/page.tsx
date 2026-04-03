@@ -1,8 +1,8 @@
-'use client'
+// app/[lang]/(company)/blog/page.tsx
+// ¡ADIÓS 'use client'!
 
 import Link from 'next/link'
 import { Calendar, User, ArrowRight } from 'lucide-react'
-import { useState } from 'react'
 
 const blogPosts = [
   {
@@ -61,13 +61,26 @@ const blogPosts = [
   }
 ]
 
-export default function BlogPage() {
-  const [selectedCategory, setSelectedCategory] = useState('Todas')
-  const categories = ['Todas', 'Educación', 'Sostenibilidad', 'Comparativa', 'Consejos', 'Mercado']
-  
-  const filteredPosts = selectedCategory === 'Todas' 
-    ? blogPosts 
-    : blogPosts.filter(post => post.category === selectedCategory)
+export default async function BlogPage({ 
+    params,
+    searchParams 
+  }: { 
+    // Ahora tipamos esto como Promesas
+    params: Promise<{ lang: string }>
+    searchParams: Promise<{ category?: string }> 
+  }) {
+    // 1. Resolvemos las promesas
+    const resolvedParams = await params
+    const resolvedSearchParams = await searchParams
+
+    const lang = resolvedParams.lang
+    // 2. Leemos la categoría de los parámetros ya resueltos
+    const selectedCategory = resolvedSearchParams.category || 'Todas'
+    const categories = ['Todas', 'Educación', 'Sostenibilidad', 'Comparativa', 'Consejos', 'Mercado']
+    
+    const filteredPosts = selectedCategory === 'Todas' 
+      ? blogPosts 
+      : blogPosts.filter(post => post.category === selectedCategory)
 
   return (
     <div className="space-y-12">
@@ -79,21 +92,28 @@ export default function BlogPage() {
         </p>
       </div>
 
-      {/* Categorías */}
+      {/* Categorías convertidas en Links en lugar de botones con onClick */}
       <div className="flex flex-wrap gap-2 justify-center mb-12">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full font-medium transition-colors ${
-              cat === selectedCategory
-                ? 'bg-emerald-600 text-white'
-                : 'bg-muted hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+        {categories.map((cat) => {
+          // 3. Usamos la variable 'lang' resuelta para construir el enlace
+          const href = cat === 'Todas' 
+            ? `/${lang}/blog` 
+            : `/${lang}/blog?category=${cat}`
+
+          return (
+            <Link
+              key={cat}
+              href={href}
+              className={`px-4 py-2 rounded-full font-medium transition-colors ${
+                cat === selectedCategory
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-muted hover:bg-muted text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {cat}
+            </Link>
+          )
+        })}
       </div>
 
       {/* Featured Post */}

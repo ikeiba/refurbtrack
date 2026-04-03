@@ -7,6 +7,42 @@ import { Metadata } from "next";
 // --- IMPORTANTE: Aquí extraemos los componentes interactivos a "Islas" ---
 import ProductViewClient from "@/components/product/ProductViewClient"; 
 
+// 1. REVALIDACIÓN ISR: Guarda las páginas generadas en caché durante 10 minutos
+export const revalidate = 600;
+
+// 2. DINAMISMO (TIER 2): Si un usuario entra a una URL que NO se pre-renderizó en el build, 
+// permítele pasar y genérala bajo demanda (true). Si fuera false, daría un error 404.
+export const dynamicParams = true;
+
+// 3. GENERACIÓN DEL TIER 1 EN EL BUILD
+export async function generateStaticParams() {
+  try {
+    // Usamos la URL interna de tu API. 
+    // OJO: Al ejecutarse en el servidor (Docker), asegúrate de que esta variable 
+    // apunta al contenedor de Django (ej: http://backend:8000/api) y no a localhost.
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/top-specs/`);
+    
+    if (!res.ok) {
+      console.warn("No se pudo cargar el Tier 1, saltando pre-renderizado...");
+      return [];
+    }
+    
+    const topSpecs = await res.json();
+    
+    // Mapeamos las claves de Django a los [parámetros] exactos de tu carpeta en Next.js
+    return topSpecs.map((item: any) => ({
+      lang: 'es', // Dejamos 'es' fijo hasta que implementemos el multi-idioma real
+      category: item.product__category__slug,
+      brand: item.product__brand__slug,
+      product: item.product__slug,
+      spec: item.slug
+    }));
+  } catch (error) {
+    console.error("Error en generateStaticParams:", error);
+    return []; // Si hay un error, el build no explota, simplemente todo el catálogo será Tier 2
+  }
+}
+
 interface Props {
   params: Promise<{
     lang: string;

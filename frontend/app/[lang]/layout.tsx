@@ -1,20 +1,22 @@
+// app/[lang]/layout.tsx
+
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import "./globals.css"
+// ¡OJO! Hemos bajado un nivel, así que hay que subir uno para encontrar el CSS
+import "../globals.css" 
 import { Toaster } from "@/components/ui/toaster"
 import { Footer } from "@/components/footer" 
 import { AuthProvider } from "@/context/auth-context" 
-
-// <--- 1. Importar el proveedor y el componente del banner de cookies
 import { ConsentProvider } from "@/context/ConsentContext"
 import { CookieBanner } from "@/components/CookieBanner"
-
 import { AnalyticsScripts } from "@/components/AnalyticsScripts"
 
 const _inter = Inter({ subsets: ["latin"] })
 
+// La metadata se queda igual por ahora
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com'),
   title: "RefurbTrack - Refurbished Tech Price Tracker",
   description:
     "Track prices from Back Market and other refurbished tech marketplaces. Find the best deals on iPhones, iPads, and more.",
@@ -35,32 +37,39 @@ export const metadata: Metadata = {
     ],
   },
   other: {
-    'awin': 'Awin' // <--- Añade esto
+    'awin': 'Awin'
   }
 }
 
-export default function RootLayout({
+// 1. ZONA FRÍA: Activamos la generación estática para el idioma español
+export async function generateStaticParams() {
+  return [{ lang: 'es' }]
+}
+
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode
+  // 2. Tipamos los params como Promesa (Next.js 16)
+  params: Promise<{ lang: string }> 
 }>) {
+  // 3. Resolvemos la promesa para sacar el idioma
+  const resolvedParams = await params
+  const lang = resolvedParams.lang
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <body className={`${_inter.className} font-sans antialiased`}>
-        
-        {/* <--- 2. Envolver toda la aplicación con el ConsentProvider */}
         <ConsentProvider>
           <AuthProvider>
             {children}
             <Footer />
             <Toaster />
           </AuthProvider>
-          
-          {/* <--- 3. Renderizar el Banner al final del body */}
           <CookieBanner />
-          <AnalyticsScripts /> {/* <--- Añade esta línea aquí */}
+          <AnalyticsScripts />
         </ConsentProvider>
-
       </body>
     </html>
   )

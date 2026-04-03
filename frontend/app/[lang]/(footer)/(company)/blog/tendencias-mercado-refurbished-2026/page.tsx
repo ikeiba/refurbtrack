@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 import { Calendar, User, ArrowLeft, Share2, TrendingUp } from 'lucide-react'
 

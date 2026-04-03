@@ -16,7 +16,7 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from rest_framework.views import APIView
 from rest_framework import status
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 
 
 from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Offer, ClickEvent
@@ -506,4 +506,23 @@ def sitemap_data(request):
         'slug',
         'last_updated'
     )
+    return Response(list(specs))
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def top_specs_for_build(request):
+    """
+    Endpoint ultraligero para el SSG de Next.js.
+    Devuelve solo los slugs de las 50 especificaciones más relevantes.
+    """
+    specs = Spec.objects.select_related(
+        'product', 'product__category', 'product__brand'
+    ).order_by('-last_updated')[:50].values(
+        'product__category__slug',
+        'product__brand__slug',
+        'product__slug',
+        'slug'
+    )
+    
     return Response(list(specs))

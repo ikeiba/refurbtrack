@@ -25,7 +25,7 @@ import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   selectedCountry: string
-  onCountryChange: (country: string) => void
+  onCountryChange?: (country: string) => void
   searchQuery?: string
   onSearchChange?: (query: string) => void
   onSearchSubmit?: (query: string) => void
@@ -136,7 +136,7 @@ export function Header({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {countries.map((country) => (
-                <DropdownMenuItem key={country.code} onClick={() => onCountryChange(country.code)} className="gap-2">
+                <DropdownMenuItem key={country.code} onClick={() => onCountryChange?.(country.code)} className="gap-2">
                   <span>{country.flag}</span>
                   <span>{country.name}</span>
                 </DropdownMenuItem>

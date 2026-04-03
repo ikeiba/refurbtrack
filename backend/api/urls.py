@@ -7,7 +7,7 @@ from .views import (DeleteAccountView, HistoricalLowOffersView, PasswordResetReq
                     UserRegistrationView, 
                     AlertDetailView,
                     AlertUnsubscribeView, PasswordResetConfirmView, health_check, redirect_to_store, 
-                    ProductResolveBySlugView, sitemap_data)
+                    ProductResolveBySlugView, sitemap_data, top_specs_for_build)
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -25,6 +25,9 @@ urlpatterns = [
     path('products/resolve/', ProductResolveBySlugView.as_view(), name='product-resolve'),
 
     path('products/sitemap-data/', sitemap_data, name='sitemap_data'),
+
+    # NUESTRO NUEVO ENDPOINT PARA EL BUILD
+    path('products/top-specs/', top_specs_for_build, name='top_specs_build'),
 
     # Rutas automáticas del router
     path('', include(router.urls)),
