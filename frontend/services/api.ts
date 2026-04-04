@@ -11,28 +11,27 @@ import { authService } from "./auth" // <--- 1. Importamos el servicio de auth
 // frontend/services/api.ts
 const IS_SERVER = typeof window === 'undefined';
 
+// Esta constante ahora es 100% segura. Siempre será "http://web:8000/api" o "http://127.0.0.1:8000/api"
+// export const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://127.0.0.1:8000/api";
+
+// services/api.ts
+
+// 2. Enrutamiento Isomórfico (Dependiente del contexto)
+// Función inquebrantable para obtener la base de la API
 const getBaseUrl = () => {
-  // 1. Cogemos la URL de las variables de entorno o usamos los fallbacks
-  let url = IS_SERVER 
-    ? (process.env.INTERNAL_API_URL || "http://web:8000") 
-    : (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000");
-
-  // 2. Le quitamos la barra final si la tiene para evitar "http://web:8000//api"
-  if (url.endsWith('/')) {
-    url = url.slice(0, -1);
+  if (!IS_SERVER) {
+    // Entorno de Navegador (Cliente)
+    const publicUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    return publicUrl.endsWith('/api') ? publicUrl : `${publicUrl}/api`;
   }
-
-  // 3. Garantizamos que SIEMPRE termine en /api
-  if (!url.endsWith('/api')) {
-    url = `${url}/api`;
-  }
-
-  return url;
+  
+  // Entorno de Node.js (Servidor / Docker Build)
+  // Usamos el nombre del servicio de Docker ("web")
+  const internalUrl = process.env.INTERNAL_API_URL || process.env.API_URL || "http://web:8000/api";
+  return internalUrl.endsWith('/api') ? internalUrl : `${internalUrl}/api`;
 };
 
-// Esta constante ahora es 100% segura. Siempre será "http://web:8000/api" o "http://127.0.0.1:8000/api"
 export const API_URL = getBaseUrl();
-// ¡Asegúrate de cambiar API_URL por API_URL_SAFE en tus fetch!
 
 // ... resto de tus funciones ...
 

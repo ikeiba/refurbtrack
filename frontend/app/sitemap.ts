@@ -1,5 +1,7 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next'
+import { API_URL } from "@/services/api"
+
 
 // 1. Tipado robusto para el escalado
 interface SitemapItem {
@@ -51,7 +53,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let brandEntries: MetadataRoute.Sitemap = []
   let productEntries: MetadataRoute.Sitemap = []
   
-  const API_URL = "http://web:8000/api"
 
   try {
     const response = await fetch(`${API_URL}/products/sitemap-data/`, {

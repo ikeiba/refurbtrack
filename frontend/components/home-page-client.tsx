@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+// 1. Añadimos Suspense a los imports
+import { useState, useEffect, Suspense } from "react"
 import { Header } from "@/components/header"
 import { HomeHero } from "@/components/home-hero"
 import { FamilyGrid } from "@/components/family-grid"
@@ -15,58 +16,62 @@ interface HomePageClientProps {
   initialHotOffers: OfferSummary[];
 }
 
+// EL MICRO-COMPONENTE INVISIBLE: Su única misión es leer la URL
+function SearchQuerySync({ onUpdate }: { onUpdate: (q: string) => void }) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    onUpdate(searchParams.get("q") || "")
+  }, [searchParams, onUpdate])
+  return null
+}
+
 export default function HomePageClient({ initialProducts, initialHotOffers }: HomePageClientProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  // 2. ¡ELIMINADO useSearchParams de aquí! El padre ya no lo sabe.
   const params = useParams()
-  const lang = params?.lang || "es" // Capturamos el idioma
+  const lang = params?.lang || "es"
   
   const [selectedCountry, setSelectedCountry] = useState("ES")
-  // 1. Inicializamos el estado leyendo directamente de la URL
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "")
+  
+  // 3. Inicializamos vacío. El micro-componente lo actualizará una fracción de segundo después si hay URL.
+  const [searchQuery, setSearchQuery] = useState("")
 
-  // 2. Si la URL cambia (porque alguien usó las flechas de Atrás/Adelante), actualizamos el input
-  useEffect(() => {
-    setSearchQuery(searchParams.get("q") || "")
-  }, [searchParams])
+  // 4. ¡ELIMINADO el useEffect que escuchaba a searchParams!
 
   const filteredProducts = initialProducts.filter((p) => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // 3. Manejador para el filtrado INSTANTÁNEO (Mientras el usuario teclea)
   const handleInstantSearch = (query: string) => {
     setSearchQuery(query)
-
-    // FIX: Si el usuario borra todo el texto, limpiamos la URL automáticamente
-    // para mantener sincronizada la interfaz con el enlace.
     if (query.trim() === "") {
       router.replace(`/${lang}`, { scroll: false })
     }
   }
 
-  // 4. Manejador para cuando el usuario pulsa ENTER (Fijamos la URL)
   const handleSearchSubmit = (query: string) => {
     const trimmed = query.trim()
     const targetUrl = trimmed 
       ? `/${lang}?q=${encodeURIComponent(trimmed)}` 
       : `/${lang}`
       
-    // Usamos replace para no ensuciar el historial de navegación excesivamente
     router.replace(targetUrl, { scroll: false })
   }
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      
+      {/* 5. INYECTAMOS EL COMPONENTE INVISIBLE PROTEGIDO POR SUSPENSE */}
+      <Suspense fallback={null}>
+        <SearchQuerySync onUpdate={setSearchQuery} />
+      </Suspense>
+
       <Header 
         selectedCountry={selectedCountry}
         onCountryChange={setSelectedCountry}
         searchQuery={searchQuery} 
-        
-        // Pasamos ambos manejadores al Header
         onSearchChange={handleInstantSearch} 
         onSearchSubmit={handleSearchSubmit}
-        
         onMenuClick={() => console.log("Menú click")} 
       />
       
@@ -77,14 +82,12 @@ export default function HomePageClient({ initialProducts, initialHotOffers }: Ho
             offers={initialHotOffers} 
             onOfferClick={(o) => {
               const batteryParam = o.battery_new ? 'new' : 'standard'
-              // Usamos la variable de idioma dinámica
               router.push(`/${lang}/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${o.spec_slug}?condition=${o.condition}&battery=${batteryParam}`)
             }}
           />
        )}
 
       <div className="bg-muted/30 border-border min-h-[50vh] py-4">
-        {/* Desaparece el condicional de loading. El Grid se pinta al instante */}
         <FamilyGrid products={filteredProducts} />
       </div>
 

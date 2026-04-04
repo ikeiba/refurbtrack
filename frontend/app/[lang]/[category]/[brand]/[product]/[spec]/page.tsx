@@ -3,6 +3,7 @@
 import { getProductBySlugs, getHistoricalLowOffers } from "@/services/api";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { API_URL } from "@/services/api"
 
 // --- IMPORTANTE: Aquí extraemos los componentes interactivos a "Islas" ---
 import ProductViewClient from "@/components/product/ProductViewClient"; 
@@ -20,7 +21,7 @@ export async function generateStaticParams() {
     // Usamos la URL interna de tu API. 
     // OJO: Al ejecutarse en el servidor (Docker), asegúrate de que esta variable 
     // apunta al contenedor de Django (ej: http://backend:8000/api) y no a localhost.
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/top-specs/`);
+    const res = await fetch(`${API_URL}/products/top-specs/`);
     
     if (!res.ok) {
       console.warn("No se pudo cargar el Tier 1, saltando pre-renderizado...");

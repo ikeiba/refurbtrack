@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, Suspense, useCallback  } from "react"
 import { useRouter, useParams, useSearchParams, usePathname } from "next/navigation"
 import { getOfferHistory } from "@/services/api"
 import { cn, getColorHex, CHART_COLORS } from "@/lib/utils"
@@ -39,10 +39,23 @@ interface ProductViewClientProps {
 //     <ProductViewClient ... />
 //   </Suspense>
 
+// 1. EL MICRO-COMPONENTE INVISIBLE
+// 1. Micro-componente con las dependencias arregladas para evitar bucles
+function ProductParamsSync({ onSync }: { onSync: (c: string, b: boolean) => void }) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const cond = searchParams.get("condition") || "Fair"
+    const batt = searchParams.get("battery") === "new"
+    onSync(cond, batt)
+    // Ignoramos la regla exhaustiva para onSync, evitando el rebote en cada render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]) 
+  return null
+}
+
 export default function ProductViewClient({ initialProduct, initialHotOffers, lang }: ProductViewClientProps) {
   const router = useRouter()
   const params = useParams()
-  const searchParams = useSearchParams()
   const pathname = usePathname() // <--- NUEVO: Nos da la ruta base actual
 
   // ─── SPEC ACTIVA (por slug de URL) ───────────────────────────────────────
@@ -65,13 +78,20 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   };
 
   // ─── ESTADOS INTERNOS (no indexables → query params) ─────────────────────
-  const [selectedCondition, setSelectedCondition] = useState(searchParams.get("condition") || "Fair")
-  const [selectedBattery, setSelectedBattery]     = useState(searchParams.get("battery") === "new")
+  // 2. Estados inicializados con valores por defecto seguros
+  const [selectedCondition, setSelectedCondition] = useState("Fair")
+  const [selectedBattery, setSelectedBattery]     = useState(false)
   const [chartData, setChartData]                 = useState<{ name: string; color?: string; data: any[] }[]>([])
   const [isAlertOpen, setIsAlertOpen]             = useState(false)
   const [country, setCountry]                     = useState("ES")
   const [searchQuery, setSearchQuery]             = useState("")
 
+  // 2. Usamos useCallback para mantener la referencia estable (Soluciona el rebote)
+  const handleUrlSync = useCallback((c: string, b: boolean) => {
+    setSelectedCondition(prev => prev !== c ? c : prev)
+    setSelectedBattery(prev => prev !== b ? b : prev)
+  }, [])
+  
   const handleHeaderSearch = (query: string) => {
     const trimmed = query.trim()
     // AHORA SÍ: Mantenemos el idioma para no romper la navegación
@@ -90,14 +110,17 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
     }
   }
 
-  // NUEVA FUNCIÓN: Actualiza la URL sin recargar la página
+  // NUEVA FUNCIÓN: Actualiza la URL sin recargar la página (usando JS nativo)
   const updateUrlParams = (key: string, value: string) => {
-    const current = new URLSearchParams(Array.from(searchParams.entries()))
+    // Usamos window.location.search en lugar de searchParams de Next.js
+    const current = new URLSearchParams(window.location.search)
+    
     if (value) current.set(key, value)
     else current.delete(key)
     
     const search = current.toString()
     const query = search ? `?${search}` : ""
+    
     // Usamos replace para no ensuciar el historial del botón "Atrás" del navegador
     router.replace(`${pathname}${query}`, { scroll: false })
   }
@@ -256,6 +279,11 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* 3. INYECTAMOS LA SINCRONIZACIÓN SILENCIOSA */}
+      <Suspense fallback={null}>
+        <ProductParamsSync onSync={handleUrlSync} />
+      </Suspense>
+
       <Header
         selectedCountry={country}
         onCountryChange={setCountry}
