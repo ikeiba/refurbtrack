@@ -9,7 +9,7 @@ import { Metadata } from "next";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper"; 
 
-export const revalidate = 3600; // Cacheamos en servidor por 1 hora
+export const revalidate = 600; // Cacheamos en servidor por 1 hora
 
 interface Props {
   params: Promise<{
