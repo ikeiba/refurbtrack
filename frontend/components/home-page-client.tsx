@@ -7,7 +7,7 @@ import { FamilyGrid } from "@/components/family-grid"
 import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
 import { Toaster } from "@/components/ui/toaster"
 import { WhyRefurbished } from "@/components/why-refurbished"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams, useParams } from "next/navigation"
 import type { ProductSummary, OfferSummary } from "@/lib/types"
 
 interface HomePageClientProps {
@@ -18,23 +18,42 @@ interface HomePageClientProps {
 export default function HomePageClient({ initialProducts, initialHotOffers }: HomePageClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const params = useParams()
+  const lang = params?.lang || "es" // Capturamos el idioma
   
   const [selectedCountry, setSelectedCountry] = useState("ES")
-  const [searchQuery, setSearchQuery] = useState("")
+  // 1. Inicializamos el estado leyendo directamente de la URL
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "")
 
-  // Sincronizar búsqueda con URL (esto sí se queda en el cliente)
+  // 2. Si la URL cambia (porque alguien usó las flechas de Atrás/Adelante), actualizamos el input
   useEffect(() => {
-    const urlQuery = searchParams.get("q") || ""
-    setSearchQuery(urlQuery)
+    setSearchQuery(searchParams.get("q") || "")
   }, [searchParams])
 
-  // Filtrado instantáneo (ya tenemos los datos)
   const filteredProducts = initialProducts.filter((p) => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleHeaderSearch = (query: string) => {
+  // 3. Manejador para el filtrado INSTANTÁNEO (Mientras el usuario teclea)
+  const handleInstantSearch = (query: string) => {
     setSearchQuery(query)
+
+    // FIX: Si el usuario borra todo el texto, limpiamos la URL automáticamente
+    // para mantener sincronizada la interfaz con el enlace.
+    if (query.trim() === "") {
+      router.replace(`/${lang}`, { scroll: false })
+    }
+  }
+
+  // 4. Manejador para cuando el usuario pulsa ENTER (Fijamos la URL)
+  const handleSearchSubmit = (query: string) => {
+    const trimmed = query.trim()
+    const targetUrl = trimmed 
+      ? `/${lang}?q=${encodeURIComponent(trimmed)}` 
+      : `/${lang}`
+      
+    // Usamos replace para no ensuciar el historial de navegación excesivamente
+    router.replace(targetUrl, { scroll: false })
   }
 
   return (
@@ -43,7 +62,11 @@ export default function HomePageClient({ initialProducts, initialHotOffers }: Ho
         selectedCountry={selectedCountry}
         onCountryChange={setSelectedCountry}
         searchQuery={searchQuery} 
-        onSearchChange={setSearchQuery} 
+        
+        // Pasamos ambos manejadores al Header
+        onSearchChange={handleInstantSearch} 
+        onSearchSubmit={handleSearchSubmit}
+        
         onMenuClick={() => console.log("Menú click")} 
       />
       
@@ -54,7 +77,8 @@ export default function HomePageClient({ initialProducts, initialHotOffers }: Ho
             offers={initialHotOffers} 
             onOfferClick={(o) => {
               const batteryParam = o.battery_new ? 'new' : 'standard'
-              router.push(`/es/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${o.spec_slug}?condition=${o.condition}&battery=${batteryParam}`)
+              // Usamos la variable de idioma dinámica
+              router.push(`/${lang}/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${o.spec_slug}?condition=${o.condition}&battery=${batteryParam}`)
             }}
           />
        )}

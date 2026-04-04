@@ -74,7 +74,8 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
 
   const handleHeaderSearch = (query: string) => {
     const trimmed = query.trim()
-    router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/")
+    // AHORA SÍ: Mantenemos el idioma para no romper la navegación
+    router.push(trimmed ? `/${lang}?q=${encodeURIComponent(trimmed)}` : `/${lang}`)
   }
 
   // ─── NAVEGACIÓN SEO (color y storage cambian el slug de URL) ─────────────
