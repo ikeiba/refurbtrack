@@ -1,3 +1,4 @@
+'''
 import os
 import sys
 import django
@@ -23,42 +24,43 @@ except ModuleNotFoundError as e:
 from api.models import Product  # Solo necesitamos Product para obtener los IDs
 
 def run_spiders_concurrently():
-    while True:
-        # Obtenemos todos los IDs de productos que queremos scrapear
-        # Se asume que existen productos en la DB (creados con el script anterior)
-        product_ids = Product.objects.values_list('id', flat=True)
+
+    # Obtenemos todos los IDs de productos que queremos scrapear
+    # Se asume que existen productos en la DB (creados con el script anterior)
+    product_ids = Product.objects.values_list('id', flat=True)
+    
+    processes = []
+    MAX_CONCURRENT_PROCESSES = 12  # Bajado un poco por seguridad al principio
+
+    print(f"📦 Se encontraron {len(product_ids)} productos para procesar.")
+
+    for pid in product_ids:
+        # El comando sigue siendo igual, pasamos el ID del producto
+        cmd = [
+            'scrapy', 'crawl', 'backmarket',
+            '-a', f'product_id={pid}'
+        ]
         
-        processes = []
-        MAX_CONCURRENT_PROCESSES = 12  # Bajado un poco por seguridad al principio
+        print(f"🚀 Lanzando spider para producto ID {pid}...")
+        
+        p = subprocess.Popen(cmd)
+        processes.append(p)
 
-        print(f"📦 Se encontraron {len(product_ids)} productos para procesar.")
+        # Control de concurrencia
+        if len(processes) >= MAX_CONCURRENT_PROCESSES:
+            print("⏳ Esperando a que se libere un slot...")
+            processes[0].wait()
+            processes.pop(0)
+        
+        time.sleep(2) # Pausa entre lanzamientos
 
-        for pid in product_ids:
-            # El comando sigue siendo igual, pasamos el ID del producto
-            cmd = [
-                'scrapy', 'crawl', 'backmarket',
-                '-a', f'product_id={pid}'
-            ]
-            
-            print(f"🚀 Lanzando spider para producto ID {pid}...")
-            
-            p = subprocess.Popen(cmd)
-            processes.append(p)
+    # Esperar a que terminen los restantes
+    for p in processes:
+        p.wait()
 
-            # Control de concurrencia
-            if len(processes) >= MAX_CONCURRENT_PROCESSES:
-                print("⏳ Esperando a que se libere un slot...")
-                processes[0].wait()
-                processes.pop(0)
-            
-            time.sleep(2) # Pausa entre lanzamientos
+    print("✅ Ronda completada. Durmiendo 45 minutos...")
 
-        # Esperar a que terminen los restantes
-        for p in processes:
-            p.wait()
-
-        print("✅ Ronda completada. Durmiendo 45 minutos...")
-        time.sleep(45 * 60)
 
 if __name__ == '__main__':
     run_spiders_concurrently()
+'''

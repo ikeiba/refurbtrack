@@ -135,18 +135,6 @@ CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_TIMEZONE = "Europe/Madrid"
 
-# CELERY BEAT SCHEDULE
-# Aquí definimos cada cuánto se lanza el orquestador
-
-CELERY_BEAT_SCHEDULE = {
-    'run-scraper-every-hour': {
-        'task': 'api.tasks.run_spiders_manager',
-        'schedule': 7200.0, # Ejecutar cada 7200 segundos (2 horas)
-        # O usar crontab para horas específicas:
-        # 'schedule': crontab(minute=0, hour='*/1'), 
-    },
-}
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # <--- AÑADIR ESTO PRIMERO
     'django.middleware.security.SecurityMiddleware',
