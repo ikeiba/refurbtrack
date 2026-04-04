@@ -139,12 +139,53 @@ const jsonLd = {
   }
 };
 
+// 1. Construimos las URLs base para el JSON-LD
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com';
+
+// 2. Definimos la jerarquía de migas de pan
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": `${baseUrl}/${lang}`
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": category.charAt(0).toUpperCase() + category.slice(1),
+      "item": `${baseUrl}/${lang}/${category}`
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Apple", // Usamos la variable que ya tienes definida para el JSON de Product
+      "item": `${baseUrl}/${lang}/${category}/${brand}`
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": productData.name,
+      "item": `${baseUrl}/${lang}/${category}/${brand}/${productSlug}`
+    }
+  ]
+};
+
   return (
     <main className="min-h-screen bg-background">
       {/* EL CHIVATO SEO PARA GOOGLEBOT */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* 2. NUEVO: JSON-LD de las Migas de Pan */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
       <ProductViewClient 

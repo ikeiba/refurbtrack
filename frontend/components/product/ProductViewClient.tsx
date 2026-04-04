@@ -15,13 +15,15 @@ import { Separator } from "@/components/ui/separator"
 import { Card } from "@/components/ui/card"
 import {
   Bell, TrendingDown, Calendar, ArrowUp, ArrowDown,
-  Activity, ExternalLink, Sparkles
+  Activity, ExternalLink, Sparkles, Info
 } from "lucide-react"
 import PriceHistoryChart from "@/components/price-history-chart"
 import { ComparisonPopover } from "@/components/comparison-popover"   // FIX 4: restored
 import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
 import { AlertModal } from "@/components/alert-modal"
 import type { Offer } from "@/lib/types"
+import Link from "next/link"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 
 interface ProductViewClientProps {
   initialProduct: any;
@@ -47,6 +49,20 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   const activeSpec = useMemo(() => {
     return initialProduct.specs.find((s: any) => s.slug === params.spec) || initialProduct.specs[0]
   }, [initialProduct, params.spec])
+
+  // ─── GENERADOR DE ENLACES ESTÁTICOS (Para Googlebot) ─────────────
+  const getSpecUrl = (newStorage: string, newColor: string) => {
+    const targetSpec = initialProduct.specs.find(
+      (s: any) => s.storage === newStorage && s.color === newColor
+    );
+    
+    if (!targetSpec) return "#"; // Fallback de seguridad
+    
+    const path = `/${lang}/${initialProduct.category_slug}/${initialProduct.brand_slug}/${initialProduct.slug}/${targetSpec.slug}`;
+    const query = `?condition=${selectedCondition}${selectedBattery ? "&battery=new" : ""}`;
+    
+    return path + query;
+  };
 
   // ─── ESTADOS INTERNOS (no indexables → query params) ─────────────────────
   const [selectedCondition, setSelectedCondition] = useState(searchParams.get("condition") || "Fair")
@@ -228,6 +244,14 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
     return min === 999999 ? "---" : min;
   }
 
+  // Justo antes del return, define los nodos del breadcrumb:
+  const breadcrumbNodes = [
+    { label: "Inicio", href: `/${lang}` },
+    { label: initialProduct.category_slug, href: `/${lang}/${initialProduct.category_slug}` },
+    { label: initialProduct.brand_slug, href: `/${lang}/${initialProduct.category_slug}/${initialProduct.brand_slug}` },
+    { label: initialProduct.name } // El último nodo no lleva href
+  ];
+
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -240,6 +264,9 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
       />
 
       <div className="container mx-auto px-4 py-8">
+        {/* BREADCRUMBS (Ruta de navegación SEO) */}
+        {/* BREADCRUMBS (Componente Reutilizable) */}
+        <Breadcrumbs items={breadcrumbNodes} />
         <div className="grid md:grid-cols-2 gap- items-start">
 
           {/* GALERÍA */}
@@ -259,20 +286,20 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
             <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">{initialProduct.name}</h1>
             <Separator />
 
-            {/* ALMACENAMIENTO */}
+            {/* ALMACENAMIENTO (Ahora como Enlaces Estáticos) */}
             <div>
               <h3 className="mb-3 text-sm font-medium text-muted-foreground">Almacenamiento</h3>
               <div className="flex flex-wrap gap-2">
                 {storages.map((storage) => {
-                  // 1. Ahora leemos la selección directamente de la URL (activeSpec)
                   const isSelected = activeSpec.storage === storage;
                   const price = getMinPriceForStorage(storage);
                   
                   return (
-                    <button
+                    <Link
                       key={storage}
-                      // 2. Usamos nuestra nueva función de navegación SEO
-                      onClick={() => navigateToSpec(storage, activeSpec.color)}
+                      href={getSpecUrl(storage, activeSpec.color)}
+                      scroll={false} // Evita que la página salte arriba al hacer clic
+                      // prefetch={true} // Opcional: precarga el JSON de las otras capacidades en background
                       className={cn(
                         "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all h-10 rounded-md gap-1.5 px-4 min-w-fit border",
                         isSelected 
@@ -284,28 +311,31 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                       <span className={cn("ml-2 text-xs", isSelected ? "opacity-90" : "opacity-60")}>
                         (desde {price}€)
                       </span>
-                    </button>
+                    </Link>
                   )
                 })}
               </div>
             </div>
 
-            {/* COLOR */}
-            <div>
+            {/* COLOR (Ahora como Enlaces Estáticos) */}
+            <div className="mt-6">
               <h3 className="mb-3 text-sm font-medium text-muted-foreground">Color</h3>
               <div className="flex flex-wrap gap-3">
                 {colors.map((c) => (
-                  <button
+                  <Link
                     key={c}
-                    onClick={() => navigateToSpec(activeSpec.storage, c)}
+                    href={getSpecUrl(activeSpec.storage, c)}
+                    scroll={false}
                     className={cn(
-                      "h-10 w-10 rounded-full border-2 transition-all shadow-sm",
+                      "h-10 w-10 rounded-full border-2 transition-all shadow-sm block", // Añadido 'block' para <a>
                       activeSpec.color === c
                         ? "border-foreground ring-2 ring-offset-2 ring-foreground"
                         : "border-transparent hover:scale-110 hover:border-border"
                     )}
                     style={{ backgroundColor: getColorHex(c) }}
                     title={t(c)}
+                    // Aria-label es vital para accesibilidad y SEO si el enlace no tiene texto visible
+                    aria-label={`Ver modelo en color ${c}`}
                   />
                 ))}
               </div>
@@ -478,8 +508,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
               <h2 className="text-2xl font-bold flex items-center gap-2 mb-6">
                 <Sparkles className="w-6 h-6 text-primary" /> También te podría interesar
               </h2>
-              {/* FIX 2: Internal navigation restored — pushes to the product route,
-                  not directly to o.url (which is an external Back Market link). */}
+              {/* FIX 2: Internal navigation restored */}
               <HistoricalLowsCarousel
                 offers={initialHotOffers}
                 onOfferClick={(o) => {
@@ -492,6 +521,35 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
               />
             </div>
           )}
+
+          {/* SECCIÓN SEO: TEXTO ESTRUCTURADO */}
+          <div className="mt-10 pt-5 border-border">
+            <h2 className="text-2xl font-bold flex items-center gap-2 mb-6">
+              {/* Añadimos un icono consistente con el resto del diseño */}
+              <Info className="w-6 h-6 text-primary" /> Sobre el {initialProduct.name}
+            </h2>
+            
+            {/* Usamos el mismo diseño de "Card" que usaste en la gráfica para integrarlo */}
+            <Card className="p-6 md:p-8 bg-card border shadow-sm">
+              <div className="prose prose-sm sm:prose-base dark:prose-invert text-muted-foreground max-w-none">
+                <p>
+                  Comprar un <strong>{initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color)}</strong> reacondicionado 
+                  es una de las decisiones más inteligentes para ahorrar dinero y reducir la basura electrónica. 
+                  Este modelo ha demostrado mantener un excelente valor en el mercado de segunda mano.
+                </p>
+                
+                {priceStats && priceStats.min > 0 && (
+                  <p className="mt-4">
+                    Según nuestro historial de precios, el <strong>precio más bajo registrado</strong> para esta configuración específica 
+                    ha sido de <strong>{priceStats.min}€</strong>. Analizamos diariamente múltiples tiendas como Back Market 
+                    para asegurarnos de que no pagues de más. Si su precio actual ronda la media de <strong>{priceStats.avg}€</strong>, 
+                    sigue siendo una excelente oportunidad frente al precio de un dispositivo nuevo.
+                  </p>
+                )}
+              </div>
+            </Card>
+          </div>
+
         </div>
       </div>
 
