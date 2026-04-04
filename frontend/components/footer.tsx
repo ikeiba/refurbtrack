@@ -35,7 +35,7 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Productos</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/es" className="hover:text-emerald-600 transition-colors">
+                <Link href="/es/smartphone/apple" className="hover:text-emerald-600 transition-colors">
                   iPhones
                 </Link>
               </li>
