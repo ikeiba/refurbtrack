@@ -45,7 +45,7 @@ export const getProducts = async (): Promise<ProductSummary[]> => {
       },
       // IMPORTANTE: 'no-store' asegura que siempre veamos datos frescos (SSR real)
       // Si quisieras ISR (actualizar cada hora), usarías { next: { revalidate: 3600 } }
-      cache: 'no-store', 
+      next: { revalidate: 3600 } // Sincronizado con el revalidate de la página 
     });
 
     if (!res.ok) {
@@ -96,7 +96,9 @@ export const createAlert = async (data: AlertData) => {
 
 export const getHistoricalLowOffers = async (): Promise<OfferSummary[]> => {
   try {
-    const res = await fetch(`${API_URL}/offers/historical-lows/`)
+    const res = await fetch(`${API_URL}/offers/historical-lows/`, {
+      next: { revalidate: 3600 } // <-- AÑADIDO PARA ALINEAR LA CACHÉ
+    })
     if (!res.ok) throw new Error("Error fetching offers")
     return await res.json()
   } catch (error) {
@@ -274,8 +276,7 @@ export const getProductBySlugs = async (category: string, brand: string, product
 
   try {
     const res = await fetch(urlToFetch, {
-      //next: { revalidate: 1800, tags: ['products'] }
-      cache:'no-store'
+      next: { revalidate: 3600, tags: ['products'] }
     });
 
     console.log("✅ [NEXT.JS RESPONSE] Status:", res.status); // <-- EL RESULTADO
