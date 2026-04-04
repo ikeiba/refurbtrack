@@ -94,7 +94,7 @@ services:
     volumes:
       - ./backend:/app/backend
       - ./scraper:/app/scraper
-    command: celery -A config beat --loglevel=info
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}

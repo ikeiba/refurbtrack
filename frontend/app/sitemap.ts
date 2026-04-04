@@ -56,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const response = await fetch(`${API_URL}/products/sitemap-data/`, {
-      next: { revalidate: 86400 } 
+      next: { revalidate: 3600 } 
     })
 
     if (response.ok) {
