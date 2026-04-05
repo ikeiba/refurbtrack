@@ -2,6 +2,8 @@
 import { MetadataRoute } from 'next'
 import { API_URL } from "@/services/api"
 
+// Añadimos ISR al sitemap: Que se regenere cada 1 hora (3600) o cada 24h (86400)
+export const revalidate = 3600;
 
 // 1. Tipado robusto para el escalado
 interface SitemapItem {
