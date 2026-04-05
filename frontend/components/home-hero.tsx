@@ -46,8 +46,8 @@ export function HomeHero() {
         </h1>
 
         <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground">
-          Consulta el historial de precios de iPhones reacondicionados en Back Market. 
-          Encuentra la mejor oferta con garantía
+          Consulta el historial de precios de iPhones reacondicionados en Back Market 
+          con gráficos interactivos. Crea alertas de precio y compra en el momento justo.
         </p>
       </div>
     </section>
