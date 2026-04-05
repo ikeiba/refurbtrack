@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com'),
   title: "RefurbTrack - Refurbished Tech Price Tracker",
   description:
-    "Track prices from Back Market and other refurbished tech marketplaces. Find the best deals on iPhones, iPads, and more.",
+    "Compara precios históricos de iPhones reacondicionados en Back Market. Encuentra las mejores ofertas en tecnología reacondicionada.",
   manifest: "/site.webmanifest",
   verification: {
     google: "cdvImXJDTi0mo4J1NSj6wCfbuMkBB6ybvInJn2UwI9A", 
