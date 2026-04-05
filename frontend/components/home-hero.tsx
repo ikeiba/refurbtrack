@@ -25,10 +25,10 @@ export function HomeHero() {
         
         {/* TÍTULO PRINCIPAL */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground mb-6">
-          Rastrea el mejor precio,{" "}
+          Compara precios de iPhones,{" "}
           <br className="hidden sm:block" />
           <span className="text-emerald-600 relative inline-block">
-            protege el planeta.
+            reacondicionados en Back Market
             {/* Subrayado SVG movido aquí */}
             <svg
               className="absolute w-full h-3 -bottom-1 left-0 text-emerald-600 opacity-20"
@@ -46,8 +46,9 @@ export function HomeHero() {
         </h1>
 
         <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground">
-          Cada dispositivo reacondicionado ahorra hasta 80kg de CO2. Comparamos los mejores precios en 
-          tecnología reacondicionada para que tu impacto sea positivo tanto para tu bolsillo como para el medio ambiente.
+          Consulta el historial de precios de iPhones reacondicionados en Back Market. 
+          Cada dispositivo reacondicionado ahorra hasta 80kg de CO2. 
+          Encuentra la mejor oferta con garantía
         </p>
       </div>
     </section>
