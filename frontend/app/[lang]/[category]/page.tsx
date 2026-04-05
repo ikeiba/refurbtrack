@@ -23,8 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const prettyCategory = category.charAt(0).toUpperCase() + category.slice(1);
 
   return {
-    title: `Comprar ${prettyCategory} Reacondicionados Baratos | RefurbTrack`,
-    description: `Compara precios de ${prettyCategory} reacondicionados. Las mejores ofertas garantizadas y con garantía.`,
+    title: `Compara ${prettyCategory} Reacondicionados | RefurbTrack`,
+    description: `Compara precios históricos de ${prettyCategory} reacondicionados en Back Market. Encuentra la mejor oferta con garantía.`,
     alternates: {
       canonical: `/${lang}/${category}`
     }

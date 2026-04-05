@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     // Ej: Apple Smartphone Reacondicionados al Mejor Precio
-    title: `${seoBrandName} ${prettyCat} Reacondicionados al Mejor Precio | RefurbTrack`,
-    description: `Ahorra en tu próximo ${prettyCat} ${seoBrandName}. Compara precios históricos de reacondicionados con garantía.`,
+    title: `${seoBrandName} Reacondicionados - Historial de Precios | RefurbTrack`,
+    description: `Compara precios históricos de ${prettyCat}s ${seoBrandName} reacondicionados en Back Market. Encuentra la mejor oferta con garantía.`,
     alternates: { canonical: `/${lang}/${category}/${brand}` }
   };
 }

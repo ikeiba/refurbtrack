@@ -66,8 +66,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalUrl = `https://refurbtrack.com/${lang}/${data.category_slug}/${data.brand_slug}/${data.slug}/${specSlug}`;
 
   return {
-    title: `${data.name} Reacondicionado al mejor precio | RefurbTrack`,
-    description: `Compara precios históricos del ${data.name}. Ahorra comprando tecnología reacondicionada con garantía.`,
+    title: `${data.name} Reacondicionado - Historial de Precios | RefurbTrack`,
+    description: `Historial de precios del ${data.name} reacondicionado en Back Market. Compara condiciones y ahorra con garantía.`,
     alternates: { canonical: canonicalUrl },
     openGraph: {
       images: [data.image],

@@ -17,7 +17,7 @@ const _inter = Inter({ subsets: ["latin"] })
 // La metadata se queda igual por ahora
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com'),
-  title: "RefurbTrack - Refurbished Tech Price Tracker",
+  title: "RefurbTrack - Compara Precios de iPhones Reacondicionados en Back Market",
   description:
     "Compara precios históricos de iPhones reacondicionados en Back Market. Encuentra las mejores ofertas en tecnología reacondicionada.",
   manifest: "/site.webmanifest",
