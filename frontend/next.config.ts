@@ -10,7 +10,8 @@ const nextConfig = {
   unoptimized: false, // Deja que Next.js optimice
  },
  // Inyección de cabeceras para CDNs
-  async headers() {
+
+  /*async headers() {
     return [
       {
         // Aplicar a TODAS las rutas de producto
@@ -44,7 +45,7 @@ const nextConfig = {
         ],
       },
     ]
-  },
+  },*/
   
 }
 

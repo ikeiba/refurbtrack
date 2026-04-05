@@ -7,7 +7,8 @@ import { Metadata } from "next";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper";
 
-export const revalidate = 600; // Cachear 1 hora (ISR)
+// export const revalidate = 600; // Cachear 1 hora (ISR)
+export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{

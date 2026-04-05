@@ -9,7 +9,8 @@ import { API_URL } from "@/services/api"
 import ProductViewClient from "@/components/product/ProductViewClient"; 
 
 // 1. REVALIDACIÓN ISR: Guarda las páginas generadas en caché durante 10 minutos
-export const revalidate = 600;
+// export const revalidate = 600;
+export const dynamic = 'force-dynamic'
 
 // 2. DINAMISMO (TIER 2): Si un usuario entra a una URL que NO se pre-renderizó en el build, 
 // permítele pasar y genérala bajo demanda (true). Si fuera false, daría un error 404.

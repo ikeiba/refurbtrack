@@ -4,7 +4,8 @@ import HomePageClient from "@/components/home-page-client"
 import { Metadata } from "next"
 
 // Añade esta línea mágica para activar el ISR
-export const revalidate = 600;
+// export const revalidate = 600;
+export const dynamic = 'force-dynamic'
 
 // Generación de metadata para la Home
 export async function generateMetadata({ 
