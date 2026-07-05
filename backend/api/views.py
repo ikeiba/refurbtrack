@@ -45,6 +45,11 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.db import connection
 
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from rest_framework_simplejwt.tokens import RefreshToken # Ajusta esto si no usas SimpleJWT
+import os
+
 
 # --- 1. VIEWSET PRINCIPAL (Catálogo) ---
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -526,3 +531,73 @@ def top_specs_for_build(request):
     )
     
     return Response(list(specs))
+
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [] # El endpoint debe ser público para que puedan loguearse
+
+    def post(self, request):
+        token = request.data.get('token')
+        if not token:
+            return Response({"error": "Token no proveído"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 1. El portero comprueba el token con Google Cloud
+            CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "TU_CLIENT_ID_AQUÍ")
+            
+            idinfo = id_token.verify_oauth2_token(
+                token, 
+                requests.Request(), 
+                CLIENT_ID
+            )
+
+            # 2. El token es válido. Sacamos los datos seguros de Google.
+            email = idinfo['email']
+            first_name = idinfo.get('given_name', '')
+            last_name = idinfo.get('family_name', '')
+
+            # 3. ¿El usuario existe? Si no, lo creamos.
+            # Como tu app necesita que los usuarios sean suscriptores para las alertas,
+            # te recomiendo importar y crear tu modelo Subscriber aquí también si hiciera falta.
+            user, created = User.objects.get_or_create(
+                email=email,
+                defaults={
+                    'username': email,
+                    'first_name': first_name,
+                    'last_name': last_name,
+                }
+            )
+
+            # Si el usuario no tenía contraseña (porque se acaba de crear), 
+            # Django le pone una inutilizable por defecto (set_unusable_password).
+            # Esto es perfecto para que no puedan entrar por el login tradicional si no la cambian.
+            if created:
+                user.set_unusable_password()
+                user.save()
+
+            if created:
+                    user.set_unusable_password()
+                    user.save()
+
+            # ---- ESTO ES A LO QUE ME REFERÍA ----
+            # 3.5. Sincronizamos creando también su perfil de Suscriptor para tu negocio
+            # Asegúrate de importar el modelo: from tu_app.models import Subscriber
+            Subscriber.objects.get_or_create(email=email)
+
+            # 4. Generamos los tokens de sesión de TU aplicación (SimpleJWT)
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+                'user': {
+                    'email': user.email,
+                    'name': user.first_name,
+                    'is_new': created
+                }
+            })
+
+        except ValueError:
+            # El token estaba falsificado o caducado
+            return Response({"error": "Token de Google inválido"}, status=status.HTTP_401_UNAUTHORIZED)

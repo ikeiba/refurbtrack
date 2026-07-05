@@ -7,11 +7,12 @@ from .views import (DeleteAccountView, HistoricalLowOffersView, PasswordResetReq
                     UserRegistrationView, 
                     AlertDetailView,
                     AlertUnsubscribeView, PasswordResetConfirmView, health_check, redirect_to_store, 
-                    ProductResolveBySlugView, sitemap_data, top_specs_for_build)
+                    ProductResolveBySlugView, sitemap_data, top_specs_for_build, GoogleLoginView)
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
 
 # El Router crea automáticamente las rutas estándar para el ViewSet:
 # GET /api/products/       (Lista)
@@ -68,5 +69,7 @@ urlpatterns = [
     path('health/', health_check, name='health-check'),  # 👈 AÑADE ESTO
 
     # Añade esta línea a tu urlpatterns existente:
-    path('out/<uuid:offer_uuid>/', redirect_to_store, name='redirect_to_store')
+    path('out/<uuid:offer_uuid>/', redirect_to_store, name='redirect_to_store'),
+    
+    path('auth/google/', GoogleLoginView.as_view(), name='google_login'),
 ]

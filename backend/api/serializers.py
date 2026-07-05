@@ -403,4 +403,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password']
         )
+        
+        # ---> LÍNEA AÑADIDA PARA CREAR EL SUSCRIPTOR <---
+        # Importa Subscriber arriba del todo: from tu_app.models import Subscriber
+        Subscriber.objects.get_or_create(email=user.email)
+
         return user

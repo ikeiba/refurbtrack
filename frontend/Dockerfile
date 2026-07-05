@@ -29,6 +29,10 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL=/api
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
+# 👇 NUEVO: Recibimos el argumento y lo convertimos en variable de entorno para el build
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+
 # Desactivamos telemetría y construimos
 ENV NEXT_TELEMETRY_DISABLED=1
 

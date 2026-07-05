@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
+import { API_URL } from "@/services/api"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -49,80 +51,137 @@ export default function RegisterPage() {
     }
   }
 
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setIsSubmitting(true)
+    setError("")
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+      const res = await fetch(`${apiUrl}/auth/google/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      if (!res.ok) throw new Error("Error autenticando con Google");
+      
+      const data = await res.json();
+      
+      // 👇 AQUÍ ESTÁ LA MAGIA ARREGLADA 👇
+      // Usamos exactamente los nombres que espera tu AuthContext
+      localStorage.setItem('accessToken', data.access_token);
+      if (data.refresh_token) {
+        localStorage.setItem('refreshToken', data.refresh_token);
+      }
+      // Guardamos también el email que nos devuelve el backend de Django
+      localStorage.setItem('userEmail', data.user.email);
+      
+      // Forzamos la recarga para que el AuthContext lea los datos
+      window.location.href = "/es";
+    } catch (err: any) {
+      setError(err.message || "Error al conectar con Google")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <Card className="border-emerald-100 dark:border-emerald-900 shadow-lg">
-      <CardHeader className="space-y-1">
-        <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                <UserPlus className="h-6 w-6 text-emerald-600" />
-            </div>
-        </div>
-        <CardTitle className="text-2xl font-bold text-center">Crea tu cuenta</CardTitle>
-        <CardDescription className="text-center">
-          Únete a RefurbTrack para gestionar tus alertas y guardar favoritos
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/10 border border-red-200 rounded-md">
-              {error}
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="tu@email.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required 
-            />
+    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+      <Card className="border-emerald-100 dark:border-emerald-900 shadow-lg">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+              <div className="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <UserPlus className="h-6 w-6 text-emerald-600" />
+              </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required 
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-            <Input 
-              id="confirmPassword" 
-              type="password" 
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required 
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4 mt-6">
-          <Button 
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" 
-            type="submit" 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creando cuenta...
-                </>
-            ) : (
-                "Registrarse"
+          <CardTitle className="text-2xl font-bold text-center">Crea tu cuenta</CardTitle>
+          <CardDescription className="text-center">
+            Únete a RefurbTrack para gestionar tus alertas y guardar favoritos
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/10 border border-red-200 rounded-md">
+                {error}
+              </div>
             )}
-          </Button>
-          <div className="text-center text-sm">
-            ¿Ya tienes cuenta?{" "}
-            <Link href="/es/login" className="font-medium text-emerald-600 hover:underline">
-              Inicia sesión
-            </Link>
-          </div>
-        </CardFooter>
-      </form>
-    </Card>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="tu@email.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Contraseña</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+              <Input 
+                id="confirmPassword" 
+                type="password" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required 
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4 mt-6">
+            <Button 
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                  <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creando cuenta...
+                  </>
+              ) : (
+                  "Registrarse"
+              )}
+            </Button>
+
+            {/* Separador */}
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300 dark:border-gray-700" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-gray-950 px-2 text-gray-500">
+                  O continúa con
+                </span>
+              </div>
+            </div>
+
+            {/* Botón de Google */}
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError("Error en el pop-up de Google")}
+                theme="outline"
+              />
+            </div>
+
+            <div className="text-center text-sm">
+              ¿Ya tienes cuenta?{" "}
+              <Link href="/es/login" className="font-medium text-emerald-600 hover:underline">
+                Inicia sesión
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
+    </GoogleOAuthProvider>
   )
 }
