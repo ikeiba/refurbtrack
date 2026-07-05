@@ -79,16 +79,20 @@ export const getOfferHistory = async (offerId: number) => {
 export const createAlert = async (data: AlertData) => {
   const res = await fetch(`${API_URL}/alerts/`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    // Lanzamos error con detalle para mostrarlo en el Toast
-    throw new Error(JSON.stringify(errorData));
+    let errorMessage = "Error en el servidor";
+    try {
+      const errorData = await res.json();
+      errorMessage = JSON.stringify(errorData);
+    } catch (e) {
+      // Si entra aquí, es que Django devolvió un HTML (Error 500)
+      errorMessage = `Error del servidor (Status: ${res.status})`;
+    }
+    throw new Error(errorMessage);
   }
   
   return res.json();

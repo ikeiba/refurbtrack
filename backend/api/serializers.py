@@ -128,8 +128,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 class AlertSerializer(serializers.ModelSerializer):
     # Campos de escritura (Input)
-    #product_id = serializers.IntegerField(write_only=True)
-    #email = serializers.EmailField(write_only=True)
+    product_id = serializers.IntegerField(write_only=True)
+    email = serializers.EmailField(write_only=True)
     
     # Campos de lectura (Output para el Dashboard)
     #product_name = serializers.CharField(source='product.name', read_only=True)
@@ -154,8 +154,8 @@ class AlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alert
         fields = [
-            'id', 'price_threshold', 'product_name', 'product_image',
-            'category_slug', 'brand_slug', 'product_slug', 'target_path', 
+            'id', 'product_id', 'email', 'price_threshold', 'product_name', 
+            'product_image', 'category_slug', 'brand_slug', 'product_slug', 'target_path', 
             'target_affiliate_url', 'target_conditions', 'target_storages', 
             'target_colors', 'battery_new'
         ]
