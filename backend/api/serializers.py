@@ -239,46 +239,53 @@ class AlertSerializer(serializers.ModelSerializer):
         )
         
         # ---------------------------------------------------------
-        # 3. ¡NUEVO! ENVÍO DE EMAIL HTML
+        # 3. ¡NUEVO! ENVÍO DE EMAIL HTML (CORREGIDO PARA PRODUCCIÓN)
         # ---------------------------------------------------------
         try:
-            # A. Preparamos los datos para "rellenar" el HTML
-            # Nota: product_url debería ser la URL de TU web (localhost:3000/product/...), 
-            # pero como estamos en local, a veces Gmail no deja hacer clic en localhost.
-            # Pondremos una variable genérica.
+            # A. Configuración de URLs dinámicas
+            # Usamos settings para que en local sea localhost y en prod refurbtrack.com
+            from django.conf import settings
+            base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+            backend_url = getattr(settings, 'BACKEND_URL', 'http://localhost:8000')
 
             signer = TimestampSigner()
-            # TOKEN 1: Para borrar ESTA alerta específica
             token_alert = signer.sign(alert.id)
-            # TOKEN 2: Para borrar al SUSCRIPTOR (y todas sus alertas)
             token_subscriber = signer.sign(subscriber.id)
-            
-            # Base URL del frontend
-            base_url = "http://localhost:3000" # En producción usar env var
 
-            # --- CORRECCIÓN DE LA IMAGEN ---
-            # 1. Primero comprobamos si existe imagen (porque es opcional en el modelo)
-            # 2. Convertimos el objeto ImageField a string para sacar la ruta
-            final_image_url = ""
+            # B. --- CORRECCIÓN DE LA IMAGEN (Versión Next.js Public) ---
+            final_image_url = f"{base_url}/placeholder.jpg" # base_url es FRONTEND_URL
+            
             if product.image:
-                img_path = str(product.image)  # Esto nos da "products/foto.jpg"
-                
-                # Ahora sí podemos usar startswith porque img_path es texto
+                img_path = str(product.image)
                 if img_path.startswith("http"):
                     final_image_url = img_path
                 else:
-                    # Construimos la URL completa para que Gmail pueda descargarla (si fuera pública)
-                    # o para que el link funcione.
-                    final_image_url = f"{base_url}/{img_path}"
+                    # Quitamos barras iniciales por si acaso (ej. "/products/foto.jpg" -> "products/foto.jpg")
+                    clean_path = img_path.lstrip('/')
+                    
+                    # Si en tu BD guardaste solo "iphone-13.jpg" en vez de "products/iphone-13.jpg",
+                    # lo concatenamos. Si ya incluye "products/", lo dejamos igual.
+                    if not clean_path.startswith("products/"):
+                        clean_path = f"products/{clean_path}"
+                    
+                    # CORREGIDO: Le quitamos el "products/" extra porque clean_path ya lo lleva.
+                    # Quedará algo como: http://localhost:3000/_next/image?url=/products/iphone-11.avif&w=256&q=75
+                    final_image_url = f"{base_url}/_next/image?url=/{clean_path}&w=256&q=75"
+
+            # C. --- CORRECCIÓN DE LA URL DEL PRODUCTO (Usando tu lógica SEO) ---
+            # Llamamos a tu función para obtener la ruta exacta: /smartphones/apple/iphone-13...
+            target_path = self.get_target_path(alert)
+            if target_path:
+                product_url = f"{base_url}/es{target_path}"
             else:
-                # Imagen por defecto si el producto no tiene foto
-                final_image_url = f"{base_url}/placeholder.jpg"
+                # Fallback por si acaso falla algo en el target_path
+                product_url = f"{base_url}/es/{product.category.slug}/{product.brand.slug}/{product.slug}"
 
             context = {
                 'product_name': product.name,
                 'product_type': product.type if hasattr(product, 'type') else '',
                 'target_price': alert.price_threshold,
-                'product_image': final_image_url, # <--- Usamos la variable segura
+                'product_image': final_image_url,
                 
                 # DETALLES DE LA ALERTA
                 'target_storages': ', '.join(alert.target_storages) if alert.target_storages else 'Cualquiera',
@@ -288,16 +295,15 @@ class AlertSerializer(serializers.ModelSerializer):
                 'country': alert.country,
                 'has_criteria': bool(alert.target_storages or alert.target_colors or alert.target_conditions or alert.battery_new),
                 
-                # LINKS DE ACCIÓN
-                'product_url': f"{base_url}/product/{product.id}",
-                'home_url': base_url,
-                'dashboard_url': f"{base_url}/dashboard",
-                'login_url': f"{base_url}/auth/login",
-                # LINK 1: Borrar solo esta (Botón rojo cuerpo del correo)
-                'unsubscribe_url': f"{base_url}/alerts/unsubscribe?token={token_alert}",
+                # LINKS DE ACCIÓN (Añadido el prefijo /es/ para evitar 404 en Next.js)
+                'product_url': product_url,
+                'home_url': f"{base_url}/es",
+                'dashboard_url': f"{base_url}/es/dashboard",
+                'login_url': f"{base_url}/es/auth/login",
                 
-                # LINK 2: Borrar TODO (Footer) - Apunta a una página NUEVA
-                'unsubscribe_all_url': f"{base_url}/alerts/unsubscribe-all?token={token_subscriber}"
+                # LINKS DE BORRADO
+                'unsubscribe_url': f"{base_url}/es/alerts/unsubscribe?token={token_alert}",
+                'unsubscribe_all_url': f"{base_url}/es/alerts/unsubscribe-all?token={token_subscriber}"
             }
 
             # B. Renderizamos el HTML
