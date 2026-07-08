@@ -70,9 +70,12 @@ export const getProductDetail = async (id: string) => {
 };
 
 // Para el Historial (Gráfica)
-export const getOfferHistory = async (offerId: number) => {
-  const res = await fetch(`${API_URL}/offers/${offerId}/history/`);
-  if (!res.ok) return []; // Si falla, devolvemos array vacío
+export const getOfferHistory = async (offerId: number, days: string = '30') => {
+  // Ahora la URL siempre lleva el parámetro
+  const url = `${API_URL}/offers/${offerId}/history/?days=${days}`;
+  
+  const res = await fetch(url);
+  if (!res.ok) return []; 
   return res.json();
 };
 

@@ -143,10 +143,14 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
     )
   }, [activeSpec, selectedCondition, selectedBattery])
 
+  const [timeRange, setTimeRange] = useState<string>('30') // Por defecto 30 días
+  
   // ─── HISTORIAL DEL GRÁFICO ────────────────────────────────────────────────
+  // 3. Modifica tu useEffect del historial para que escuche el cambio de tiempo:
   useEffect(() => {
     if (activeOffer) {
-      getOfferHistory(activeOffer.id).then((history) => {
+      // Le pasamos el timeRange a la función getOfferHistory
+      getOfferHistory(activeOffer.id, timeRange).then((history) => {
         setChartData([{
           name:  `${initialProduct.name} ${t(activeSpec.color)} ${activeSpec.storage}GB - ${t(selectedCondition)}`,
           data:  history,
@@ -154,7 +158,8 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
         }])
       })
     }
-  }, [activeOffer, activeSpec, selectedCondition, initialProduct.name])
+  // ¡IMPORTANTE! Añade timeRange al array de dependencias para que se vuelva a ejecutar al hacer clic
+  }, [activeOffer, activeSpec, selectedCondition, initialProduct.name, timeRange])
 
   // ─── FIX 4: COMPARACIÓN ───────────────────────────────────────────────────
   // Restored ComparisonPopover + handleAddComparison + handleRemoveSeries,
@@ -464,9 +469,6 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
               <TrendingDown className="w-6 h-6 text-primary" /> Histórico de Precios
             </h2>
             {/* FIX 4: ComparisonPopover restored */}
-            <div className="ml-auto">
-              <ComparisonPopover onCompare={handleAddComparison} />
-            </div>
           </div>
 
           {/* STATS CARDS */}
@@ -518,6 +520,51 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
               </Card>
             </div>
           )}
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          {/* 1. Título a la izquierda */}
+          <h3 className="text-lg font-semibold text-foreground">
+            Evolución del precio
+          </h3>
+          
+          {/* 2. Grupo de controles a la derecha (o debajo en móviles) */}
+          <div className="flex flex-wrap items-center gap-3">
+            
+            {/* Selector de tiempo (Estilo Tabs) */}
+            <div className="flex bg-muted/70 p-1 rounded-lg border shadow-sm">
+              <Button
+                variant={timeRange === '7' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md transition-all"
+                onClick={() => setTimeRange('7')}
+              >
+                7d
+              </Button>
+              <Button
+                variant={timeRange === '30' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md transition-all"
+                onClick={() => setTimeRange('30')}
+              >
+                30d
+              </Button>
+              <Button
+                variant={timeRange === '90' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md transition-all"
+                onClick={() => setTimeRange('90')}
+              >
+                90d
+              </Button>
+            </div>
+
+            {/* Botón de comparar */}
+            <div className="flex-shrink-0">
+              <ComparisonPopover onCompare={handleAddComparison} />
+            </div>
+            
+          </div>
+        </div>
 
           <Card className="p-6 bg-card border shadow-sm h-[450px]">
             {chartData.length > 0 ? (
