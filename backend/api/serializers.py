@@ -299,11 +299,11 @@ class AlertSerializer(serializers.ModelSerializer):
                 'product_url': product_url,
                 'home_url': f"{base_url}/es",
                 'dashboard_url': f"{base_url}/es/dashboard",
-                'login_url': f"{base_url}/es/auth/login",
+                'login_url': f"{base_url}/es/login",
                 
                 # LINKS DE BORRADO
-                'unsubscribe_url': f"{base_url}/es/alerts/unsubscribe?token={token_alert}",
-                'unsubscribe_all_url': f"{base_url}/es/alerts/unsubscribe-all?token={token_subscriber}"
+                'unsubscribe_url': f"{base_url}/es/unsubscribe?token={token_alert}",
+                'unsubscribe_all_url': f"{base_url}/es/unsubscribe-all?token={token_subscriber}"
             }
 
             # B. Renderizamos el HTML

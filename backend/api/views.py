@@ -325,7 +325,10 @@ class PasswordResetRequestView(APIView):
             token = default_token_generator.make_token(user)
             
             # URL del Frontend (Ajusta localhost:3000 si es necesario)
-            reset_link = f"http://localhost:3000/auth/reset-password/{uid}/{token}"
+            base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+
+            # Añadimos el /es/ para que Next.js no devuelva un 404
+            reset_link = f"{base_url}/es/reset-password/{uid}/{token}"
             
             # Renderizamos el email
             context = {
