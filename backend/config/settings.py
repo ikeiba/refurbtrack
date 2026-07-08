@@ -70,7 +70,7 @@ EMAIL_PORT = 587                    # El puerto estándar para envío seguro
 EMAIL_USE_TLS = True                # Encriptación (Seguridad)
 EMAIL_HOST_USER = 'resend'
 EMAIL_HOST_PASSWORD = os.getenv('RESEND_API_KEY')
-DEFAULT_FROM_EMAIL = 'RefurbTrack <onboarding@resend.dev>' # Quien envía el correo por defecto
+DEFAULT_FROM_EMAIL = 'RefurbTrack <alertas@refurbtrack.com>' # O hola@, noreply@...
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
