@@ -65,38 +65,59 @@ def send_alert_email(alert, offer):
     # ... (Esta función es IDÉNTICA a la que te pasé antes: genera el HTML y envía) ...
     try:
         signer = TimestampSigner()
-        # Generamos tokens para borrar alerta (alert ID) y borrar todo (subscriber ID)
-        token_alert = signer.sign(alert.id)
-        token_subscriber = signer.sign(alert.subscriber.id) # <--- OJO: Necesitamos esto para el footer
         
-        base_url = "http://localhost:3000"
+        # Generamos tokens 
+        token_alert = signer.sign(alert.id)
+        token_subscriber = signer.sign(alert.subscriber.id) 
+        
+        base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+        backend_url = getattr(settings, 'BACKEND_URL', 'http://localhost:8000')
 
-        # Imagen
-        img_url = ""
-        if offer.spec.image:
-            img_url = str(offer.spec.image)
-        elif alert.product.image:
-            img_url = str(alert.product.image)
-            
-        if img_url and not img_url.startswith("http"):
-            img_url = f"{base_url}/{img_url}"
+        # ---------------------------------------------------------
+        # LÓGICA DE IMAGEN (Con tu limpieza de rutas)
+        # ---------------------------------------------------------
+        final_image_url = f"{base_url}/placeholder.jpg"
+        
+        # Buscamos primero en la spec, luego en el producto
+        img_field = offer.spec.image or alert.product.image
+        
+        if img_field:
+            img_path = str(img_field)
+            if img_path.startswith("http"):
+                final_image_url = img_path
+            else:
+                clean_path = img_path.lstrip('/')
+                
+                if not clean_path.startswith("products/"):
+                    clean_path = f"products/{clean_path}"
+                
+                # Apuntamos al archivo puro para evitar bloqueos anti-spam en Gmail
+                final_image_url = f"{base_url}/{clean_path}"
 
+        # ---------------------------------------------------------
+        # CONTEXTO DEL EMAIL
+        # ---------------------------------------------------------
         context = {
             'product_name': alert.product.name,
             'storage': offer.spec.storage,
             'color': offer.spec.color,
-            'condition': offer.condition,
+            
+            # FIX: Usamos get_condition_display para texto amigable
+            'condition': offer.get_condition_display() if hasattr(offer, 'get_condition_display') else offer.condition,
+            
             'current_price': offer.current_price,
             'old_price': offer.max_price_30d,
-            'product_image': img_url,
-            'offer_url': offer.url if offer.url else f"{base_url}/product/{alert.product.id}",
+            'product_image': final_image_url,
             
-            # LINKS (Con tu arquitectura nueva)
-            'unsubscribe_url': f"{base_url}/alerts/unsubscribe?token={token_alert}",
-            'unsubscribe_all_url': f"{base_url}/alerts/unsubscribe-all?token={token_subscriber}",
-            'dashboard_url': f"{base_url}/dashboard",
-            'home_url': f"{base_url}",
-            'login_url': f"{base_url}/auth/login",
+            # FIX CRÍTICO: Reconstruimos la URL usando el UUID directamente hacia el backend
+            'offer_url': f"{backend_url}/api/out/{offer.uuid}/" if hasattr(offer, 'uuid') else f"{base_url}/es",
+            
+            # LINKS FRONTEND
+            'unsubscribe_url': f"{base_url}/es/unsubscribe?token={token_alert}",
+            'unsubscribe_all_url': f"{base_url}/es/unsubscribe-all?token={token_subscriber}",
+            'dashboard_url': f"{base_url}/es/dashboard",
+            'home_url': f"{base_url}/es",
+            'login_url': f"{base_url}/es/login",
             'has_criteria': True,
             'target_price': alert.price_threshold,
             'country': alert.country,
