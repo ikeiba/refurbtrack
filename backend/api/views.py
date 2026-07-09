@@ -72,7 +72,9 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Optimización de Consultas (Solving N+1 Problem).
         """
-        queryset = Product.objects.all()
+        # AÑADIMOS EL .order_by('id') AQUÍ
+        # Si prefieres que salgan de más nuevo a más viejo, cámbialo por '-id'
+        queryset = Product.objects.all().order_by('id')
 
         if self.action == 'retrieve':
             # Si estamos viendo el detalle, necesitamos traer TODO el árbol de golpe.
