@@ -1,0 +1,3 @@
+interface:
+  display_name: "Save Note"
+  short_description: "Save note into obsidian"

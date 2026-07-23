@@ -8,3 +8,8 @@ frontend/node_modules
 scraper/__pycache__
 backend/db.sqlite3
 backend/staticfiles
+
+# OpenCode AI Agents
+.agents/
+AGENTS.md
+docs/agents/
