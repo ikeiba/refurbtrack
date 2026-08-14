@@ -111,3 +111,11 @@ export interface AlertItem {
   product_name?: string     // Lo necesitaremos (si el backend no lo manda, habrá que ajustarlo o hacer trampa visual)
   product_image?: string
 }
+
+//? ESTO ES LO QUE ENVIAMOS AL BACKEND EN EL FORMULARIO DE CONTACTO
+export interface ContactData {
+  name: string
+  email: string
+  subject: string
+  message: string
+}

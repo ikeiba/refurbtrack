@@ -1,12 +1,16 @@
 from rest_framework import serializers
 from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber
 from django.contrib.auth.models import User
-from rest_framework.validators import UniqueValidator
 from django.core.mail import send_mail # <--- 1. IMPORTAR ESTO
 from django.conf import settings # Para acceder al remitente por defecto
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.signing import TimestampSigner
+from django.contrib.auth.password_validation import (
+    validate_password as django_validate_password,
+    MinimumLengthValidator,
+)
+from django.db import IntegrityError
 
 # --- 1. HISTÓRICO (Para la Gráfica) ---
 class PriceHistorySerializer(serializers.ModelSerializer):
@@ -161,64 +165,50 @@ class AlertSerializer(serializers.ModelSerializer):
         ]
     
     def get_target_path(self, obj):
-        # 1. Comprobar si es una alerta específica (Solo 1 opción de cada)
         is_specific = (
             len(obj.target_storages or []) == 1 and 
             len(obj.target_colors or []) == 1
         )
 
+        specs = list(obj.product.specs.all())
+
         if is_specific:
-            # Buscamos la spec exacta
-            spec = obj.product.specs.filter(
-                storage=obj.target_storages[0],
-                color=obj.target_colors[0]
-            ).first()
+            matching = [
+                s for s in specs
+                if s.storage == obj.target_storages[0]
+                and s.color == obj.target_colors[0]
+            ]
+            spec = matching[0] if matching else None
         else:
-            # Si es general, buscamos la spec más barata actualmente
-            spec = obj.product.specs.order_by('min_price_cached').first()
+            spec = min(specs, key=lambda s: s.min_price_cached or float('inf')) if specs else None
 
         if spec:
-            # Construimos la ruta base
             path = f"/{obj.product.category.slug}/{obj.product.brand.slug}/{obj.product.slug}/{spec.slug}"
-            
-            # Añadimos los parámetros de estado/batería si son específicos
             params = []
             if len(obj.target_conditions or []) == 1:
                 params.append(f"condition={obj.target_conditions[0]}")
             if obj.battery_new is not None:
                 params.append(f"battery={'new' if obj.battery_new else 'standard'}")
-            
             query = f"?{'&'.join(params)}" if params else ""
             return path + query
-        
         return None
 
     def get_target_affiliate_url(self, obj):
-        # 1. Empezamos con todas las ofertas de ese producto
-        # (Ajusta la relación según tu modelo, asumo que Offer -> Spec -> Product)
         qs = Offer.objects.filter(spec__product=obj.product)
 
-        # 2. Aplicamos los filtros de la alerta
         if obj.target_storages:
             qs = qs.filter(spec__storage__in=obj.target_storages)
-        
         if obj.target_colors:
             qs = qs.filter(spec__color__in=obj.target_colors)
-            
         if obj.target_conditions:
             qs = qs.filter(condition__in=obj.target_conditions)
-            
         if obj.battery_new is not None:
             qs = qs.filter(battery_new=obj.battery_new)
 
-        # 3. Ordenamos por el mejor precio actual
         best_offer = qs.order_by('current_price').first()
 
-        # 4. Devolvemos tu URL de redirección segura con UUID
         if best_offer:
             return f"/api/out/{best_offer.uuid}/"
-        
-        # Fallback si no hay stock que cumpla los filtros
         return "https://www.backmarket.es"
 
     def create(self, validated_data):
@@ -384,28 +374,39 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
         return f"/api/out/{obj.uuid}/"
     
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    # 1. Hacemos el email OBLIGATORIO y ÚNICO (Django por defecto no lo exige)
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        # 2. Quitamos 'username' de aquí. El frontend no lo envía.
-        fields = ('email', 'password') 
+        fields = ('email', 'password')
+
+    def validate_password(self, value):
+        django_validate_password(
+            value,
+            password_validators=[MinimumLengthValidator(min_length=6)]
+        )
+        return value
 
     def create(self, validated_data):
-        # 3. TRUCO: Usamos el email como username
-        user = User.objects.create_user(
-            username=validated_data['email'], 
-            email=validated_data['email'],
-            password=validated_data['password']
-        )
-        
-        # ---> LÍNEA AÑADIDA PARA CREAR EL SUSCRIPTOR <---
-        # Importa Subscriber arriba del todo: from tu_app.models import Subscriber
+        try:
+            user = User.objects.create_user(
+                username=validated_data['email'],
+                email=validated_data['email'],
+                password=validated_data['password']
+            )
+        except IntegrityError:
+            raise serializers.ValidationError(
+                {'email': 'Este email ya está registrado.'}
+            )
+
         Subscriber.objects.get_or_create(email=user.email)
 
         return user
+
+
+class ContactMessageSerializer(serializers.Serializer):
+    name = serializers.CharField(required=True, max_length=255)
+    email = serializers.EmailField(required=True)
+    subject = serializers.CharField(required=True, max_length=255)
+    message = serializers.CharField(required=True)

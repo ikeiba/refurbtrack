@@ -1,5 +1,5 @@
 // frontend_light/services/api.ts
-import { ProductSummary, AlertData, OfferSummary } from "@/lib/types";
+import { ProductSummary, AlertData, OfferSummary, ContactData } from "@/lib/types";
 import { authService } from "./auth" // <--- 1. Importamos el servicio de auth
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
@@ -297,4 +297,25 @@ export const getProductBySlugs = async (category: string, brand: string, product
     console.error("❌ [NEXT.JS ERROR FATAL]", error);
     throw error;
   }
+};
+
+export const sendContactMessage = async (data: ContactData) => {
+  const res = await fetch(`${API_URL}/contact/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    let errorMessage = "No se pudo enviar el mensaje";
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.error || JSON.stringify(errorData);
+    } catch (e) {
+      errorMessage = `Error del servidor (Status: ${res.status})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return res.json();
 };

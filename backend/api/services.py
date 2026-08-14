@@ -1,4 +1,4 @@
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
@@ -59,6 +59,32 @@ def check_alerts_for_product(product, cutoff_time=None):
         
         if winning_offer:
             send_alert_email(alert, winning_offer)
+
+
+def send_contact_email(name, email, subject, message):
+    """
+    Reenvía un mensaje del formulario de contacto al inbox de destino
+    (settings.CONTACT_EMAIL), manteniendo el email del usuario como reply-to.
+    """
+    context = {
+        'name': name,
+        'email': email,
+        'subject': subject,
+        'message': message,
+    }
+
+    html_msg = render_to_string('emails/contact_notification.html', context)
+    plain_msg = strip_tags(html_msg)
+
+    message = EmailMultiAlternatives(
+        subject=f'📩 Contacto: {subject}',
+        body=plain_msg,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[settings.CONTACT_EMAIL],
+        reply_to=[email],
+    )
+    message.attach_alternative(html_msg, 'text/html')
+    message.send(fail_silently=False)
 
 
 def send_alert_email(alert, offer):

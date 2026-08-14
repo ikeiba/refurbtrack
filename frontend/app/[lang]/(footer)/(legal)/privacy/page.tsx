@@ -13,7 +13,7 @@ export default function PrivacyPage() {
 
       <h3 className="text-xl font-bold mt-8">1. Responsable del Tratamiento</h3>
       <p>
-        Puedes contactarnos en privacidad@refurbtrack.com para ejercer tus derechos o resolver cualquier duda relacionada con el tratamiento de tus datos.
+        Puedes contactarnos <a href="/es/contact" className="text-emerald-600 hover:underline">aquí</a> para ejercer tus derechos o resolver cualquier duda relacionada con el tratamiento de tus datos.
       </p>
 
       <h3 className="text-xl font-bold mt-8">2. Datos que Recopilamos</h3>
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
         <li><strong>Revocación del consentimiento:</strong> Retirar tu consentimiento en cualquier momento</li>
       </ul>
       <p className="mt-4">
-        Para ejercer estos derechos, envía un email a <strong>privacidad@refurbtrack.com</strong> con tu solicitud. Responderemos en un plazo máximo de 30 días.
+        Para ejercer estos derechos, contacta con nosotros <a href="/es/contact" className="text-emerald-600 hover:underline">aquí</a> con tu solicitud. Responderemos en un plazo máximo de 30 días.
       </p>
 
       <h3 className="text-xl font-bold mt-8">9. Seguridad de los Datos</h3>

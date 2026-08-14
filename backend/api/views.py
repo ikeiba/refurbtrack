@@ -26,8 +26,10 @@ from .serializers import (
     ProductDetailSerializer, 
     PriceHistorySerializer,
     HistoricalLowOfferSerializer, 
-    UserRegistrationSerializer
+    UserRegistrationSerializer,
+    ContactMessageSerializer
 )
+from .services import send_contact_email
 
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -131,7 +133,13 @@ class AlertListCreateView(generics.ListCreateAPIView):
         """
         user = self.request.user
         if user.is_authenticated:
-            return Alert.objects.filter(subscriber__email=user.email).order_by('-id')
+            return Alert.objects.filter(
+                subscriber__email=user.email
+            ).select_related(
+                'product__category', 'product__brand'
+            ).prefetch_related(
+                'product__specs'
+            ).order_by('-id')
         
         # Si es GET y no está logueado, devolvemos nada
         return Alert.objects.none()
@@ -219,7 +227,13 @@ class AlertDetailView(generics.RetrieveDestroyAPIView):
         Seguridad: Filtramos para que un usuario solo pueda 
         acceder o borrar alertas vinculadas a su email.
         """
-        return Alert.objects.filter(subscriber__email=self.request.user.email)
+        return Alert.objects.filter(
+            subscriber__email=self.request.user.email
+        ).select_related(
+            'product__category', 'product__brand'
+        ).prefetch_related(
+            'product__specs'
+        )
     
 
 class AlertUnsubscribeView(APIView):
@@ -606,3 +620,30 @@ class GoogleLoginView(APIView):
         except ValueError:
             # El token estaba falsificado o caducado
             return Response({"error": "Token de Google inválido"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class ContactMessageView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ContactMessageSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+
+        try:
+            send_contact_email(
+                name=data['name'],
+                email=data['email'],
+                subject=data['subject'],
+                message=data['message'],
+            )
+        except Exception as e:
+            print(f"❌ Error enviando mensaje de contacto: {e}")
+            return Response(
+                {"error": "No se pudo enviar el mensaje. Inténtalo de nuevo más tarde."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({"message": "Mensaje enviado correctamente"}, status=status.HTTP_200_OK)

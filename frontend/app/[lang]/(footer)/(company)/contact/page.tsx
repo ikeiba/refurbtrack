@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Mail, MessageSquare, Clock, AlertCircle } from "lucide-react"
+import { ContactForm } from "@/components/ContactForm"
 
 export default function ContactPage() {
   return (
@@ -100,50 +98,7 @@ export default function ContactPage() {
         {/* Formulario de Contacto */}
         <div>
           <h3 className="font-bold text-xl mb-4">Envíanos un Mensaje</h3>
-          <form className="space-y-4 border p-6 rounded-xl bg-card shadow-sm">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Nombre completo *</label>
-              <Input placeholder="Tu nombre" required />
-            </div>
-            
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Email *</label>
-              <Input type="email" placeholder="tu@email.com" required />
-            </div>
-
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Asunto *</label>
-              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                <option value="">Selecciona un asunto</option>
-                {/*<option value="error-datos">❌ Error en datos/precios</option>*/}
-                <option value="sugerencia">💡 Sugerencia de mejora</option>
-                <option value="colaboracion">🤝 Propuesta de colaboración</option>
-                <option value="tecnico">🔧 Problema técnico</option>
-                <option value="otro">📩 Otro</option>
-              </select>
-            </div>
-            
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Mensaje *</label>
-              <Textarea 
-                placeholder="Describe tu consulta con el máximo detalle posible. Si reportas un error, incluye la URL del producto afectado." 
-                className="min-h-[150px]" 
-                required
-              />
-            </div>
-
-            <div className="bg-muted/50 p-3 rounded text-xs text-muted-foreground">
-              Al enviar este formulario, aceptas nuestra{" "}
-              <a href="/es/privacy" className="text-emerald-600 hover:underline">
-                Política de Privacidad
-              </a>
-              . Solo usaremos tu email para responder a tu consulta.
-            </div>
-            
-            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-              Enviar Mensaje
-            </Button>
-          </form>
+          <ContactForm />
 
           {/*}
           <div className="mt-6 text-center">

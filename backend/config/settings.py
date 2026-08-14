@@ -71,6 +71,7 @@ EMAIL_USE_TLS = True                # Encriptación (Seguridad)
 EMAIL_HOST_USER = 'resend'
 EMAIL_HOST_PASSWORD = os.getenv('RESEND_API_KEY')
 DEFAULT_FROM_EMAIL = 'RefurbTrack <alertas@refurbtrack.com>' # O hola@, noreply@...
+CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', DEFAULT_FROM_EMAIL)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
