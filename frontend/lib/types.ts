@@ -16,6 +16,9 @@ export interface ProductSummary {
   category_slug?: string;
   brand_slug?: string;
   default_spec_slug?: string;
+  available_colors?: string[];
+  available_storages?: string[];
+  spec_count?: number;
 }
 
 //? ESTO ES LO QUE RECIBIMOS PARA VER EL GRÁFICO DE HISTORIAL DE PRECIOS
@@ -118,4 +121,86 @@ export interface ContactData {
   email: string
   subject: string
   message: string
+}
+
+//? HUB DE MODELO (Agregación SEO por modelo devuelta por /api/products/model-hub/)
+export interface HubOffer {
+  condition: string
+  battery_new: boolean
+  current_price: number | null
+  min_price_30d: number | null
+  avg_price_30d: number | null
+  max_price_30d: number | null
+  last_updated: string | null
+  url: string
+}
+
+export interface HubSpec {
+  slug: string
+  storage: string
+  color: string
+  image: string | null
+  current_price: number | null
+  min_price_30d: number | null
+  avg_price_30d: number | null
+  max_price_30d: number | null
+  last_updated: string | null
+  best_offer_url: string | null
+  offers: HubOffer[]
+}
+
+export interface HubStorageGroup {
+  storage: string
+  specs: HubSpec[]
+}
+
+export interface HubSummary {
+  lowest_current_price: number | null
+  avg_current_price: number | null
+  historical_min: number | null
+  config_count: number
+  last_updated: string | null
+}
+
+export interface HubInsights {
+  cheapest_spec: string | null
+  closest_to_min_spec: string | null
+  closest_to_min_gap: number | null
+  biggest_drop_spec: string | null
+  biggest_drop_value: number | null
+}
+
+export interface ModelHub {
+  id: number
+  name: string
+  slug: string
+  image: string | null
+  category_slug: string
+  brand_slug: string
+  market_price: number | null
+  lowest_ever_price: number | null
+  storage_groups: HubStorageGroup[]
+  summary: HubSummary
+  insights: HubInsights
+}
+
+export interface FeaturedStats {
+  product_name: string
+  storage: string
+  color: string
+  condition: string
+  current: number | null
+  min30d: number | null
+  avg30d: number | null
+  max30d: number | null
+  last_updated: string | null
+  percentage_vs_average: number | null
+  price_position: number | null
+  position_label: string | null
+}
+
+export interface FeaturedHistory {
+  model: ModelHub | null
+  history: HistoryPoint[]
+  stats: FeaturedStats | null
 }

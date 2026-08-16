@@ -30,7 +30,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // --- ZONA 1: RUTAS ESTÁTICAS Y DE EMPRESA ---
   const mainRoutes: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/es`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-    { url: `${baseUrl}/es/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 }
+    { url: `${baseUrl}/es/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/es/historial-precios-back-market`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 }
   ]
 
   // --- ZONA 2: RUTAS DEL BLOG (SEO Content) ---
@@ -51,9 +52,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/es/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
   ]
 
-  // --- ZONA 4: RUTAS DINÁMICAS (Categorías, Marcas y Productos) ---
+  // --- ZONA 4: RUTAS DINÁMICAS (Categorías, Marcas, Hubs y Productos) ---
   let categoryEntries: MetadataRoute.Sitemap = []
   let brandEntries: MetadataRoute.Sitemap = []
+  let hubEntries: MetadataRoute.Sitemap = []
   let productEntries: MetadataRoute.Sitemap = []
   
 
@@ -69,11 +71,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // Utilizamos Sets para garantizar que no haya URLs duplicadas
         const uniqueCategories = new Set<string>()
         const uniqueBrands = new Set<string>() // Guardaremos el formato "categoria/marca"
+        const uniqueHubs = new Set<string>()   // Guardaremos "categoria/marca/producto"
 
-        // 1. Extraemos URLs de productos y alimentamos los Sets de categorías/marcas
+        // 1. Extraemos URLs de productos y alimentamos los Sets de categorías/marcas/hubs
         productEntries = data.map((item: SitemapItem) => {
           uniqueCategories.add(item.product__category__slug)
           uniqueBrands.add(`${item.product__category__slug}/${item.product__brand__slug}`)
+          uniqueHubs.add(`${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}`)
 
           return {
             url: `${baseUrl}/es/${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}/${item.slug}`,
@@ -98,6 +102,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           changeFrequency: 'daily',
           priority: 0.85, // Alta prioridad, justo debajo de la categoría padre
         }))
+
+        // 4. Generamos las entradas para los Hubs de modelo (índice por modelo)
+        hubEntries = Array.from(uniqueHubs).map(catBrandProduct => ({
+          url: `${baseUrl}/es/${catBrandProduct}`,
+          lastModified: new Date(),
+          changeFrequency: 'daily',
+          priority: 0.85,
+        }))
       }
     }
   } catch (error) {
@@ -109,6 +121,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...mainRoutes, 
     ...categoryEntries, 
     ...brandEntries, 
+    ...hubEntries,
     ...blogRoutes, 
     ...legalRoutes, 
     ...productEntries

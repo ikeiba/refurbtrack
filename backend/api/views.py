@@ -29,7 +29,7 @@ from .serializers import (
     UserRegistrationSerializer,
     ContactMessageSerializer
 )
-from .services import send_contact_email
+from .services import send_contact_email, build_model_hub, get_featured_history
 
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -86,7 +86,11 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 'specs',
                 'specs__offers'
             )
-        
+        else:
+            # Para el listado, traemos las specs para evitar N+1 al calcular
+            # default_spec_slug, available_colors, available_storages y spec_count.
+            queryset = queryset.prefetch_related('specs')
+
         return queryset
 
 # --- 2. VISTA DE HISTÓRICO (Gráfica) ---
@@ -481,24 +485,20 @@ def redirect_to_store(request, offer_uuid):
 class ProductResolveBySlugView(APIView):
     """
     Cerebro del SEO: Resuelve la jerarquía de slugs y devuelve el detalle.
-    URL: /api/resolve-slugs/?cat=...&brand=...&prod=...&spec=...
+    URL: /api/products/resolve/?cat=...&brand=...&prod=...&spec=...
     """
-    permission_classes = [] # Pública para SEO
+    permission_classes = []  # Pública para SEO
 
     def get(self, request):
-        # 1. Capturamos los slugs de la URL
         category_slug = request.query_params.get('cat')
         brand_slug = request.query_params.get('brand')
         product_slug = request.query_params.get('prod')
         spec_slug = request.query_params.get('spec')
 
-        # 2. La consulta maestra (O(log n) gracias a los índices B-Tree)
-        # Usamos select_related para evitar el problema de N+1 consultas.
-        # Filtramos por los 4 niveles para asegurar que la jerarquía es válida.
         spec = get_object_or_404(
             Spec.objects.select_related(
-                'product', 
-                'product__brand', 
+                'product',
+                'product__brand',
                 'product__category'
             ).prefetch_related('offers'),
             slug=spec_slug,
@@ -507,17 +507,45 @@ class ProductResolveBySlugView(APIView):
             product__category__slug=category_slug
         )
 
-        # 3. Serializamos (usamos el pesado porque es la vista de detalle)
-        # IMPORTANTE: Pasamos el 'product' al serializer porque el detalle
-        # espera la estructura desde el nivel de producto hacia abajo.
         serializer = ProductDetailSerializer(spec.product)
-        
-        # 4. Inyectamos datos extra útiles para el frontend
         data = serializer.data
-        data['current_spec_id'] = spec.id # Para que Next.js sepa qué Spec marcar como activa
-        
+        data['current_spec_id'] = spec.id
+
         return Response(data)
-    
+
+
+class ModelHubView(APIView):
+    """
+    Agregación SEO por modelo (hub).
+    URL: /api/products/model-hub/?cat=...&brand=...&prod=...
+    """
+    permission_classes = []
+
+    def get(self, request):
+        category_slug = request.query_params.get('cat')
+        brand_slug = request.query_params.get('brand')
+        product_slug = request.query_params.get('prod')
+
+        product = get_object_or_404(
+            Product.objects.select_related('category', 'brand'),
+            slug=product_slug,
+            brand__slug=brand_slug,
+            category__slug=category_slug,
+        )
+
+        return Response(build_model_hub(product))
+
+
+class FeaturedHistoryView(APIView):
+    """
+    Selección dinámica del modelo con más historial para la landing.
+    URL: /api/offers/featured/
+    """
+    permission_classes = []
+
+    def get(self, request):
+        return Response(get_featured_history())
+
 
 @api_view(['GET'])
 def sitemap_data(request):

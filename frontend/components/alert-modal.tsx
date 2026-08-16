@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast"
 import { ToastAction } from "@/components/ui/toast"
 import { cn, getColorHex } from "@/lib/utils" // <--- Importamos getColorHex
 import { createAlert } from "@/services/api"
-import type { ProductDetail } from "@/lib/types"
 import { t } from "@/lib/translations"
 import { useAuth } from "@/context/auth-context" // <--- 1. Importar el cerebro
 import { useRouter } from "next/navigation"
@@ -21,7 +20,11 @@ import { useRouter } from "next/navigation"
 interface AlertModalProps {
   isOpen: boolean
   onClose: () => void
-  product: ProductDetail
+  product: {
+    id: number
+    name: string
+    specs: { storage: string; color: string }[]
+  }
   currentConfig: {
     color: string
     storage: string

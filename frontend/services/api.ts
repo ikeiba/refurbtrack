@@ -1,5 +1,5 @@
 // frontend_light/services/api.ts
-import { ProductSummary, AlertData, OfferSummary, ContactData } from "@/lib/types";
+import { ProductSummary, AlertData, OfferSummary, ContactData, ModelHub, FeaturedHistory } from "@/lib/types";
 import { authService } from "./auth" // <--- 1. Importamos el servicio de auth
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
@@ -296,6 +296,36 @@ export const getProductBySlugs = async (category: string, brand: string, product
   } catch (error) {
     console.error("❌ [NEXT.JS ERROR FATAL]", error);
     throw error;
+  }
+};
+
+export const getModelHub = async (category: string, brand: string, product: string): Promise<ModelHub | null> => {
+  const params = new URLSearchParams({ cat: category, brand, prod: product });
+  try {
+    const res = await fetch(`${API_URL}/products/model-hub/?${params.toString()}`, {
+      next: { revalidate: 600, tags: ['model-hub'] }
+    });
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`Error del servidor: ${res.status}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error("❌ Error cargando hub de modelo:", error);
+    return null;
+  }
+};
+
+export const getFeaturedHistory = async (): Promise<FeaturedHistory> => {
+  try {
+    const res = await fetch(`${API_URL}/offers/featured/`, {
+      next: { revalidate: 600, tags: ['featured-history'] }
+    });
+    if (!res.ok) throw new Error(`Error del servidor: ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.error("❌ Error cargando historial destacado:", error);
+    return { model: null, history: [], stats: null };
   }
 };
 

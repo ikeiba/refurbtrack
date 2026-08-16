@@ -94,22 +94,39 @@ class ProductListSerializer(serializers.ModelSerializer):
     brand_slug = serializers.CharField(source='brand.slug', read_only=True)
     # Calculamos cuál es el slug de la spec más barata para usarlo de enlace por defecto
     default_spec_slug = serializers.SerializerMethodField()
+    # Colores y almacenamientos disponibles (para las tarjetas de la landing)
+    available_colors = serializers.SerializerMethodField()
+    available_storages = serializers.SerializerMethodField()
+    spec_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'type', 'image', 'min_price_cached', 'market_price', 'slug',
-            'category_slug', 'brand_slug', 'default_spec_slug' # <-- Añadidos
+            'category_slug', 'brand_slug', 'default_spec_slug',
+            'available_colors', 'available_storages', 'spec_count' # <-- Añadidos
         ]
 
     def get_default_spec_slug(self, obj):
-        # Buscamos la primera Spec que tenga el mismo min_price_cached que el producto
-        # Si no la encontramos, devolvemos la primera spec que tenga
-        spec = obj.specs.filter(min_price_cached=obj.min_price_cached).first()
-        if not spec:
-            spec = obj.specs.first()
-        
+        # Iteramos en Python para aprovechar el prefetch_related('specs') y evitar N+1.
+        specs = list(obj.specs.all())
+        match = next((s for s in specs if s.min_price_cached == obj.min_price_cached), None)
+        spec = match or (specs[0] if specs else None)
         return spec.slug if spec else None
+
+    def get_available_colors(self, obj):
+        return sorted({s.color for s in obj.specs.all() if s.color})
+
+    def get_available_storages(self, obj):
+        def key(storage):
+            try:
+                return (0, int(storage))
+            except (TypeError, ValueError):
+                return (1, storage)
+        return sorted({s.storage for s in obj.specs.all() if s.storage}, key=key)
+
+    def get_spec_count(self, obj):
+        return len(obj.specs.all())
 
 # B. Para el DETALLE (Vista Pesada)
 # backend/api/serializers.pyH

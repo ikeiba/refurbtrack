@@ -7,7 +7,8 @@ from .views import (DeleteAccountView, HistoricalLowOffersView, PasswordResetReq
                     UserRegistrationView, 
                     AlertDetailView,
                     AlertUnsubscribeView, PasswordResetConfirmView, health_check, redirect_to_store, 
-                    ProductResolveBySlugView, sitemap_data, top_specs_for_build, GoogleLoginView,
+                    ProductResolveBySlugView, ModelHubView, FeaturedHistoryView,
+                    sitemap_data, top_specs_for_build, GoogleLoginView,
     ContactMessageView)
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -25,6 +26,12 @@ urlpatterns = [
 
     # 1. EL RESOLVER (Prioridad máxima para el SEO)
     path('products/resolve/', ProductResolveBySlugView.as_view(), name='product-resolve'),
+
+    # 2. HUB DE MODELO (Agregación SEO por modelo)
+    path('products/model-hub/', ModelHubView.as_view(), name='model-hub'),
+
+    # 3. FEATURED PARA LA LANDING DE HISTORIAL
+    path('offers/featured/', FeaturedHistoryView.as_view(), name='featured-history'),
 
     path('products/sitemap-data/', sitemap_data, name='sitemap_data'),
 

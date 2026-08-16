@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator"
 import { Card } from "@/components/ui/card"
 import {
   Bell, TrendingDown, Calendar, ArrowUp, ArrowDown,
-  Activity, ExternalLink, Sparkles, Info
+  Activity, ExternalLink, Sparkles, Info, Table
 } from "lucide-react"
 import PriceHistoryChart from "@/components/price-history-chart"
 import { ComparisonPopover } from "@/components/comparison-popover"   // FIX 4: restored
@@ -24,6 +24,7 @@ import { AlertModal } from "@/components/alert-modal"
 import type { Offer } from "@/lib/types"
 import Link from "next/link"
 import { Breadcrumbs } from "@/components/breadcrumbs"
+import { hubPath } from "@/lib/urls"
 
 interface ProductViewClientProps {
   initialProduct: any;
@@ -274,11 +275,13 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   }
 
   // Justo antes del return, define los nodos del breadcrumb:
+  const modelHubHref = hubPath(lang, initialProduct.category_slug, initialProduct.brand_slug, initialProduct.slug);
   const breadcrumbNodes = [
     { label: "Inicio", href: `/${lang}` },
     { label: initialProduct.category_slug, href: `/${lang}/${initialProduct.category_slug}` },
     { label: initialProduct.brand_slug, href: `/${lang}/${initialProduct.category_slug}/${initialProduct.brand_slug}` },
-    { label: initialProduct.name } // El último nodo no lleva href
+    { label: initialProduct.name, href: modelHubHref },
+    { label: `${activeSpec.storage} GB` } // Configuración actual, sin href
   ];
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
@@ -301,6 +304,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
         {/* BREADCRUMBS (Ruta de navegación SEO) */}
         {/* BREADCRUMBS (Componente Reutilizable) */}
         <Breadcrumbs items={breadcrumbNodes} />
+
         <div className="grid md:grid-cols-2 gap- items-start">
 
           {/* GALERÍA */}
@@ -317,7 +321,16 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
 
           {/* PANEL DERECHO */}
           <div className="flex flex-col gap-2 mt-12">
-            <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">{initialProduct.name}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">{initialProduct.name}</h1>
+              <Link
+                href={modelHubHref}
+                className="shrink-0 inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md text-sm font-medium border border-border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <Table className="h-4 w-4" />
+                Ver tabla comparativa
+              </Link>
+            </div>
             <Separator />
 
             {/* ALMACENAMIENTO (Ahora como Enlaces Estáticos) */}

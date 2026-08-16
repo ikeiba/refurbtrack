@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { ProductSummary } from "@/lib/types" // Tu tipo real
+import { hubPath } from "@/lib/urls"
 import {
   Tooltip,
   TooltipContent,
@@ -24,10 +25,9 @@ export function FamilyGrid({ products }: FamilyGridProps) {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.map((product) => {
-          // Construimos la URL semántica. 
-          // Fallback a "#" si por algún motivo la BD estuviera corrupta y no tuviera specs.
-          const defaultHref = product.default_spec_slug 
-            ? `/es/${product.category_slug}/${product.brand_slug}/${product.slug}/${product.default_spec_slug}`
+          // Construimos la URL semántica hacia el hub del modelo.
+          const defaultHref = product.category_slug && product.brand_slug
+            ? hubPath("es", product.category_slug, product.brand_slug, product.slug)
             : "#";
 
           return (

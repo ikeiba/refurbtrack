@@ -4,6 +4,7 @@ import { getProductBySlugs, getHistoricalLowOffers } from "@/services/api";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { API_URL } from "@/services/api"
+import { absoluteUrl, hubPath, specPath, brandPath, categoryPath } from "@/lib/urls";
 
 // --- IMPORTANTE: Aquí extraemos los componentes interactivos a "Islas" ---
 import ProductViewClient from "@/components/product/ProductViewClient"; 
@@ -63,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return { title: "Producto no encontrado" };
 
   // Construimos la URL canónica que nos dio el Backend
-  const canonicalUrl = `https://refurbtrack.com/${lang}/${data.category_slug}/${data.brand_slug}/${data.slug}/${specSlug}`;
+  const canonicalUrl = absoluteUrl(specPath(lang, data.category_slug, data.brand_slug, data.slug, specSlug));
 
   return {
     title: `${data.name} Reacondicionado - Historial de Precios | RefurbTrack`,
@@ -142,7 +143,7 @@ const jsonLd = {
 };
 
 // 1. Construimos las URLs base para el JSON-LD
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com';
+const baseUrl = absoluteUrl("").replace(/\/$/, "");
 
 // 2. Definimos la jerarquía de migas de pan
 const breadcrumbLd = {
@@ -159,19 +160,19 @@ const breadcrumbLd = {
       "@type": "ListItem",
       "position": 2,
       "name": category.charAt(0).toUpperCase() + category.slice(1),
-      "item": `${baseUrl}/${lang}/${category}`
+      "item": absoluteUrl(categoryPath(lang, category))
     },
     {
       "@type": "ListItem",
       "position": 3,
-      "name": "Apple", // Usamos la variable que ya tienes definida para el JSON de Product
-      "item": `${baseUrl}/${lang}/${category}/${brand}`
+      "name": productData.brand_slug,
+      "item": absoluteUrl(brandPath(lang, category, brand))
     },
     {
       "@type": "ListItem",
       "position": 4,
       "name": productData.name,
-      "item": `${baseUrl}/${lang}/${category}/${brand}/${productSlug}`
+      "item": absoluteUrl(hubPath(lang, category, brand, productSlug))
     }
   ]
 };
