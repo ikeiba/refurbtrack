@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { API_URL } from "@/services/api"
 import { absoluteUrl, hubPath, specPath, brandPath, categoryPath } from "@/lib/urls";
+import { t } from "@/lib/translations";
+import { formatPrice } from "@/lib/format";
 
 // --- IMPORTANTE: Aquí extraemos los componentes interactivos a "Islas" ---
 import ProductViewClient from "@/components/product/ProductViewClient"; 
@@ -56,6 +58,31 @@ interface Props {
   }>;
 }
 
+// --- HELPERS DE VARIANTE (capacidad/color/precio) ---
+// Se comparten entre generateMetadata y la página para que título, meta y
+// JSON-LD cuenten siempre la misma historia de la spec activa.
+function getActiveSpec(data: any) {
+  return data?.specs?.find((s: any) => s.id === data.current_spec_id);
+}
+
+function getLowPrice(spec: any): number {
+  const offers = spec?.offers || [];
+  const valid = offers
+    .map((o: any) => parseFloat(o.current_price))
+    .filter((p: number) => !isNaN(p) && p > 0);
+  if (valid.length > 0) return Math.min(...valid);
+  return parseFloat(spec?.min_price_cached) || 0;
+}
+
+// Mínimo de los últimos 30 días para esta spec (mínimo de min_price_30d de sus ofertas).
+function getMin30(spec: any): number {
+  const offers = spec?.offers || [];
+  const valid = offers
+    .map((o: any) => parseFloat(o.min_price_30d))
+    .filter((p: number) => !isNaN(p) && p > 0);
+  return valid.length > 0 ? Math.min(...valid) : 0;
+}
+
 // 1. GENERACIÓN DE METADATA DINÁMICA (SEO ELITE)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, category, brand, product: productSlug, spec: specSlug } = await params;
@@ -63,12 +90,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!data) return { title: "Producto no encontrado" };
 
+  // Diferenciamos cada variante con su capacidad, color y precio (patrón comparador)
+  const spec = getActiveSpec(data);
+  const variant = [spec?.storage ? `${spec.storage}GB` : "", spec?.color ? t(spec.color) : ""]
+    .filter(Boolean)
+    .join(" ");
+  const price = formatPrice(getLowPrice(spec));
+  const min30 = formatPrice(getMin30(spec));
+
+  const pricePart = price ? `${price}€ ahora` : "";
+  const minPart = min30 ? ` (mín ${min30}€)` : "";
+  const priceSuffix = pricePart ? ` — ${pricePart}${minPart}` : "";
+
   // Construimos la URL canónica que nos dio el Backend
   const canonicalUrl = absoluteUrl(specPath(lang, data.category_slug, data.brand_slug, data.slug, specSlug));
 
   return {
-    title: `${data.name} Reacondicionado - Historial de Precios | RefurbTrack`,
-    description: `Historial de precios del ${data.name} reacondicionado en Back Market. Compara condiciones y ahorra con garantía.`,
+    title: `${data.name}${variant ? ` ${variant}` : ""} Reacondicionado${priceSuffix} | RefurbTrack`,
+    description: `Historial de precios del ${data.name}${variant ? ` ${variant}` : ""} reacondicionado en Back Market${price ? ` — ${price}€ ahora` : ""}${min30 ? `, mínimo 30 días ${min30}€` : ""}. Compara condiciones y ahorra con garantía.`,
     alternates: { canonical: canonicalUrl },
     openGraph: {
       images: [data.image],
@@ -101,45 +140,77 @@ if (!specDetails) return notFound();
 // 2. EXTRACCIÓN Y LIMPIEZA DE PRECIOS (Mentalidad de Datos)
 const activeOffers = specDetails.offers || [];
 
-// Filtramos solo precios válidos y mayores que 0 para evitar fallos de Google
-const validPrices = activeOffers
-  .map((o: any) => parseFloat(o.current_price))
-  .filter((p: number) => !isNaN(p) && p > 0);
+// Ofertas reales: solo las que tienen un precio válido (> 0) en el último scrape
+const validOffers = activeOffers.filter((o: any) => {
+  const p = parseFloat(o.current_price);
+  return !isNaN(p) && p > 0;
+});
 
-const offerCount = validPrices.length;
-
-// Definimos los precios con fallbacks seguros
-// Si no hay ofertas activas, usamos el min_price_cached de la base de datos
-const fallbackPrice = parseFloat(specDetails.min_price_cached) || 0;
-
-const finalLowPrice = offerCount > 0 ? Math.min(...validPrices) : fallbackPrice;
-const finalHighPrice = offerCount > 0 ? Math.max(...validPrices) : fallbackPrice;
+const offerCount = validOffers.length;
+const validPrices = validOffers.map((o: any) => parseFloat(o.current_price));
 
 // 3. CONSTRUCCIÓN DEL JSON-LD REFORZADO
+// URL canónica de esta variante (la misma que en generateMetadata)
+const canonicalUrl = absoluteUrl(
+  specPath(lang, productData.category_slug, productData.brand_slug, productData.slug, specSlug)
+);
+
+// Las imágenes llegan como rutas relativas ("products/xxx.avif") desde el backend.
+// Schema.org exige URL absoluta, así que las normalizamos contra el dominio.
+const toAbsoluteUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  return absoluteUrl(path.startsWith("/") ? path : `/${path}`);
+};
+
+const productImage = toAbsoluteUrl(specDetails.image || productData.image);
+
+// Marca real (viene del backend como brand_name). Fallback al slug capitalizado
+// mientras no esté desplegado el cambio del serializer.
+const brandName =
+  productData.brand_name ||
+  (productData.brand_slug
+    ? productData.brand_slug.charAt(0).toUpperCase() + productData.brand_slug.slice(1)
+    : "Back Market");
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Product",
-  "name": `${productData.name} (${specDetails.storage} - ${specDetails.color})`,
-  "image": specDetails.image || productData.image, // URL simple
-  "description": `Compara precios de Back Market para el ${productData.name} ${specDetails.storage} ${specDetails.color}.`,
+  "name": `${productData.name} ${specDetails.storage}GB ${specDetails.color}`,
+  "description": `Compara precios de Back Market para el ${productData.name} ${specDetails.storage}GB ${specDetails.color}.`,
+  "image": productImage,
+  "url": canonicalUrl,
+  "sku": specDetails.back_market_uuid,
   "brand": {
     "@type": "Brand",
-    "name": "Apple" // O productData.brand_name
+    "name": brandName,
   },
-  "offers": {
-    "@type": "AggregateOffer",
-    "priceCurrency": "EUR",
-    // IMPORTANTE: Forzamos que sean strings con 2 decimales para Google
-    "lowPrice": finalLowPrice.toFixed(2),
-    "highPrice": finalHighPrice.toFixed(2),
-    "offerCount": offerCount > 0 ? offerCount : 1,
-    "itemCondition": "https://schema.org/RefurbishedCondition",
-    "availability": offerCount > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-    "seller": {
-      "@type": "Organization",
-      "name": "Back Market"
-    }
-  }
+  // Solo emitimos el bloque de ofertas si hay stock real. Evita declarar
+  // "1 oferta a 0,00 €" cuando no hay nada a la venta.
+  ...(offerCount > 0
+    ? {
+        offers: [
+          {
+            "@type": "AggregateOffer",
+            "priceCurrency": "EUR",
+            "lowPrice": Math.min(...validPrices).toFixed(2),
+            "highPrice": Math.max(...validPrices).toFixed(2),
+            "offerCount": offerCount,
+            "itemCondition": "https://schema.org/RefurbishedCondition",
+            "seller": { "@type": "Organization", "name": "Back Market" },
+          },
+          ...validOffers.map((o: any) => ({
+            "@type": "Offer",
+            "price": parseFloat(o.current_price).toFixed(2),
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/InStock",
+            "itemCondition": "https://schema.org/RefurbishedCondition",
+            "url": toAbsoluteUrl(o.url),
+            "seller": { "@type": "Organization", "name": "Back Market" },
+          })),
+        ],
+      }
+    : {}),
 };
 
 // 1. Construimos las URLs base para el JSON-LD

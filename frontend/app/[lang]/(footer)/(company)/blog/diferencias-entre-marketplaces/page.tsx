@@ -1,5 +1,26 @@
 import Link from 'next/link'
 import { Calendar, User, ArrowLeft, Share2 } from 'lucide-react'
+import type { Metadata } from 'next'
+import { absoluteUrl, blogPostPath } from '@/lib/urls'
+
+interface Props {
+  params: Promise<{ lang: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const canonical = absoluteUrl(blogPostPath(lang, 'diferencias-entre-marketplaces'))
+  const title = 'Back Market vs Amazon Renewed vs eBay: Comparativa Completa | RefurbTrack'
+  const description =
+    'Comparativa de los principales marketplaces de reacondicionados: precios, garantías, devoluciones y cuál elegir según tus necesidades.'
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description },
+  }
+}
 
 export default function BlogPost() {
   return (

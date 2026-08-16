@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { ModelHubView } from "@/components/hub/model-hub-view";
 import { HeaderWrapper } from "@/components/header-wrapper";
 import { absoluteUrl, hubPath } from "@/lib/urls";
+import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -18,6 +19,15 @@ interface Props {
   }>;
 }
 
+// Mínimo de los últimos 30 días a nivel de modelo (mínimo entre todas sus configuraciones).
+function getHubMin30(hub: any): number {
+  const specs = hub?.storage_groups?.flatMap((g: any) => g.specs) || [];
+  const vals = specs
+    .map((s: any) => parseFloat(s.min_price_30d))
+    .filter((p: number) => !isNaN(p) && p > 0);
+  return vals.length > 0 ? Math.min(...vals) : 0;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, category, brand, product } = await params;
   const hub = await getModelHub(category, brand, product);
@@ -25,10 +35,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!hub) return { title: "Modelo no encontrado" };
 
   const canonical = absoluteUrl(hubPath(lang, category, brand, product));
-  const title = `${hub.name} reacondicionado: precios e historial | RefurbTrack`;
+
+  // Patrón comparador: precio actual y mínimo 30d en el snippet.
+  const current = hub.summary.lowest_current_price;
+  const price = formatPrice(current);
+  const min30 = formatPrice(getHubMin30(hub));
+
+  const pricePart = price ? `${price}€ ahora` : "";
+  const minPart = min30 ? ` (mín ${min30}€)` : "";
+
+  const title = `${hub.name} reacondicionado${pricePart ? ` — ${pricePart}${minPart}` : ""} | RefurbTrack`;
   const description =
-    hub.summary.lowest_current_price !== null
-      ? `Precios e historial del ${hub.name} reacondicionado en Back Market. Compara sus ${hub.summary.config_count} configuraciones, desde ${hub.summary.lowest_current_price} €.`
+    current !== null
+      ? `Precios e historial del ${hub.name} reacondicionado en Back Market. Compara sus ${hub.summary.config_count} configuraciones — ${price}€ ahora${min30 ? `, mínimo 30 días ${min30}€` : ""}.`
       : `Precios e historial del ${hub.name} reacondicionado en Back Market. Compara sus ${hub.summary.config_count} configuraciones y su evolución de precios.`;
 
   return {

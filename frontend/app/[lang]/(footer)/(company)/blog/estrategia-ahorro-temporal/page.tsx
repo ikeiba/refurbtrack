@@ -1,5 +1,26 @@
 import Link from 'next/link'
 import { Calendar, User, ArrowLeft, Share2, TrendingDown } from 'lucide-react'
+import type { Metadata } from 'next'
+import { absoluteUrl, blogPostPath } from '@/lib/urls'
+
+interface Props {
+  params: Promise<{ lang: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const canonical = absoluteUrl(blogPostPath(lang, 'estrategia-ahorro-temporal'))
+  const title = '5 Estrategias para Ahorrar: Timing y Patrones de Precio | RefurbTrack'
+  const description =
+    'Descubre cuándo son más baratos los dispositivos reacondicionados: patrones estacionales, Black Friday y lanzamientos de Apple para comprar en el momento ideal.'
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description },
+  }
+}
 
 export default function BlogPost() {
   return (

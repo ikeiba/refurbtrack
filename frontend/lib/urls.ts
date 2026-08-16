@@ -30,6 +30,14 @@ export function categoryPath(lang: string, category: string): string {
   return `/${lang}/${category}`;
 }
 
+export function blogIndexPath(lang: string): string {
+  return `/${lang}/blog`;
+}
+
+export function blogPostPath(lang: string, slug: string): string {
+  return `/${lang}/blog/${slug}`;
+}
+
 export function absoluteUrl(path: string, baseUrl?: string): string {
   const base = baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "https://refurbtrack.com";
   return `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;

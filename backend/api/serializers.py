@@ -138,11 +138,12 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     # NUEVOS: Slugs de jerarquía superior
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     brand_slug = serializers.CharField(source='brand.slug', read_only=True)
+    brand_name = serializers.CharField(source='brand.name', read_only=True)
 
     class Meta:
         model = Product
         # Añade los nuevos campos a la lista
-        fields = ['id', 'name', 'type', 'image', 'specs', 'category_slug', 'brand_slug', 'slug']
+        fields = ['id', 'name', 'type', 'image', 'specs', 'category_slug', 'brand_slug', 'brand_name', 'slug']
 
 
 # backend/api/serializers.py

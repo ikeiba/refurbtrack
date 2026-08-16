@@ -99,19 +99,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
     router.push(trimmed ? `/${lang}?q=${encodeURIComponent(trimmed)}` : `/${lang}`)
   }
 
-  // ─── NAVEGACIÓN SEO (color y storage cambian el slug de URL) ─────────────
-  const navigateToSpec = (newStorage: string, newColor: string) => {
-    const targetSpec = initialProduct.specs.find(
-      (s: any) => s.storage === newStorage && s.color === newColor
-    )
-    if (targetSpec) {
-      const path  = `/${lang}/${initialProduct.category_slug}/${initialProduct.brand_slug}/${initialProduct.slug}/${targetSpec.slug}`
-      const query = `?condition=${selectedCondition}${selectedBattery ? "&battery=new" : ""}`
-      router.push(path + query, { scroll: false })
-    }
-  }
-
-  // NUEVA FUNCIÓN: Actualiza la URL sin recargar la página (usando JS nativo)
+  // Actualiza la URL sin recargar la página (usando JS nativo)
   const updateUrlParams = (key: string, value: string) => {
     // Usamos window.location.search en lugar de searchParams de Next.js
     const current = new URLSearchParams(window.location.search)
@@ -322,7 +310,14 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
           {/* PANEL DERECHO */}
           <div className="flex flex-col gap-2 mt-12">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">{initialProduct.name}</h1>
+              <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">
+                {initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color)}
+                {Number(activeSpec.min_price_cached) > 0 && (
+                  <span className="block mt-1 text-xl font-semibold text-emerald-600">
+                    Desde {Number(activeSpec.min_price_cached)}€
+                  </span>
+                )}
+              </h1>
               <Link
                 href={modelHubHref}
                 className="shrink-0 inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md text-sm font-medium border border-border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
@@ -355,9 +350,9 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                       )}
                     >
                       <span className="font-semibold">{storage}GB</span>
-                      <span className={cn("ml-2 text-xs", isSelected ? "opacity-90" : "opacity-60")}>
+                      {/*<span className={cn("ml-2 text-xs", isSelected ? "opacity-90" : "opacity-60")}>
                         (desde {price}€)
-                      </span>
+                      </span> */}
                     </Link>
                   )
                 })}

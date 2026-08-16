@@ -1,7 +1,26 @@
-'use client'
-
 import Link from 'next/link'
 import { Calendar, User, ArrowLeft, Share2, Leaf } from 'lucide-react'
+import type { Metadata } from 'next'
+import { absoluteUrl, blogPostPath } from '@/lib/urls'
+
+interface Props {
+  params: Promise<{ lang: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const canonical = absoluteUrl(blogPostPath(lang, 'impacto-ambiental-reacondicionado'))
+  const title = 'Impacto Ambiental de Comprar Reacondicionado: Cuánto Ahorras | RefurbTrack'
+  const description =
+    'Análisis del CO2 evitado, agua ahorrada y residuos prevenidos por cada dispositivo reacondicionado, con datos verificables frente a dispositivos nuevos.'
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description },
+  }
+}
 
 export default function BlogPost() {
   return (

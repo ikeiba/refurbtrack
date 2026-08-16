@@ -19,10 +19,13 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: [
         '/api/',              // Bloqueo genérico de rutas de API
-        '/*/*/login',         // Bloquea /es/login, /en/login, etc.
-        '/*/*/register',
-        '/*/*/dashboard',     // Bloquea /es/dashboard
-        '/*/*/unsubscribe',   // Bloquea páginas de gestión de alertas
+        '/*/login',           // Bloquea /es/login, /en/login, etc.
+        '/*/register',
+        '/*/forgot-password',
+        '/*/reset-password',
+        '/*/dashboard',       // Bloquea /es/dashboard
+        '/*/unsubscribe',     // Bloquea páginas de gestión de alertas
+        '/*/unsubscribe-all',
         
         // --- GESTIÓN DE NAVEGACIÓN FACETADA ---
         // Bloqueamos rastreo de combinaciones de filtros para ahorrar Crawl Budget

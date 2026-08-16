@@ -1,5 +1,26 @@
 import Link from 'next/link'
 import { Calendar, User, ArrowLeft, Share2 } from 'lucide-react'
+import type { Metadata } from 'next'
+import { absoluteUrl, blogPostPath } from '@/lib/urls'
+
+interface Props {
+  params: Promise<{ lang: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const canonical = absoluteUrl(blogPostPath(lang, 'falsos-mitos-reacondicionados'))
+  const title = '7 Mitos Sobre Dispositivos Reacondicionados Desmentidos | RefurbTrack'
+  const description =
+    '¿Duran menos? ¿Tienen baterías degradadas? Desmentimos los mitos más comunes sobre reacondicionados con datos reales.'
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description },
+  }
+}
 
 export default function BlogPost() {
   return (

@@ -4,7 +4,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs"
 import { Faq, type FaqItem } from "@/components/faq"
 import { FeaturedPriceChart } from "@/components/landing/featured-price-chart"
 import { formatEur, formatDateEs, formatSignedPercent } from "@/lib/format"
-import { hubPath, specPath, categoryPath } from "@/lib/urls"
+import { hubPath, categoryPath } from "@/lib/urls"
 import { getColorHex } from "@/lib/utils"
 import { t } from "@/lib/translations"
 import type { ProductSummary, FeaturedHistory } from "@/lib/types"
@@ -95,9 +95,6 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {models.map((product) => {
               const href = hubPath(lang, product.category_slug!, product.brand_slug!, product.slug)
-              const specHref = product.default_spec_slug
-                ? specPath(lang, product.category_slug!, product.brand_slug!, product.slug, product.default_spec_slug)
-                : href
               const colors = product.available_colors ?? []
               const storages = product.available_storages ?? []
               return (
@@ -158,7 +155,7 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
                     </div>
                   )}
 
-                  <Link href={specHref} className="text-sm font-medium text-emerald-600 hover:underline mt-auto">
+                  <Link href={href} className="text-sm font-medium text-emerald-600 hover:underline mt-auto">
                     Ver historial de precios
                   </Link>
                 </div>

@@ -32,3 +32,10 @@ export function formatDateEs(iso: string | null | undefined): string {
     return "";
   }
 }
+
+export function formatPrice(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  const n = Number(value);
+  if (isNaN(n) || n <= 0) return "";
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}

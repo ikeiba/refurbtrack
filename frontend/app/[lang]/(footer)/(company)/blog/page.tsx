@@ -119,7 +119,7 @@ export default async function BlogPage({
       {/* Featured Post */}
       {filteredPosts.length > 0 && (
         <div className="mb-12">
-          <Link href={`/company/blog/${filteredPosts[0].slug}`}>
+          <Link href={`/${lang}/blog/${filteredPosts[0].slug}`}>
             <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20 p-8 rounded-2xl border border-emerald-200 dark:border-emerald-800 hover:shadow-lg transition-shadow cursor-pointer">
               <div className="flex items-center gap-2 mb-3">
                 <span className="inline-block px-3 py-1 bg-emerald-600 text-white text-xs font-bold rounded-full">
@@ -159,7 +159,7 @@ export default async function BlogPage({
       {filteredPosts.length > 1 && (
         <div className="grid md:grid-cols-2 gap-6">
           {filteredPosts.slice(1).map((post) => (
-            <Link key={post.slug} href={`/company/blog/${post.slug}`}>
+            <Link key={post.slug} href={`/${lang}/blog/${post.slug}`}>
               <div className="bg-card border rounded-xl p-6 hover:shadow-md transition-shadow h-full cursor-pointer flex flex-col">
                 <div className="flex items-start justify-between mb-3">
                   <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded">
