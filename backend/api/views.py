@@ -30,6 +30,7 @@ from .serializers import (
     ContactMessageSerializer
 )
 from .services import send_contact_email, build_model_hub, get_featured_history
+from .bot_detection import should_track_click
 
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -454,16 +455,18 @@ def redirect_to_store(request, offer_uuid):
         return redirect("https://www.backmarket.es")
 
     # 3. Guardamos la telemetría síncronamente (rápido en PostgreSQL)
-    try:
-        ClickEvent.objects.create(
-            offer=offer,
-            referer=request.META.get('HTTP_REFERER', '')[:500],
-            user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
-            ip_hash=hash_ip(request.META.get('REMOTE_ADDR', ''))
-        )
-    except Exception as e:
-        # Si falla la BD por algo raro, imprimimos pero NO cortamos la redirección
-        print(f"Error registrando clic: {e}")
+    #    Solo si es un clic humano: descartamos bots/crawlers y golpes directos.
+    if should_track_click(request):
+        try:
+            ClickEvent.objects.create(
+                offer=offer,
+                referer=request.META.get('HTTP_REFERER', '')[:500],
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+                ip_hash=hash_ip(request.META.get('REMOTE_ADDR', ''))
+            )
+        except Exception as e:
+            # Si falla la BD por algo raro, imprimimos pero NO cortamos la redirección
+            print(f"Error registrando clic: {e}")
     
     # ---------------------------------------------------------
     # 2. INTERRUPTOR DE MONETIZACIÓN (Bypass temporal)

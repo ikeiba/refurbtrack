@@ -375,7 +375,7 @@ def send_alert_email(alert, offer):
             'product_image': final_image_url,
             
             # FIX CRÍTICO: Reconstruimos la URL usando el UUID directamente hacia el backend
-            'offer_url': f"{backend_url}/api/out/{offer.uuid}/" if hasattr(offer, 'uuid') else f"{base_url}/es",
+            'offer_url': f"{backend_url}/api/out/{offer.uuid}/?src=email" if hasattr(offer, 'uuid') else f"{base_url}/es",
             
             # LINKS FRONTEND
             'unsubscribe_url': f"{base_url}/es/unsubscribe?token={token_alert}",

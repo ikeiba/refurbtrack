@@ -5,6 +5,7 @@ from django.db.models import Count, Q
 from django.db.models.functions import TruncDay, TruncHour
 
 from api.models import ClickEvent
+from api.bot_detection import is_bot_user_agent
 
 BOT_SIGNALS = [
     'bot', 'crawl', 'spider', 'slurp', 'python', 'curl', 'wget', 'httpclient',
@@ -22,6 +23,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--limit', type=int, default=30, help='Nº de filas por desglose')
+        parser.add_argument(
+            '--purge-bots',
+            action='store_true',
+            help='BORRA las filas con User-Agent de bot/crawler/script. '
+                 'Sin esta bandera solo se reporta el conteo (dry-run).',
+        )
 
     def handle(self, *args, **options):
         limit = options['limit']
@@ -115,5 +122,18 @@ class Command(BaseCommand):
                 family['Navegador / app'] += 1
         for k, v in family.most_common():
             self.stdout.write(f'{v:>7}  {k}')
+
+        # 7. Purga opcional de bots (UA inequívoco)
+        self.stdout.write('\n--- PURGA DE BOTS ---')
+        bot_ids = [
+            pk for pk, ua in ClickEvent.objects.values_list('id', 'user_agent')
+            if is_bot_user_agent(ua)
+        ]
+        self.stdout.write(f'Filas con UA de bot: {len(bot_ids)}')
+        if options['purge_bots'] and bot_ids:
+            deleted, _ = ClickEvent.objects.filter(id__in=bot_ids).delete()
+            self.stdout.write(self.style.SUCCESS(f'✅ Borradas: {deleted}'))
+        elif bot_ids:
+            self.stdout.write('Dry-run: usa --purge-bots para borrarlas.')
 
         self.stdout.write('\nListo.')
