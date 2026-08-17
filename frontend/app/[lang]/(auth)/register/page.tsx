@@ -11,6 +11,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import { API_URL } from "@/services/api"
+import { track } from "@/lib/analytics"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -42,6 +43,7 @@ export default function RegisterPage() {
       await register({ email, password })
       // Iniciar sesión automáticamente después del registro
       await login({ email, password })
+      track('signup', { method: 'password' })
       // Redirigir a la pantalla de inicio
       router.push("/es")
     } catch (err: any) {
@@ -75,6 +77,8 @@ export default function RegisterPage() {
       // Guardamos también el email que nos devuelve el backend de Django
       localStorage.setItem('userEmail', data.user.email);
       
+      track('signup', { method: 'google' })
+
       // Forzamos la recarga para que el AuthContext lea los datos
       window.location.href = "/es";
     } catch (err: any) {

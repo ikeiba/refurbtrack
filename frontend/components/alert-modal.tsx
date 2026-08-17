@@ -15,6 +15,7 @@ import { createAlert } from "@/services/api"
 import { t } from "@/lib/translations"
 import { useAuth } from "@/context/auth-context" // <--- 1. Importar el cerebro
 import { useRouter } from "next/navigation"
+import { track } from "@/lib/analytics"
 
 
 interface AlertModalProps {
@@ -152,6 +153,14 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
         target_storages: anyStorage ? [] : selectedStorages,
         target_conditions: anyCondition ? [] : selectedConditions,
         battery_new: batteryPayload
+      })
+
+      track('alert_created', {
+        price_threshold: Number(targetPrice),
+        storages: anyStorage ? 'any' : selectedStorages.join('/'),
+        colors: anyColor ? 'any' : selectedColors.join('/'),
+        conditions: anyCondition ? 'any' : selectedConditions.join('/'),
+        battery: batteryPayload === null ? 'any' : batteryPayload ? 'new' : 'standard',
       })
 
       toast({

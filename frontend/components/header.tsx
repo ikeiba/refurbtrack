@@ -22,6 +22,7 @@ import { countries } from "@/lib/mock-data"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
+import { track } from "@/lib/analytics"
 
 interface HeaderProps {
   selectedCountry: string
@@ -74,6 +75,7 @@ export function Header({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && onSearchSubmit) {
       const trimmed = inputValue.trim()
+      if (trimmed) track('search', { search_term: trimmed })
       onSearchSubmit(trimmed)
     }
   }

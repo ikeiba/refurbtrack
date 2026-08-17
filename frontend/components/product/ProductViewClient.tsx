@@ -25,6 +25,7 @@ import type { Offer } from "@/lib/types"
 import Link from "next/link"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { hubPath } from "@/lib/urls"
+import { track } from "@/lib/analytics"
 
 interface ProductViewClientProps {
   initialProduct: any;
@@ -118,11 +119,13 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   const handleConditionChange = (cond: string) => {
     setSelectedCondition(cond)
     updateUrlParams("condition", cond)
+    track('filter_used', { filter: 'condition', value: cond })
   }
 
   const handleBatteryChange = (isNew: boolean) => {
     setSelectedBattery(isNew)
     updateUrlParams("battery", isNew ? "new" : "standard")
+    track('filter_used', { filter: 'battery', value: isNew ? 'new' : 'standard' })
   }
 
   // ─── OFERTA ACTIVA ────────────────────────────────────────────────────────
@@ -133,6 +136,18 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   }, [activeSpec, selectedCondition, selectedBattery])
 
   const [timeRange, setTimeRange] = useState<string>('30') // Por defecto 30 días
+
+  // ─── ANALÍTICA: product_view ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!activeSpec) return
+    track('product_view', {
+      brand: initialProduct.brand_slug,
+      model: initialProduct.name,
+      storage: activeSpec.storage,
+      color: activeSpec.color,
+      price: activeOffer?.current_price ?? activeSpec.min_price_cached ?? 0,
+    })
+  }, [activeSpec, activeOffer, initialProduct])
   
   // ─── HISTORIAL DEL GRÁFICO ────────────────────────────────────────────────
   // 3. Modifica tu useEffect del historial para que escuche el cambio de tiempo:
@@ -157,6 +172,8 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
     if (activeOffer && targetOffer.id === activeOffer.id) return
     if (chartData.length >= 6) return
     if (chartData.some((s) => s.name === label)) return
+
+    track('price_comparison_click', { label })
 
     try {
       const history = await getOfferHistory(targetOffer.id)
@@ -299,6 +316,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
           <div className="h-fit w-full max-w-[550px] mx-auto lg:ml-auto">
             {activeOffer?.url ? (
               <a href={activeOffer.url} target="_blank" rel="sponsored noopener"
+                 onClick={() => track('outbound_click', { store: 'Back Market', model: initialProduct.name, url: activeOffer.url })}
                  className="block transition-opacity hover:opacity-95">
                 <ProductGallery images={[finalImage]} />
               </a>
@@ -446,6 +464,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                       href={activeOffer.url}
                       target="_blank"
                       rel="sponsored noopener"
+                      onClick={() => track('outbound_click', { store: 'Back Market', model: initialProduct.name, url: activeOffer.url })}
                       className="w-full h-11 inline-flex items-center justify-center rounded-md text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all"
                     >
                       Ver oferta en Back Market
@@ -463,7 +482,10 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
               className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700"
               size="lg"
               disabled={!activeSpec}
-              onClick={() => setIsAlertOpen(true)}
+              onClick={() => {
+                track('alert_started', { model: initialProduct.name, storage: activeSpec.storage, color: activeSpec.color })
+                setIsAlertOpen(true)
+              }}
             >
               <Bell className="w-5 h-5" /> Alerta
             </Button>
@@ -544,7 +566,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                 variant={timeRange === '7' ? 'default' : 'ghost'}
                 size="sm"
                 className="h-7 text-xs px-3 rounded-md transition-all"
-                onClick={() => setTimeRange('7')}
+                onClick={() => { setTimeRange('7'); track('filter_used', { filter: 'time_range', value: '7' }) }}
               >
                 7d
               </Button>
@@ -552,7 +574,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                 variant={timeRange === '30' ? 'default' : 'ghost'}
                 size="sm"
                 className="h-7 text-xs px-3 rounded-md transition-all"
-                onClick={() => setTimeRange('30')}
+                onClick={() => { setTimeRange('30'); track('filter_used', { filter: 'time_range', value: '30' }) }}
               >
                 30d
               </Button>
@@ -560,7 +582,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                 variant={timeRange === '90' ? 'default' : 'ghost'}
                 size="sm"
                 className="h-7 text-xs px-3 rounded-md transition-all"
-                onClick={() => setTimeRange('90')}
+                onClick={() => { setTimeRange('90'); track('filter_used', { filter: 'time_range', value: '90' }) }}
               >
                 90d
               </Button>

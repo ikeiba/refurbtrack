@@ -5,6 +5,7 @@ import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { useConsent } from '@/context/ConsentContext'
+import { flushAnalyticsQueue, trackReturnVisit } from '@/lib/analytics'
 
 // 1. Movemos toda la lógica a un componente interno
 function AnalyticsContent() {
@@ -21,6 +22,19 @@ function AnalyticsContent() {
       }
     }
   }, [pathname, searchParams, consent?.marketing])
+
+  // Vaciado de la cola de eventos GA4 (reintenta hasta que gtag esté listo)
+  useEffect(() => {
+    if (!consent?.analytics) return
+    flushAnalyticsQueue()
+    const id = setInterval(flushAnalyticsQueue, 1500)
+    return () => clearInterval(id)
+  }, [consent?.analytics])
+
+  // Marca de visita recurrente
+  useEffect(() => {
+    trackReturnVisit()
+  }, [])
 
   return (
     <>
