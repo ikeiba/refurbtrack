@@ -136,6 +136,11 @@ CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 CELERY_TIMEZONE = "Europe/Madrid"
 
+# Mercados que el orquestador Celery (run_spiders_manager) itera de forma
+# SECUENCIAL. El orden importa: ES siempre antes que UK para no duplicar la tasa
+# de peticiones simultáneas contra el firewall global de Back Market.
+ACTIVE_MARKETS = ['ES', 'UK']
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # <--- AÑADIR ESTO PRIMERO
     'django.middleware.security.SecurityMiddleware',

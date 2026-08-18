@@ -21,42 +21,56 @@ except ModuleNotFoundError as e:
     sys.exit(1)
 
 # --- IMPORTACIÓN DE MODELOS NUEVOS ---
-from api.models import Product  # Solo necesitamos Product para obtener los IDs
+from api.models import Product, Market  # Product para los IDs, Market para los mercados
 
 def run_spiders_concurrently():
 
     # Obtenemos todos los IDs de productos que queremos scrapear
     # Se asume que existen productos en la DB (creados con el script anterior)
     product_ids = Product.objects.values_list('id', flat=True)
-    
+
+    # Mercados activos (ES, UK). Se iteran de forma SECUENCIAL por la regla de
+    # rate limiting (el firewall de Back Market es global por IP).
+    markets = list(Market.objects.filter(code__in=['ES', 'UK']).order_by('id'))
+
     processes = []
     MAX_CONCURRENT_PROCESSES = 12  # Bajado un poco por seguridad al principio
+    COOLDOWN_BETWEEN_MARKETS = 30
 
     print(f"📦 Se encontraron {len(product_ids)} productos para procesar.")
 
-    for pid in product_ids:
-        # El comando sigue siendo igual, pasamos el ID del producto
-        cmd = [
-            'scrapy', 'crawl', 'backmarket',
-            '-a', f'product_id={pid}'
-        ]
-        
-        print(f"🚀 Lanzando spider para producto ID {pid}...")
-        
-        p = subprocess.Popen(cmd)
-        processes.append(p)
+    for idx, market in enumerate(markets):
+        print(f"🌍 Procesando mercado {market.code} ({market.currency})...")
 
-        # Control de concurrencia
-        if len(processes) >= MAX_CONCURRENT_PROCESSES:
-            print("⏳ Esperando a que se libere un slot...")
-            processes[0].wait()
-            processes.pop(0)
-        
-        time.sleep(2) # Pausa entre lanzamientos
+        for pid in product_ids:
+            # El comando pasa ahora el mercado además del producto
+            cmd = [
+                'scrapy', 'crawl', 'backmarket',
+                '-a', f'product_id={pid}',
+                '-a', f'market={market.code}',
+            ]
 
-    # Esperar a que terminen los restantes
-    for p in processes:
-        p.wait()
+            print(f"🚀 Lanzando spider para producto ID {pid} @ {market.code}...")
+
+            p = subprocess.Popen(cmd)
+            processes.append(p)
+
+            # Control de concurrencia
+            if len(processes) >= MAX_CONCURRENT_PROCESSES:
+                print("⏳ Esperando a que se libere un slot...")
+                processes[0].wait()
+                processes.pop(0)
+
+            time.sleep(2)  # Pausa entre lanzamientos
+
+        # Esperar a que terminen los restantes de este mercado
+        for p in processes:
+            p.wait()
+        processes = []
+
+        if idx < len(markets) - 1:
+            print(f"⏳ Cooldown de {COOLDOWN_BETWEEN_MARKETS}s antes del siguiente mercado...")
+            time.sleep(COOLDOWN_BETWEEN_MARKETS)
 
     print("✅ Ronda completada. Durmiendo 45 minutos...")
 

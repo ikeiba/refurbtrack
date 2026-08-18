@@ -34,18 +34,18 @@ class Command(BaseCommand):
     # DICCIONARIO DE PRECIOS OFICIALES DE SALIDA PARA UK (GBP).
     # Valores aproximados pendientes de verificar antes de activar el mercado UK.
     OFFICIAL_MSRP_UK = {
-        "iPhone 11": 499.00,
-        "iPhone 11 Pro": 689.00,
-        "iPhone 12": 689.00,
-        "iPhone 12 Pro": 883.00,
-        "iPhone 13": 629.00,
-        "iPhone 13 Pro": 985.00,
-        "iPhone 14": 629.00,
-        "iPhone 14 Pro": 1121.00,
-        "iPhone 15": 815.00,
-        "iPhone 15 Pro": 1036.00,
-        "iPhone 16": 730.00,
-        "iPhone 16 Pro": 1036.00,
+        "iPhone 11": 489.00,
+        "iPhone 11 Pro": 639.00,
+        "iPhone 12": 649.00,
+        "iPhone 12 Pro": 879.00,
+        "iPhone 13": 599.00,
+        "iPhone 13 Pro": 949.00,
+        "iPhone 14": 599.00,
+        "iPhone 14 Pro": 1099.00,
+        "iPhone 15": 699.00,
+        "iPhone 15 Pro": 999.00,
+        "iPhone 16": 699.00,
+        "iPhone 16 Pro": 999.00,
         # Añade más según necesites
     }
 

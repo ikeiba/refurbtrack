@@ -2,7 +2,7 @@ from decimal import Decimal
 from time import time
 from datetime import datetime, timedelta
 import scrapy
-from api.models import Spec, Offer, PriceHistory, Product # Importamos los nuevos modelos
+from api.models import Spec, Offer, PriceHistory, Product, Market # Importamos los nuevos modelos
 import json
 import random
 from scrapy.exceptions import IgnoreRequest
@@ -21,6 +21,13 @@ class BackMarketSpider(scrapy.Spider):
         self.exitosos = 0
         self.start_time = None
 
+        # --- PARÁMETRO DE MERCADO (-a market=UK) ---
+        # Scrapy inyecta los -a como atributos string sobre la instancia.
+        self.market_code = str(getattr(self, 'market', 'ES')).upper()
+        self.market_obj = None
+        self.currency_symbol = '€'
+        self.accept_language = 'es-ES,es;q=0.9'
+
         # --- NUEVO: PREPARACIÓN PARA ALERTAS SEGURAS ---
         # 1. Guardamos la hora EXACTA de inicio (con zona horaria)
         self.scrape_start_time = timezone.now()
@@ -33,6 +40,18 @@ class BackMarketSpider(scrapy.Spider):
         'Excellent': '10',
         'Good': '11',
         'Fair': '12',
+    }
+
+    # Símbolo de moneda por código ISO (para limpiar el precio scrapeado)
+    CURRENCY_SYMBOL = {
+        'EUR': '€',
+        'GBP': '£',
+    }
+
+    # Cabecera Accept-Language por mercado (para que Back Market sirva el idioma correcto)
+    ACCEPT_LANGUAGE = {
+        'ES': 'es-ES,es;q=0.9',
+        'UK': 'en-GB,en;q=0.9',
     }
 
     custom_settings = {
@@ -66,6 +85,19 @@ class BackMarketSpider(scrapy.Spider):
         self.start_time = time()
         self.logger.warning(f"⏰ Inicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
+        # --- RESOLUCIÓN DEL MERCADO (-a market=UK) ---
+        try:
+            market = Market.objects.get(code=self.market_code)
+        except Market.DoesNotExist:
+            self.logger.error(f"❌ Market '{self.market_code}' no existe en DB. Abortando spider.")
+            return
+        self.market_obj = market
+        self.currency_symbol = self.CURRENCY_SYMBOL.get(market.currency, '€')
+        self.accept_language = self.ACCEPT_LANGUAGE.get(market.code, 'es-ES,es;q=0.9')
+        self.logger.info(
+            f"🌍 Mercado: {market.code} ({market.currency}, {market.domain}/{market.locale})"
+        )
+
         # 1. Obtener las Specs (antiguas Variants)
         # Usamos select_related para traer el producto y evitar consultas extra
         specs = Spec.objects.select_related('product')
@@ -94,10 +126,18 @@ class BackMarketSpider(scrapy.Spider):
         ]
 
         for spec in specs:
-            base_url = f"https://www.backmarket.es/es-es/p/-/{spec.back_market_uuid}"
+            base_url = f"https://www.{market.domain}/{market.locale}/p/-/{spec.back_market_uuid}"
             
             # Iteramos sobre las OFERTAS VACÍAS que ya creamos en la DB
             for offer in spec.offers.all():
+                # --- FILTRO DE MERCADO ---
+                # Solo scrapeamos la oferta de ESTE mercado. Durante la transición
+                # (ofertas sin market backfilleado) hacemos fallback al country.
+                if offer.market_id is not None and offer.market_id != market.id:
+                    continue
+                if offer.market_id is None and offer.country != market.code:
+                    continue
+
                 # URLs a visitar (Standard y Nueva Batería)
 
                 # A. Obtenemos el código de condición (ej: 'Fair' -> '12')
@@ -121,7 +161,7 @@ class BackMarketSpider(scrapy.Spider):
                 # Headers más realistas
                 headers = {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'es-ES,es;q=0.9',
+                    'Accept-Language': self.accept_language,
                     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15',
                     'Upgrade-Insecure-Requests': '1',
                 }
@@ -227,7 +267,7 @@ class BackMarketSpider(scrapy.Spider):
                 if price_text:
                     try:
                         clean_price = (price_text
-                            .replace("€", "")
+                            .replace(self.currency_symbol, "")
                             .replace(".", "")
                             .replace(",", ".")
                             .replace("\xa0", "")
@@ -254,10 +294,11 @@ class BackMarketSpider(scrapy.Spider):
                 
                 # LOG DE ÉXITO (Formato idéntico al tuyo)
                 print(
-                    f"[{self.contador}] 💰 {final_price}€ | "
+                    f"[{self.contador}] 💰 {final_price}{self.currency_symbol} | "
                     f"{offer.spec.product.name} | "
                     f"{cond_name} | {batt_label} | "
                     f"{offer.spec.storage} | {offer.spec.color} | "
+                    f"{self.market_code} |"
                     f"✅ {success_rate:.1f}%"
                 )
 
@@ -280,10 +321,11 @@ class BackMarketSpider(scrapy.Spider):
                 # LOG DE FALLO (Sin precio)
                 self.logger.warning(
                     f"⚠️ No se encontró precio en {response.url[:95]} | "
-                    f"[{self.contador}] -- € | "
+                    f"[{self.contador}] -- {self.currency_symbol} | "
                     f"{offer.spec.product.name} | "
                     f"{cond_name} | {batt_label} | "
                     f"{offer.spec.storage} | {offer.spec.color} | "
+                    f"{self.market_code} |"
                     f"❌ {success_rate:.1f}%"
                 )
                 self.errores += 1
