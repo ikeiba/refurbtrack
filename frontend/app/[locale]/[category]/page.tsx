@@ -1,4 +1,4 @@
-// app/[lang]/[category]/page.tsx
+// app/[locale]/[category]/page.tsx
 import { getProducts } from "@/services/api";
 import { FamilyGrid } from "@/components/family-grid"; // Ajusta el import si FamilyGrid está en otro archivo
 import { generateCategoryCopy } from "@/lib/seo-utils";
@@ -6,55 +6,62 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper";
+import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n";
 
 // export const revalidate = 600; // Cachear 1 hora (ISR)
 export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{
-    lang: string;
+    locale: string;
     category: string;
   }>;
 }
 
 // Generación de Metadata dinámica para el SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang, category } = await params;
+  const { locale, category } = await params;
   const prettyCategory = category.charAt(0).toUpperCase() + category.slice(1);
 
   return {
     title: `Compara ${prettyCategory} Reacondicionados | RefurbTrack`,
     description: `Compara precios históricos de ${prettyCategory} reacondicionados en Back Market. Encuentra la mejor oferta con garantía.`,
     alternates: {
-      canonical: `/${lang}/${category}`
+      canonical: `/${locale}/${category}`
     }
   };
 }
 
 export default async function CategoryPage({ params }: Props) {
-  const { lang, category } = await params;
-  
-  // 1. Obtener TODOS los productos
-  const allProducts = await getProducts();
+  const { locale: rawLocale, category } = await params;
+  const locale = parseLocale(rawLocale);
+
+  // 1. Obtener TODOS los productos del mercado
+  const allProducts = await getProducts(locale);
 
   // 2. Filtrar solo los de esta categoría (ej: category_slug === 'smartphone')
   const categoryProducts = allProducts.filter(
     (p) => p.category_slug?.toLowerCase() === category.toLowerCase()
   );
 
-  // Si alguien entra a /es/inventada y no hay productos, devolvemos 404
+  // Si alguien entra a /es-es/inventada y no hay productos, devolvemos 404
   if (categoryProducts.length === 0) {
     notFound();
   }
 
   const prettyCategory = category.charAt(0).toUpperCase() + category.slice(1);
 
-  // 3. Generar el texto SEO (Pilar 1)
-  const seoCopy = generateCategoryCopy(prettyCategory, categoryProducts);
+  // 3. Generar el texto SEO (Pilar 1) con moneda e idioma del mercado
+  const seoCopy = generateCategoryCopy(
+    prettyCategory,
+    categoryProducts,
+    getCurrency(locale),
+    getLanguage(locale)
+  );
 
   // Definimos la ruta para esta página específica
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${lang}` },
+    { label: "Inicio", href: `/${locale}` },
     { label: prettyCategory } // No pasamos href porque es la página actual
   ];
 
@@ -79,7 +86,7 @@ export default async function CategoryPage({ params }: Props) {
         </header>
 
         {/* Cuadrícula de productos */}
-        <FamilyGrid products={categoryProducts} />
+        <FamilyGrid products={categoryProducts} locale={locale} />
         
       </main>
     </div>

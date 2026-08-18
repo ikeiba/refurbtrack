@@ -9,12 +9,16 @@ import { Loader2, Mail, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 // IMPORTAMOS LA FUNCIÓN DEL SERVICIO
 import { requestPasswordReset } from "@/services/api"
+import { useParams } from "next/navigation"
+import { parseLocale } from "@/lib/i18n"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState("")
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,7 +84,7 @@ export default function ForgotPasswordPage() {
                 "Enviar enlace de recuperación"
               )}
             </Button>
-            <Link href="/es/login" className="flex items-center justify-center gap-2 text-sm text-emerald-600 hover:underline">
+            <Link href={`/${locale}/login`} className="flex items-center justify-center gap-2 text-sm text-emerald-600 hover:underline">
               <ChevronLeft className="w-4 h-4" />
               Volver al login
             </Link>
@@ -97,7 +101,7 @@ export default function ForgotPasswordPage() {
               Revisa tu bandeja de entrada (y la carpeta de spam) en los próximos minutos.
             </p>
           </div>
-          <Link href="/es/login" className="block">
+          <Link href={`/${locale}/login`} className="block">
             <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
               Volver al login
             </Button>

@@ -1,4 +1,6 @@
-export default function PrivacyPage() {
+export default async function PrivacyPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+
   return (
     <div className="space-y-6 text-sm md:text-base leading-relaxed">
       <h1 className="text-3xl font-bold mb-6">Política de Privacidad</h1>
@@ -13,7 +15,7 @@ export default function PrivacyPage() {
 
       <h3 className="text-xl font-bold mt-8">1. Responsable del Tratamiento</h3>
       <p>
-        Puedes contactarnos <a href="/es/contact" className="text-emerald-600 hover:underline">aquí</a> para ejercer tus derechos o resolver cualquier duda relacionada con el tratamiento de tus datos.
+        Puedes contactarnos <a href={`/${locale}/contact`} className="text-emerald-600 hover:underline">aquí</a> para ejercer tus derechos o resolver cualquier duda relacionada con el tratamiento de tus datos.
       </p>
 
       <h3 className="text-xl font-bold mt-8">2. Datos que Recopilamos</h3>
@@ -24,7 +26,7 @@ export default function PrivacyPage() {
         <li><strong>Datos de navegación:</strong> Dirección IP, tipo de navegador, sistema operativo y páginas visitadas (vía Google Analytics) para mejorar la experiencia de usuario y optimizar nuestros servicios.</li>
         <li><strong>Email (Opcional):</strong> Solo si te suscribes explícitamente a nuestro servicio de alertas de precios o boletín informativo. Puedes darte de baja en cualquier momento.</li>
         <li><strong>Preferencias del usuario:</strong> Configuración de tema (modo oscuro/claro), productos favoritos y filtros guardados mediante almacenamiento local del navegador.</li>
-        <li><strong>Cookies y tecnologías de seguimiento:</strong> Consulta nuestra <a href="/es/cookies" className="text-emerald-600 hover:underline">Política de Cookies</a> para más detalles.</li>
+        <li><strong>Cookies y tecnologías de seguimiento:</strong> Consulta nuestra <a href={`/${locale}/cookies`} className="text-emerald-600 hover:underline">Política de Cookies</a> para más detalles.</li>
       </ul>
 
       <h3 className="text-xl font-bold mt-8">3. Finalidad del Tratamiento</h3>
@@ -88,7 +90,7 @@ export default function PrivacyPage() {
         <li><strong>Revocación del consentimiento:</strong> Retirar tu consentimiento en cualquier momento</li>
       </ul>
       <p className="mt-4">
-        Para ejercer estos derechos, contacta con nosotros <a href="/es/contact" className="text-emerald-600 hover:underline">aquí</a> con tu solicitud. Responderemos en un plazo máximo de 30 días.
+        Para ejercer estos derechos, contacta con nosotros <a href={`/${locale}/contact`} className="text-emerald-600 hover:underline">aquí</a> con tu solicitud. Responderemos en un plazo máximo de 30 días.
       </p>
 
       <h3 className="text-xl font-bold mt-8">9. Seguridad de los Datos</h3>
@@ -121,7 +123,7 @@ export default function PrivacyPage() {
         Si tienes dudas sobre cómo tratamos tus datos o deseas presentar una queja:
       </p>
       <ul className="list-disc pl-5 space-y-2 my-4">
-        <li><strong>Formulario de contacto:</strong> <a href="/es/contact" className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
+        <li><strong>Formulario de contacto:</strong> <a href={`/${locale}/contact`} className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
         <li><strong>Autoridad de Control:</strong> Tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) en <a href="https://www.aepd.es" target="_blank" rel="noopener" className="text-emerald-600 hover:underline">www.aepd.es</a></li>
       </ul>
 

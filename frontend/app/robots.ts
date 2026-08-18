@@ -19,11 +19,11 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: [
         '/api/',              // Bloqueo genérico de rutas de API
-        '/*/login',           // Bloquea /es/login, /en/login, etc.
+        '/*/login',           // Bloquea /es-es/login, /en-gb/login, etc.
         '/*/register',
         '/*/forgot-password',
         '/*/reset-password',
-        '/*/dashboard',       // Bloquea /es/dashboard
+        '/*/dashboard',       // Bloquea /es-es/dashboard
         '/*/unsubscribe',     // Bloquea páginas de gestión de alertas
         '/*/unsubscribe-all',
         

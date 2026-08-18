@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Trash2, Bell, ExternalLink, ArrowRight, Activity, ShoppingCart, Image as ImageIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { t } from "@/lib/translations"
 import { type AlertItem } from "@/lib/types"
 import { API_URL } from "@/services/api"
+import { parseLocale, getLanguage, getCurrency } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
 
 import { 
   AlertDialog,
@@ -38,6 +40,10 @@ export default function DashboardPage() {
   
   const { toast } = useToast()
   const router = useRouter()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
+  const currency = getCurrency(locale)
 
   const handleHeaderSearch = (query: string) => {
     const trimmed = query.trim()
@@ -70,7 +76,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // Si termina de cargar auth y no está logueado, fuera
     if (!authLoading && !isAuthenticated) {
-        router.push("/es/login")
+        router.push(`/${locale}/login`)
         return
     }
 
@@ -136,7 +142,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground max-w-sm">
                     Busca un producto que te guste y crea una alerta para que te avisemos cuando baje de precio.
                 </p>
-                <Link href="/es">
+                <Link href={`/${locale}`}>
                     <Button className="mt-4 bg-emerald-600 hover:bg-emerald-700">
                         Explorar Productos <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -174,7 +180,7 @@ export default function DashboardPage() {
                                 </span>
                             </div>
                             <p className="text-muted-foreground text-sm mb-2">
-                                Avisar si baja de <span className="font-bold text-foreground">{alert.price_threshold}€</span>
+                                Avisar si baja de <span className="font-bold text-foreground">{formatCurrency(alert.price_threshold, currency, language)}</span>
                             </p>
                             
                             {/* Filtros aplicados */}
@@ -193,7 +199,7 @@ export default function DashboardPage() {
                                 {/* Color */}
                                 {alert.target_colors?.length > 0 ? (
                                     <span className="bg-secondary px-2 py-1 rounded">
-                                        Color: {alert.target_colors.map(c => t(c)).join(", ")}
+                                        Color: {alert.target_colors.map((c: string) => t(c, language)).join(", ")}
                                     </span>
                                 ) : (
                                     <span className="bg-secondary px-2 py-1 rounded">
@@ -204,7 +210,7 @@ export default function DashboardPage() {
                                 {/* Estado */}
                                 {alert.target_conditions?.length > 0 ? (
                                     <span className="bg-secondary px-2 py-1 rounded">
-                                        Estado: {alert.target_conditions.map(c => t(c)).join(", ")}
+                                        Estado: {alert.target_conditions.map((c: string) => t(c, language)).join(", ")}
                                     </span>
                                 ) : (
                                     <span className="bg-secondary px-2 py-1 rounded">
@@ -229,7 +235,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col sm:flex-row items-center gap-2">
                             {/* BOTÓN 1: VER EN TU WEB (Gráficos y Datos) */}
                             <Link 
-                                href={`/es${alert.target_path}`}
+                                href={`/${locale}${alert.target_path}`}
                                 className="w-full sm:w-auto"
                             >
                                 <Button variant="outline" size="sm" className="w-full gap-2 text-xs h-9">

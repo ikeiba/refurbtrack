@@ -1,6 +1,8 @@
 import { Leaf, Search, ShieldCheck, Target, Zap, Globe, BarChart3 } from "lucide-react"
 
-export default function AboutPage() {
+export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+
   return (
     <div className="space-y-16">
       {/* Hero Section */}
@@ -156,10 +158,10 @@ export default function AboutPage() {
         <h2 className="text-3xl font-bold">¿Listo para Ahorrar?</h2>
         <p className="text-lg text-muted-foreground">Explora nuestra colección de dispositivos reacondicionados verificados y comienza a comparar precios inteligentemente.</p>
         <div className="flex gap-3 justify-center mt-6">
-          <a href="/es" className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors">
+          <a href={`/${locale}`} className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors">
             Ir a Buscar
           </a>
-          <a href="/es/how-it-works" className="px-6 py-3 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/20 font-medium transition-colors">
+          <a href={`/${locale}/how-it-works`} className="px-6 py-3 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/20 font-medium transition-colors">
             Cómo Funciona
           </a>
         </div>

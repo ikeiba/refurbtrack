@@ -6,8 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { sendContactMessage } from "@/services/api"
+import { useParams } from "next/navigation"
+import { parseLocale } from "@/lib/i18n"
 
 export function ContactForm() {
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [subject, setSubject] = useState("")
@@ -105,7 +109,7 @@ export function ContactForm() {
 
       <div className="bg-muted/50 p-3 rounded text-xs text-muted-foreground">
         Al enviar este formulario, aceptas nuestra{" "}
-        <a href="/es/privacy" className="text-emerald-600 hover:underline">
+        <a href={`/${locale}/privacy`} className="text-emerald-600 hover:underline">
           Política de Privacidad
         </a>
         . Solo usaremos tu email para responder a tu consulta.

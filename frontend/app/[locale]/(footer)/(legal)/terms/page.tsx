@@ -1,4 +1,6 @@
-export default function TermsPage() {
+export default async function TermsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+
   return (
     <div className="space-y-6 text-sm md:text-base leading-relaxed">
       <h1 className="text-3xl font-bold mb-6">Términos y Condiciones de Uso</h1>
@@ -169,7 +171,7 @@ export default function TermsPage() {
         Para preguntas sobre estos Términos y Condiciones, puedes contactarnos en:
       </p>
       <ul className="list-none space-y-2 my-4">
-        <li><strong>Formulario de contacto:</strong> <a href="/es/contact" className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
+        <li><strong>Formulario de contacto:</strong> <a href={`/${locale}/contact`} className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
       </ul>
     </div>
   )

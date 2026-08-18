@@ -1,7 +1,9 @@
 import { Mail, MessageSquare, Clock, AlertCircle } from "lucide-react"
 import { ContactForm } from "@/components/ContactForm"
 
-export default function ContactPage() {
+export default async function ContactPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+
   return (
     <div className="space-y-8">
       <div className="space-y-4">
@@ -121,7 +123,7 @@ export default function ContactPage() {
             <h4 className="font-bold mb-1">Guía de Uso</h4>
             <p className="text-sm text-muted-foreground">
               Consulta nuestra documentación sobre {" "}
-              <a href="/es/how-it-works" className="text-emerald-600 hover:underline">
+              <a href={`/${locale}/how-it-works`} className="text-emerald-600 hover:underline">
                 cómo funciona
               </a>
               {" "} el comparador
@@ -131,7 +133,7 @@ export default function ContactPage() {
             <div className="text-3xl mb-2">🌱</div>
             <h4 className="font-bold mb-1">Sobre Nosotros</h4>
             <p className="text-sm text-muted-foreground">
-              <a href="/es/about" className="text-emerald-600 hover:underline">
+              <a href={`/${locale}/about`} className="text-emerald-600 hover:underline">
                 Conoce más sobre RefurbTrack
               </a>
             </p>
@@ -140,7 +142,7 @@ export default function ContactPage() {
             <div className="text-3xl mb-2">⚖️</div>
             <h4 className="font-bold mb-1">Legal</h4>
             <p className="text-sm text-muted-foreground">
-              <a href="/es/terms" className="text-emerald-600 hover:underline">
+              <a href={`/${locale}/terms`} className="text-emerald-600 hover:underline">
                 Términos de Servicio
               </a>
             </p>

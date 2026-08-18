@@ -1,6 +1,8 @@
 import { Search, BarChart3, ShoppingBag, Truck, Zap, TrendingDown, Lock, AlertCircle } from "lucide-react"
 
-export default function HowItWorksPage() {
+export default async function HowItWorksPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+
   const steps = [
     {
       icon: Search,
@@ -181,7 +183,7 @@ export default function HowItWorksPage() {
       <div className="text-center space-y-4 py-8 bg-emerald-50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200 dark:border-emerald-800">
         <h2 className="text-2xl font-bold">¿Listo para Empezar?</h2>
         <p className="text-muted-foreground">Explora miles de productos reacondicionados verificados y comienza a ahorrar hoy mismo.</p>
-        <a href="/es" className="inline-block px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors">
+        <a href={`/${locale}`} className="inline-block px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors">
           Ir a Buscar
         </a>
       </div>

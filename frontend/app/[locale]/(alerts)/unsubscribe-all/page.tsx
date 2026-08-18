@@ -1,6 +1,6 @@
 "use client"
 
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useParams } from "next/navigation"
 import { useState, Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,9 +11,12 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 // IMPORTAR LA FUNCIÓN
 import { unsubscribeSubscriber } from "@/services/api"
+import { parseLocale, getMarket } from "@/lib/i18n"
 
 function UnsubscribeAllContent() {
   const searchParams = useSearchParams()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
   const token = searchParams.get("token")
   
   // Estados: 'confirm' (preguntar), 'loading' (procesando), 'success' (borrado), 'error' (fallo)
@@ -73,7 +76,7 @@ function UnsubscribeAllContent() {
                 >
                     Sí, eliminar todas mis alertas
                 </Button>
-                <Link href="/es">
+                <Link href={`/${locale}`}>
                     <Button variant="outline" className="w-full">
                         Cancelar y volver al inicio
                     </Button>
@@ -87,7 +90,7 @@ function UnsubscribeAllContent() {
             <p className="text-muted-foreground">
               Has sido dado de baja correctamente. Todas tus alertas han sido eliminadas de nuestro sistema.
             </p>
-            <Link href="/es">
+            <Link href={`/${locale}`}>
                 <Button variant="outline" className="gap-2 mt-4">
                     <ArrowLeft className="h-4 w-4"/> Volver al inicio
                 </Button>
@@ -102,7 +105,7 @@ function UnsubscribeAllContent() {
               El enlace ha caducado o no es válido. Ve a tu panel para gestionar tus alertas.
             </p>
             <div className="pt-4">
-              <Link href="/es">
+              <Link href={`/${locale}`}>
                 <Button variant="outline" className="gap-2">
                   <ArrowLeft className="h-4 w-4"/> Volver al inicio
                 </Button>
@@ -116,7 +119,9 @@ function UnsubscribeAllContent() {
 }
 
 export default function UnsubscribeAllPage() {
-    const [country, setCountry] = useState("ES")
+    const params = useParams()
+    const market = getMarket(params?.locale as string | undefined)
+    const [country, setCountry] = useState<string>(market)
     
     return (
         <div className="min-h-screen flex flex-col">

@@ -14,8 +14,10 @@ import { cn, getColorHex } from "@/lib/utils" // <--- Importamos getColorHex
 import { createAlert } from "@/services/api"
 import { t } from "@/lib/translations"
 import { useAuth } from "@/context/auth-context" // <--- 1. Importar el cerebro
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { track } from "@/lib/analytics"
+import { parseLocale, getLanguage, getCurrency, getMarket } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
 
 
 interface AlertModalProps {
@@ -39,6 +41,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
   const { user, isAuthenticated } = useAuth() // <--- 2. Sacar el usuario
   const { toast } = useToast()
   const router = useRouter()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
+  const currency = getCurrency(locale)
+  const currencySymbol = currency === "GBP" ? "£" : "€"
   const [loading, setLoading] = useState(false)
 
   // --- ESTADOS ---
@@ -149,6 +156,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
         price_threshold: Number(targetPrice),
         product_id: product.id,
         country: 'ES',
+        market_code: getMarket(locale),
         target_colors: anyColor ? [] : selectedColors,
         target_storages: anyStorage ? [] : selectedStorages,
         target_conditions: anyCondition ? [] : selectedConditions,
@@ -168,7 +176,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
         description: `Te avisaremos en ${email} cuando baje de precio.`,
         className: "bg-emerald-50 border-emerald-200 text-emerald-800",
         action: (
-          <ToastAction altText="Ir a mi panel" onClick={() => router.push("/es/dashboard")}>
+          <ToastAction altText="Ir a mi panel" onClick={() => router.push(`/${locale}/dashboard`)}>
             Ir a mi panel
           </ToastAction>
         )
@@ -190,11 +198,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
     // Almacenamiento (Suele ser igual en ambos idiomas, ej: 128GB)
     parts.push(anyStorage ? "Cualquier almacenamiento" : selectedStorages.join("/"))
 
-    // Color: Usamos .map(c => t(c)) para convertir ["Blue", "Red"] en "Azul/Rojo"
-    parts.push(anyColor ? "Cualquier color" : selectedColors.map(c => t(c)).join("/"))
+    // Color: Usamos .map(c => t(c, language)) para convertir ["Blue", "Red"] en "Azul/Rojo"
+    parts.push(anyColor ? "Cualquier color" : selectedColors.map(c => t(c, language)).join("/"))
 
     // Estado: Convertimos ["Fair"] en "Correcto"
-    parts.push(anyCondition ? "Cualquier estado" : selectedConditions.map(c => t(c)).join("/"))
+    parts.push(anyCondition ? "Cualquier estado" : selectedConditions.map(c => t(c, language)).join("/"))
     
     // Batería
     if (anyBattery) {
@@ -202,7 +210,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
     } else {
       // Simplificamos la lógica usando map y el traductor
       // Si selectedBattery es ['new', 'standard'] -> mostrará "Nueva/Estándar"
-      const batteryLabels = selectedBattery.map(b => t(b))
+      const batteryLabels = selectedBattery.map(b => t(b, language))
       parts.push(batteryLabels.join("/"))
     }
 
@@ -239,7 +247,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
             </div>
             <div className="text-right">
                 <p className="text-xs text-muted-foreground">Precio actual</p>
-                <p className="font-bold text-lg">{currentConfig.price}€</p>
+                <p className="font-bold text-lg">{formatCurrency(currentConfig.price, currency, language)}</p>
             </div>
           </div>
 
@@ -265,11 +273,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                 )}
                 */}
             </div>
-            {/* Precio con símbolo € absoluto */}
+            {/* Precio con símbolo de moneda dinámico */}
             <div className="space-y-2">
                 <Label htmlFor="price">Avísame si baja de</Label>
                 <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
                     <Input 
                         id="price" 
                         type="number" 
@@ -335,7 +343,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border opacity-60 hover:opacity-100"
                     )}
                     style={{ backgroundColor: getColorHex(color) }}
-                    title={t(color)}
+                    title={t(color, language)}
                   />
                 ))}
               </div>
@@ -344,7 +352,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
               <p className="text-sm text-muted-foreground italic">Cualquier color</p>
             )}
             {!anyColor && selectedColors.length > 0 && (
-                <p className="text-xs text-muted-foreground">Seleccionado: {selectedColors.map(c => t(c)).join(", ")}</p>
+                <p className="text-xs text-muted-foreground">Seleccionado: {selectedColors.map(c => t(c, language)).join(", ")}</p>
             )}
           </div>
 
@@ -370,7 +378,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border bg-transparent hover:border-emerald-600/50"
                     )}
                   >
-                    {t(cond)}
+                    {t(cond, language)}
                   </button>
                 ))}
               </div>
@@ -400,7 +408,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border hover:bg-muted"
                     )}
                   >
-                    <Battery className="h-4 w-4" /> {t("standard")}
+                    <Battery className="h-4 w-4" /> {t("standard", language)}
                   </button>
                   <button
                     onClick={() => toggleSelection(selectedBattery, 'new', setSelectedBattery)}
@@ -411,7 +419,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border hover:bg-muted"
                     )}
                   >
-                    <BatteryFull className="h-4 w-4" /> {t("new")} (100%)
+                    <BatteryFull className="h-4 w-4" /> {t("new", language)} (100%)
                   </button>
               </div>
             )}
@@ -424,7 +432,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
              <p className="text-emerald-800 dark:text-emerald-200">
                <span className="font-medium">Resumen:</span> Avisar a <b>{email || "..."}</b> cuando <br/>
-               <span className="font-semibold">{getAlertDescription()}</span> baje de <span className="font-bold text-base">{targetPrice}€</span>
+               <span className="font-semibold">{getAlertDescription()}</span> baje de <span className="font-bold text-base">{formatCurrency(Number(targetPrice), currency, language)}</span>
              </p>
           </div>
 

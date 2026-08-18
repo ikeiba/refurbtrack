@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 import { authService, UserData, LoginResponse } from "@/services/auth"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
+import { parseLocale } from "@/lib/i18n"
 
 // Definimos qué información tendrá nuestro "cerebro"
 interface AuthContextType {
@@ -22,6 +23,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true) // Para no mostrar nada hasta verificar sesión
   
   const router = useRouter()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
 
   // AL CARGAR LA PÁGINA: Comprobar si hay sesión guardada
   useEffect(() => {
@@ -75,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("userEmail")
     setUser(null)
     setIsAuthenticated(false)
-    router.push("/es") // Volver a home
+    router.push(`/${locale}`) // Volver a home
     router.refresh()
   }
 

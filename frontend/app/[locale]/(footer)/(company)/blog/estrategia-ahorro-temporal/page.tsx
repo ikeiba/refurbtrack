@@ -4,12 +4,12 @@ import type { Metadata } from 'next'
 import { absoluteUrl, blogPostPath } from '@/lib/urls'
 
 interface Props {
-  params: Promise<{ lang: string }>
+  params: Promise<{ locale: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params
-  const canonical = absoluteUrl(blogPostPath(lang, 'estrategia-ahorro-temporal'))
+  const { locale } = await params
+  const canonical = absoluteUrl(blogPostPath(locale, 'estrategia-ahorro-temporal'))
   const title = '5 Estrategias para Ahorrar: Timing y Patrones de Precio | RefurbTrack'
   const description =
     'Descubre cuándo son más baratos los dispositivos reacondicionados: patrones estacionales, Black Friday y lanzamientos de Apple para comprar en el momento ideal.'
@@ -22,10 +22,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function BlogPost() {
+export default async function BlogPost({ params }: Props) {
+  const { locale } = await params
+
   return (
     <div className="space-y-8">
-      <Link href="/es/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href={`/${locale}/blog`} className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -203,7 +205,7 @@ export default function BlogPost() {
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <Link href="/es/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <Link href={`/${locale}/blog`} className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
         </Link>

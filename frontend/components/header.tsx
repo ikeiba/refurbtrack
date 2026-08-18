@@ -21,8 +21,10 @@ import {
 import { countries } from "@/lib/mock-data"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/context/auth-context"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { track } from "@/lib/analytics"
+import { parseLocale, getLanguage } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 interface HeaderProps {
   selectedCountry: string
@@ -47,6 +49,9 @@ export function Header({
   const [isDark, setIsDark] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
   const router = useRouter()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
   const [inputValue, setInputValue] = useState(searchQuery || "")
   
   const currentCountry = countries.find((c) => c.code === selectedCountry)
@@ -88,13 +93,13 @@ export function Header({
 
         {/* LOGO - Botón para volver a home sin filtros */}
         <Link 
-          href="/es" 
+          href={`/${locale}`} 
           className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
           {/* 1. Inyectamos el SVG directamente desde la carpeta public */}
           <img 
             src="/favicon.svg" 
-            alt="Logo de RefurbTrack" 
+            alt={t("logo_alt", language)} 
             className="h-8 w-8" 
           />
           
@@ -112,7 +117,7 @@ export function Header({
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Buscar productos..."
+                  placeholder={t("search_placeholder", language)}
                   className="w-full pl-9 focus-visible:ring-emerald-500"
                   value={inputValue}
                   onChange={(e) => handleInputChange(e.target.value)}
@@ -149,7 +154,7 @@ export function Header({
           {/* Tema Oscuro/Claro */}
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            <span className="sr-only">Toggle theme</span>
+            <span className="sr-only">{t("toggle_theme", language)}</span>
           </Button>
           
           {/* CAMPANA DE NOTIFICACIONES (COMENTADA)
@@ -194,7 +199,7 @@ export function Header({
             <DropdownMenuTrigger asChild id="user-menu-trigger">
               <Button variant="ghost" size="icon" className={isAuthenticated ? "text-emerald-600" : ""}>
                 <User className="h-5 w-5" />
-                <span className="sr-only">User menu</span>
+                <span className="sr-only">{t("user_menu", language)}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -211,7 +216,7 @@ export function Header({
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/es/dashboard" className="flex w-full items-center cursor-pointer">
+                      <Link href={`/${locale}/dashboard`} className="flex w-full items-center cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         <span>Mi Panel</span>
                       </Link>
@@ -228,14 +233,14 @@ export function Header({
                     <DropdownMenuLabel>Acceso Usuarios</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href={`/es/login`} className="flex w-full items-center cursor-pointer">
+                      <Link href={`/${locale}/login`} className="flex w-full items-center cursor-pointer">
                         <LogIn className="mr-2 h-4 w-4" />
                         <span>Iniciar Sesión</span>
                       </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem asChild>
-                      <Link href={`/es/register`} className="flex w-full items-center cursor-pointer">
+                      <Link href={`/${locale}/register`} className="flex w-full items-center cursor-pointer">
                         <UserPlus className="mr-2 h-4 w-4" />
                         <span>Registrarse</span>
                       </Link>

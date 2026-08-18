@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, use } from "react" // <--- 1. IMPORTA 'use'
-import { useRouter } from "next/navigation" // OJO: next/navigation en App Router
+import { useRouter, useParams } from "next/navigation" // OJO: next/navigation en App Router
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +10,7 @@ import { Loader2, Lock, CheckCircle2 } from "lucide-react"
 import { confirmPasswordReset } from "@/services/api" // <--- IMPORTAR
 
 import Link from "next/link"
+import { parseLocale } from "@/lib/i18n"
 
 // Next.js pasa los parámetros de la URL como props al componente
 export default function ResetPasswordConfirmPage({ params }: { params: Promise<{ uid: string; token: string }> }) {
@@ -22,6 +23,8 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const urlParams = useParams()
+  const locale = parseLocale(urlParams?.locale as string | undefined)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,7 +52,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
 
       setSuccess(true)
       setTimeout(() => {
-        router.push("/es/login")
+        router.push(`/${locale}/login`)
       }, 3000)
 
     } catch (err: any) {
@@ -80,7 +83,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
               
               {/* Usamos asChild para que el botón se comporte como un enlace */}
               <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                <Link href="/es/login"> {/* La URL es /es/login porque (auth) no cuenta */}
+                <Link href={`/${locale}/login`}> {/* La URL es /es-es/login porque (auth) no cuenta */}
                   Ir al Login ahora
                 </Link>
               </Button>

@@ -6,7 +6,9 @@ import { getOfferHistory } from "@/services/api"
 import { cn, getColorHex, CHART_COLORS } from "@/lib/utils"
 import { t } from "@/lib/translations"
 import { format, roundToNearestMinutes } from "date-fns"
-import { es } from "date-fns/locale"
+import { es, enGB } from "date-fns/locale"
+import { parseLocale, getLanguage, getCurrency, getSpecSlug } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
 
 import { Header } from "@/components/header"
 import { ProductGallery } from "@/components/product-gallery"
@@ -30,7 +32,7 @@ import { track } from "@/lib/analytics"
 interface ProductViewClientProps {
   initialProduct: any;
   initialHotOffers: any[];
-  lang: string;
+  locale: string;
 }
 
 // NOTE (FIX 1): This component calls useSearchParams(), so the parent server
@@ -55,14 +57,20 @@ function ProductParamsSync({ onSync }: { onSync: (c: string, b: boolean) => void
   return null
 }
 
-export default function ProductViewClient({ initialProduct, initialHotOffers, lang }: ProductViewClientProps) {
+export default function ProductViewClient({ initialProduct, initialHotOffers, locale }: ProductViewClientProps) {
   const router = useRouter()
   const params = useParams()
   const pathname = usePathname() // <--- NUEVO: Nos da la ruta base actual
 
+  const language = getLanguage(locale)
+  const currency = getCurrency(locale)
+  const dateLocale = language === "en" ? enGB : es
+
   // ─── SPEC ACTIVA (por slug de URL) ───────────────────────────────────────
   const activeSpec = useMemo(() => {
-    return initialProduct.specs.find((s: any) => s.slug === params.spec) || initialProduct.specs[0]
+    return initialProduct.specs.find(
+      (s: any) => s.slug === params.spec || s.slug_en === params.spec
+    ) || initialProduct.specs[0]
   }, [initialProduct, params.spec])
 
   // ─── GENERADOR DE ENLACES ESTÁTICOS (Para Googlebot) ─────────────
@@ -73,7 +81,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
     
     if (!targetSpec) return "#"; // Fallback de seguridad
     
-    const path = `/${lang}/${initialProduct.category_slug}/${initialProduct.brand_slug}/${initialProduct.slug}/${targetSpec.slug}`;
+    const path = `/${locale}/${initialProduct.category_slug}/${initialProduct.brand_slug}/${initialProduct.slug}/${getSpecSlug(targetSpec, locale)}`;
     const query = `?condition=${selectedCondition}${selectedBattery ? "&battery=new" : ""}`;
     
     return path + query;
@@ -96,8 +104,8 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   
   const handleHeaderSearch = (query: string) => {
     const trimmed = query.trim()
-    // AHORA SÍ: Mantenemos el idioma para no romper la navegación
-    router.push(trimmed ? `/${lang}?q=${encodeURIComponent(trimmed)}` : `/${lang}`)
+    // Mantenemos el locale para no romper la navegación
+    router.push(trimmed ? `/${locale}?q=${encodeURIComponent(trimmed)}` : `/${locale}`)
   }
 
   // Actualiza la URL sin recargar la página (usando JS nativo)
@@ -156,7 +164,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
       // Le pasamos el timeRange a la función getOfferHistory
       getOfferHistory(activeOffer.id, timeRange).then((history) => {
         setChartData([{
-          name:  `${initialProduct.name} ${t(activeSpec.color)} ${activeSpec.storage}GB - ${t(selectedCondition)}`,
+          name:  `${initialProduct.name} ${t(activeSpec.color, language)} ${activeSpec.storage}GB - ${t(selectedCondition, language)}`,
           data:  history,
           color: CHART_COLORS[0]
         }])
@@ -237,7 +245,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
 
     const formatDate = (d: string | null) => {
       if (!d) return "N/A"
-      try { return format(new Date(d), "d MMM", { locale: es }) }
+      try { return format(new Date(d), "d MMM", { locale: dateLocale }) }
       catch { return "N/A" }
     }
 
@@ -245,7 +253,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
       ? format(
           roundToNearestMinutes(new Date(activeOffer.last_updated), { nearestTo: 30 }),
           "d MMM, HH:mm",
-          { locale: es }
+          { locale: dateLocale }
         )
       : "N/A"
 
@@ -280,11 +288,11 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
   }
 
   // Justo antes del return, define los nodos del breadcrumb:
-  const modelHubHref = hubPath(lang, initialProduct.category_slug, initialProduct.brand_slug, initialProduct.slug);
+  const modelHubHref = hubPath(locale, initialProduct.category_slug, initialProduct.brand_slug, initialProduct.slug);
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${lang}` },
-    { label: initialProduct.category_slug, href: `/${lang}/${initialProduct.category_slug}` },
-    { label: initialProduct.brand_slug, href: `/${lang}/${initialProduct.category_slug}/${initialProduct.brand_slug}` },
+    { label: "Inicio", href: `/${locale}` },
+    { label: initialProduct.category_slug, href: `/${locale}/${initialProduct.category_slug}` },
+    { label: initialProduct.brand_slug, href: `/${locale}/${initialProduct.category_slug}/${initialProduct.brand_slug}` },
     { label: initialProduct.name, href: modelHubHref },
     { label: `${activeSpec.storage} GB` } // Configuración actual, sin href
   ];
@@ -329,10 +337,10 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
           <div className="flex flex-col gap-2 mt-12">
             <div className="flex items-start justify-between gap-3">
               <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">
-                {initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color)}
+                {initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color, language)}
                 {Number(activeSpec.min_price_cached) > 0 && (
                   <span className="block mt-1 text-xl font-semibold text-emerald-600">
-                    Desde {Number(activeSpec.min_price_cached)}€
+                    Desde {formatCurrency(activeSpec.min_price_cached, currency, language)}
                   </span>
                 )}
               </h1>
@@ -393,13 +401,13 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                         : "border-transparent hover:scale-110 hover:border-border"
                     )}
                     style={{ backgroundColor: getColorHex(c) }}
-                    title={t(c)}
+                    title={t(c, language)}
                     // Aria-label es vital para accesibilidad y SEO si el enlace no tiene texto visible
                     aria-label={`Ver modelo en color ${c}`}
                   />
                 ))}
               </div>
-              <p className="mt-2 text-xs font-medium text-muted-foreground">{t(activeSpec.color)}</p>
+              <p className="mt-2 text-xs font-medium text-muted-foreground">{t(activeSpec.color, language)}</p>
             </div>
 
             {/* ESTADO + BATERÍA */}
@@ -415,7 +423,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                       disabled={!activeSpec.offers.some((o: any) => o.condition === cond)}
                       className={cn("h-8 text-xs", selectedCondition === cond ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                     >
-                      {t(cond)}
+                      {t(cond, language)}
                     </Button>
                   ))}
                 </div>
@@ -428,14 +436,14 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                     onClick={() => handleBatteryChange(false)}
                     className={cn("h-8 text-xs", !selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                   >
-                    {t("standard")}
+                    {t("standard", language)}
                   </Button>
                   <Button
                     variant={selectedBattery ? "default" : "outline"}
                     onClick={() => handleBatteryChange(true)}
                     className={cn("h-8 text-xs", selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                   >
-                    {t("new")}
+                    {t("new", language)}
                   </Button>
                 </div>
               </div>
@@ -446,14 +454,14 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
               <div>
                 <p className="text-sm text-muted-foreground">Configuración seleccionada</p>
                 <p className="mt-1 font-semibold text-lg">
-                  {initialProduct.name} · {activeSpec.storage}GB · {t(activeSpec.color)} · {t(selectedCondition)} · {priceStats?.battery}
+                  {initialProduct.name} · {activeSpec.storage}GB · {t(activeSpec.color, language)} · {t(selectedCondition, language)} · {priceStats?.battery}
                 </p>
               </div>
               <div className="mt-3">
                 {activeOffer ? (
                   <div className="space-y-3">
                     <div className="flex items-baseline gap-3">
-                      <p className="text-3xl font-bold text-emerald-600">{activeOffer.current_price}€</p>
+                      <p className="text-3xl font-bold text-emerald-600">{formatCurrency(activeOffer.current_price, currency, language)}</p>
                       {priceStats?.date && (
                         <span className="text-xs text-muted-foreground" suppressHydrationWarning>
                             Registrado el {priceStats.date}
@@ -509,7 +517,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
                     <Calendar className="w-3 h-3" /> Último Registro
                   </span>
-                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{priceStats.current}€</span>
+                  <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{formatCurrency(priceStats.current, currency, language)}</span>
                   <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
                     {priceStats.date}
                   </span>
@@ -520,7 +528,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
                     <ArrowDown className="w-3 h-3 text-green-600" /> Mínimo (30d)
                   </span>
-                  <span className="text-2xl font-bold mt-1">{priceStats.min}€</span>
+                  <span className="text-2xl font-bold mt-1">{formatCurrency(priceStats.min, currency, language)}</span>
                   {/* En la tarjeta de Mínimo */}
                   <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
                     {priceStats.minDate !== "N/A" ? `Registrado el ${priceStats.minDate}` : ""}
@@ -532,7 +540,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
                     <Activity className="w-3 h-3 text-blue-600" /> Media (30d)
                   </span>
-                  <span className="text-2xl font-bold mt-1">{priceStats.avg}€</span>
+                  <span className="text-2xl font-bold mt-1">{formatCurrency(priceStats.avg, currency, language)}</span>
                   <span className="text-[10px] text-muted-foreground mt-1">Calculado sobre registros</span>
                 </div>
               </Card>
@@ -541,7 +549,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
                     <ArrowUp className="w-3 h-3 text-red-600" /> Máximo (30d)
                   </span>
-                  <span className="text-2xl font-bold mt-1">{priceStats.max}€</span>
+                  <span className="text-2xl font-bold mt-1">{formatCurrency(priceStats.max, currency, language)}</span>
                     {/* En la tarjeta de Máximo */}
                     <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
                     {priceStats.maxDate !== "N/A" ? `Registrado el ${priceStats.maxDate}` : ""}
@@ -599,7 +607,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
           <Card className="p-6 bg-card border shadow-sm h-[450px]">
             {chartData.length > 0 ? (
               // FIX 4: onRemoveSeries restored
-              <PriceHistoryChart series={chartData} onRemoveSeries={handleRemoveSeries} />
+              <PriceHistoryChart series={chartData} onRemoveSeries={handleRemoveSeries} locale={locale} />
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
                 <TrendingDown className="w-10 h-10 mb-2 opacity-20" />
@@ -619,8 +627,9 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                 offers={initialHotOffers}
                 onOfferClick={(o) => {
                   const batteryParam = o.battery_new ? "new" : "standard"
+                  const specSlug = getSpecSlug({ slug: o.spec_slug, slug_en: o.spec_slug_en }, locale)
                   router.push(
-                    `/${lang}/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${o.spec_slug}` +
+                    `/${locale}/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${specSlug}` +
                     `?condition=${o.condition}&battery=${batteryParam}`
                   )
                 }}
@@ -639,7 +648,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
             <Card className="p-6 md:p-8 bg-card border shadow-sm">
               <div className="prose prose-sm sm:prose-base dark:prose-invert text-muted-foreground max-w-none">
                 <p>
-                  Comprar un <strong>{initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color)}</strong> reacondicionado 
+                  Comprar un <strong>{initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color, language)}</strong> reacondicionado 
                   es una de las decisiones más inteligentes para ahorrar dinero y reducir la basura electrónica. 
                   Este modelo ha demostrado mantener un excelente valor en el mercado de segunda mano.
                 </p>
@@ -647,8 +656,8 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, la
                 {priceStats && priceStats.min > 0 && (
                   <p className="mt-4">
                     Según nuestro historial de precios, el <strong>precio más bajo registrado</strong> para esta configuración específica 
-                    ha sido de <strong>{priceStats.min}€</strong>. Analizamos diariamente múltiples tiendas como Back Market 
-                    para asegurarnos de que no pagues de más. Si su precio actual ronda la media de <strong>{priceStats.avg}€</strong>, 
+                    ha sido de <strong>{formatCurrency(priceStats.min, currency, language)}</strong>. Analizamos diariamente múltiples tiendas como Back Market 
+                    para asegurarnos de que no pagues de más. Si su precio actual ronda la media de <strong>{formatCurrency(priceStats.avg, currency, language)}</strong>, 
                     sigue siendo una excelente oportunidad frente al precio de un dispositivo nuevo.
                   </p>
                 )}

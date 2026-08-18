@@ -1,6 +1,6 @@
 "use client"
 
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useParams } from "next/navigation"
 import { useEffect, useState, Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,9 +11,12 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 // IMPORTAR LA FUNCIÓN
 import { unsubscribeAlert } from "@/services/api"
+import { parseLocale, getMarket } from "@/lib/i18n"
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
   const token = searchParams.get("token")
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
 
@@ -56,7 +59,7 @@ function UnsubscribeContent() {
         )}
         
         <div className="pt-4">
-            <Link href="/es">
+            <Link href={`/${locale}`}>
                 <Button variant="outline" className="gap-2">
                     <ArrowLeft className="h-4 w-4"/> Volver al inicio
                 </Button>
@@ -68,7 +71,9 @@ function UnsubscribeContent() {
 }
 
 export default function UnsubscribePage() {
-    const [country, setCountry] = useState("ES")
+    const params = useParams()
+    const market = getMarket(params?.locale as string | undefined)
+    const [country, setCountry] = useState<string>(market)
     
     return (
         <div className="min-h-screen flex flex-col">

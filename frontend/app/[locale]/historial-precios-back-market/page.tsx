@@ -1,19 +1,20 @@
-// app/[lang]/historial-precios-back-market/page.tsx
+// app/[locale]/historial-precios-back-market/page.tsx
 import type { Metadata } from "next";
 import { getProducts, getFeaturedHistory } from "@/services/api";
 import { PriceHistoryLanding } from "@/components/landing/price-history-landing";
 import { HeaderWrapper } from "@/components/header-wrapper";
 import { absoluteUrl, historyLandingPath } from "@/lib/urls";
+import { parseLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 interface Props {
-  params: Promise<{ lang: string }>;
+  params: Promise<{ locale: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params;
-  const canonical = absoluteUrl(historyLandingPath(lang));
+  const { locale } = await params;
+  const canonical = absoluteUrl(historyLandingPath(locale));
 
   const title = "Historial y rastreador de precios Back Market | RefurbTrack";
   const description =
@@ -28,9 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PriceHistoryLandingPage({ params }: Props) {
-  const { lang } = await params;
+  const { locale: rawLocale } = await params;
+  const locale = parseLocale(rawLocale);
 
-  const [products, featured] = await Promise.all([getProducts(), getFeaturedHistory()]);
+  const [products, featured] = await Promise.all([
+    getProducts(locale),
+    getFeaturedHistory(locale),
+  ]);
 
   const faqLd = {
     "@context": "https://schema.org",
@@ -92,12 +97,12 @@ export default async function PriceHistoryLandingPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Inicio", item: `${base}/${lang}` },
+      { "@type": "ListItem", position: 1, name: "Inicio", item: `${base}/${locale}` },
       {
         "@type": "ListItem",
         position: 2,
         name: "Historial de precios de Back Market",
-        item: absoluteUrl(historyLandingPath(lang)),
+        item: absoluteUrl(historyLandingPath(locale)),
       },
     ],
   };
@@ -107,7 +112,7 @@ export default async function PriceHistoryLandingPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <HeaderWrapper />
-      <PriceHistoryLanding lang={lang} products={products} featured={featured} />
+      <PriceHistoryLanding locale={locale} products={products} featured={featured} />
     </div>
   );
 }

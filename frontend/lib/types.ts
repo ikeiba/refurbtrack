@@ -19,6 +19,9 @@ export interface ProductSummary {
   available_colors?: string[];
   available_storages?: string[];
   spec_count?: number;
+  // Fase 4: mercado y moneda del resultado
+  market?: string;
+  currency?: string;
 }
 
 //? ESTO ES LO QUE RECIBIMOS PARA VER EL GRÁFICO DE HISTORIAL DE PRECIOS
@@ -36,6 +39,10 @@ export interface Spec {
   image: string | null; // <--- NUEVO
   min_price_cached: number | null;
   offers: Offer[];
+  slug?: string;
+  slug_en?: string;
+  market?: string;
+  currency?: string;
 }
 
 //? ESTO ES CADA OFERTA DENTRO DE UNA SPEC
@@ -52,6 +59,10 @@ export interface Offer {
   max_price_30d?: number;
   min_price_30d_date?: string;  // Fecha en string ISO
   max_price_30d_date?: string;
+
+  // Fase 4: mercado y moneda de la oferta
+  market?: string;
+  currency?: string;
 }
 
 //? ESTOS SON TODAS LAS SPECS DENTRO DE UN PRODUCTO
@@ -65,7 +76,8 @@ export interface AlertData {
   price_threshold: number;
   product_id: number;
   country: string;
-  
+  market_code?: string;
+
   // Coincide con tus JSONFields del backend
   target_colors: string[];     // [] = Cualquiera
   target_storages: string[];   // [] = Cualquiera
@@ -94,6 +106,9 @@ export interface OfferSummary {
   brand_slug: string;
   product_slug: string;
   spec_slug: string;
+  spec_slug_en?: string;
+  market?: string;
+  currency?: string;
 }
 
 //? ESTO ES LO QUE RECIBIMOS EN LA PÁGINA PRINCIPAL PARA VER EL CARRUSEL
@@ -137,6 +152,7 @@ export interface HubOffer {
 
 export interface HubSpec {
   slug: string
+  slug_en?: string
   storage: string
   color: string
   image: string | null

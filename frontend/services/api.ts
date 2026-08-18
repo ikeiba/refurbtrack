@@ -1,6 +1,8 @@
 // frontend_light/services/api.ts
 import { ProductSummary, AlertData, OfferSummary, ContactData, ModelHub, FeaturedHistory } from "@/lib/types";
 import { authService } from "./auth" // <--- 1. Importamos el servicio de auth
+import { getMarket, getLanguage } from "@/lib/i18n";
+import type { MarketCode } from "@/lib/i18n";
 
 // Asegúrate de que esta URL apunta a tu backend corriendo
 // CAMBIO: En producción usará /api, en desarrollo 127.0.0.1:8000
@@ -33,12 +35,31 @@ const getBaseUrl = () => {
 
 export const API_URL = getBaseUrl();
 
+// --- FASE 4: Resolución de mercado -------------------------------------------------
+// Convierte un locale ('es-es' | 'en-gb') en el código de mercado que espera el
+// backend ('ES' | 'UK') para el parámetro `?market=`.
+
+/** Añade `?market=` a una URL (respetando query params ya existentes). */
+function withMarket(url: string, market: MarketCode | string = "ES"): string {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}market=${encodeURIComponent(market)}`;
+}
+
+/** Deriva el código de mercado desde un locale (o usa el valor directamente). */
+function resolveMarketCode(localeOrMarket?: string | null): MarketCode {
+  if (!localeOrMarket) return "ES";
+  // Si ya es un código de mercado ('ES' | 'UK'), lo devolvemos tal cual.
+  if (localeOrMarket === "ES" || localeOrMarket === "UK") return localeOrMarket;
+  return getMarket(localeOrMarket);
+}
+
 // ... resto de tus funciones ...
 
-export const getProducts = async (): Promise<ProductSummary[]> => {
+export const getProducts = async (localeOrMarket?: string | null): Promise<ProductSummary[]> => {
   try {
+    const market = resolveMarketCode(localeOrMarket);
     // Llamamos al endpoint 'catalog' que creamos en Django
-    const res = await fetch(`${API_URL}/products/`, {
+    const res = await fetch(withMarket(`${API_URL}/products/`, market), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -63,8 +84,9 @@ export const getProducts = async (): Promise<ProductSummary[]> => {
 };
 
 // Para el Detalle (fetch pesado)
-export const getProductDetail = async (id: string) => {
-  const res = await fetch(`${API_URL}/products/${id}/`);
+export const getProductDetail = async (id: string, localeOrMarket?: string | null) => {
+  const market = resolveMarketCode(localeOrMarket);
+  const res = await fetch(withMarket(`${API_URL}/products/${id}/`, market));
   if (!res.ok) throw new Error('Error fetching product detail');
   return res.json();
 };
@@ -101,9 +123,10 @@ export const createAlert = async (data: AlertData) => {
   return res.json();
 };
 
-export const getHistoricalLowOffers = async (): Promise<OfferSummary[]> => {
+export const getHistoricalLowOffers = async (localeOrMarket?: string | null): Promise<OfferSummary[]> => {
   try {
-    const res = await fetch(`${API_URL}/offers/historical-lows/`, {
+    const market = resolveMarketCode(localeOrMarket);
+    const res = await fetch(withMarket(`${API_URL}/offers/historical-lows/`, market), {
       next: { revalidate: 600 } // <-- AÑADIDO PARA ALINEAR LA CACHÉ
     })
     if (!res.ok) throw new Error("Error fetching offers")
@@ -270,12 +293,16 @@ export async function unsubscribeSubscriber(token: string) {
 
 // frontend/services/api.ts
 
-export const getProductBySlugs = async (category: string, brand: string, product: string, spec: string) => {
+export const getProductBySlugs = async (category: string, brand: string, product: string, spec: string, locale?: string | null) => {
+  const market = resolveMarketCode(locale);
+  const lang = locale ? getLanguage(locale) : "es";
   const params = new URLSearchParams({
     cat: category,
     brand: brand,
     prod: product,
-    spec: spec
+    spec: spec,
+    market: market,
+    lang: lang
   });
 
   const urlToFetch = `${API_URL}/products/resolve/?${params.toString()}`;
@@ -299,8 +326,9 @@ export const getProductBySlugs = async (category: string, brand: string, product
   }
 };
 
-export const getModelHub = async (category: string, brand: string, product: string): Promise<ModelHub | null> => {
-  const params = new URLSearchParams({ cat: category, brand, prod: product });
+export const getModelHub = async (category: string, brand: string, product: string, locale?: string | null): Promise<ModelHub | null> => {
+  const market = resolveMarketCode(locale);
+  const params = new URLSearchParams({ cat: category, brand, prod: product, market });
   try {
     const res = await fetch(`${API_URL}/products/model-hub/?${params.toString()}`, {
       next: { revalidate: 600, tags: ['model-hub'] }
@@ -316,9 +344,10 @@ export const getModelHub = async (category: string, brand: string, product: stri
   }
 };
 
-export const getFeaturedHistory = async (): Promise<FeaturedHistory> => {
+export const getFeaturedHistory = async (localeOrMarket?: string | null): Promise<FeaturedHistory> => {
   try {
-    const res = await fetch(`${API_URL}/offers/featured/`, {
+    const market = resolveMarketCode(localeOrMarket);
+    const res = await fetch(withMarket(`${API_URL}/offers/featured/`, market), {
       next: { revalidate: 600, tags: ['featured-history'] }
     });
     if (!res.ok) throw new Error(`Error del servidor: ${res.status}`);

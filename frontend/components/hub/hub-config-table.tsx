@@ -6,13 +6,14 @@ import { Bell, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AlertModal } from "@/components/alert-modal"
 import { t } from "@/lib/translations"
-import { formatEur } from "@/lib/format"
+import { formatCurrency } from "@/lib/format"
 import { specPath } from "@/lib/urls"
 import type { ModelHub, HubSpec } from "@/lib/types"
+import { parseLocale, getCurrency, getLanguage, getSpecSlug } from "@/lib/i18n"
 
 interface HubConfigTableProps {
   hub: ModelHub
-  lang: string
+  locale: string
 }
 
 function cheapestOffer(spec: HubSpec) {
@@ -24,7 +25,10 @@ function cheapestOffer(spec: HubSpec) {
   )
 }
 
-export function HubConfigTable({ hub, lang }: HubConfigTableProps) {
+export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
+  const resolvedLocale = parseLocale(locale)
+  const language = getLanguage(resolvedLocale)
+  const currency = getCurrency(resolvedLocale)
   const [alertSpec, setAlertSpec] = useState<HubSpec | null>(null)
 
   const productForAlert = {
@@ -75,21 +79,21 @@ export function HubConfigTable({ hub, lang }: HubConfigTableProps) {
                   return (
                     <tr key={spec.slug} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium">
-                        {group.storage} GB · {t(spec.color)}
+                        {group.storage} GB · {t(spec.color, language)}
                       </td>
                       <td className="px-4 py-3 font-semibold text-emerald-700 dark:text-emerald-400">
-                        {spec.current_price !== null ? formatEur(spec.current_price) : "—"}
+                        {spec.current_price !== null ? formatCurrency(spec.current_price, currency, language) : "—"}
                       </td>
-                      <td className="px-4 py-3">{spec.min_price_30d !== null ? formatEur(spec.min_price_30d) : "—"}</td>
-                      <td className="px-4 py-3">{spec.avg_price_30d !== null ? formatEur(spec.avg_price_30d) : "—"}</td>
-                      <td className="px-4 py-3">{cheapest ? t(cheapest.condition) : "—"}</td>
+                      <td className="px-4 py-3">{spec.min_price_30d !== null ? formatCurrency(spec.min_price_30d, currency, language) : "—"}</td>
+                      <td className="px-4 py-3">{spec.avg_price_30d !== null ? formatCurrency(spec.avg_price_30d, currency, language) : "—"}</td>
+                      <td className="px-4 py-3">{cheapest ? t(cheapest.condition, language) : "—"}</td>
                       <td className="px-4 py-3">
                         <Button
                           variant="outline"
                           size="sm"
                           className="gap-1.5"
                           onClick={() => setAlertSpec(spec)}
-                          aria-label={`Crear alerta para ${hub.name} ${spec.storage} GB ${t(spec.color)}`}
+                          aria-label={`Crear alerta para ${hub.name} ${spec.storage} GB ${t(spec.color, language)}`}
                         >
                           <Bell className="h-4 w-4" />
                           Alerta
@@ -112,7 +116,7 @@ export function HubConfigTable({ hub, lang }: HubConfigTableProps) {
                       </td>
                       <td className="px-4 py-3">
                         <Link
-                          href={specPath(lang, hub.category_slug, hub.brand_slug, hub.slug, spec.slug)}
+                          href={specPath(resolvedLocale, hub.category_slug, hub.brand_slug, hub.slug, getSpecSlug(spec, resolvedLocale))}
                           className="text-emerald-600 hover:underline font-medium"
                         >
                           Ver historial

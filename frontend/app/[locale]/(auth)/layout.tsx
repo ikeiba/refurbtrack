@@ -1,6 +1,7 @@
-// app/[lang]/(auth)/layout.tsx
+// app/[locale]/(auth)/layout.tsx
 
 import { Header } from "@/components/header"
+import { getMarket } from "@/lib/i18n"
 
 // 1. Añadimos async a la función
 export default async function AuthLayout({
@@ -9,13 +10,13 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode
   // 2. Tipamos params como una Promesa
-  params: Promise<{ lang: string }> 
+  params: Promise<{ locale: string }> 
 }) {
   // 3. Resolvemos la promesa antes de leer sus propiedades
   const resolvedParams = await params
   
-  // 4. Ahora sí podemos extraer el idioma y ponerlo en mayúsculas
-  const currentCountry = resolvedParams.lang.toUpperCase() 
+  // 4. Derivamos el código de mercado ('ES' | 'UK') desde el locale
+  const currentCountry = getMarket(resolvedParams.locale)
 
   return (
     <div className="min-h-screen bg-background">

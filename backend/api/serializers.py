@@ -184,7 +184,11 @@ class ProductListSerializer(serializers.ModelSerializer):
             None
         )
         spec = match or (specs[0] if specs else None)
-        return spec.slug if spec else None
+        if spec is None:
+            return None
+        if market is not None and market.language == 'en' and spec.slug_en:
+            return spec.slug_en
+        return spec.slug
 
     def get_available_colors(self, obj):
         return sorted({s.color for s in obj.specs.all() if s.color})
@@ -281,6 +285,9 @@ class AlertSerializer(serializers.ModelSerializer):
         return m.currency if m else 'EUR'
     
     def get_target_path(self, obj):
+        market = self._market(obj)
+        lang = market.language if market else 'es'
+
         is_specific = (
             len(obj.target_storages or []) == 1 and 
             len(obj.target_colors or []) == 1
@@ -299,7 +306,8 @@ class AlertSerializer(serializers.ModelSerializer):
             spec = min(specs, key=lambda s: s.min_price_cached or float('inf')) if specs else None
 
         if spec:
-            path = f"/{obj.product.category.slug}/{obj.product.brand.slug}/{obj.product.slug}/{spec.slug}"
+            spec_slug = spec.slug_en if (lang == 'en' and spec.slug_en) else spec.slug
+            path = f"/{obj.product.category.slug}/{obj.product.brand.slug}/{obj.product.slug}/{spec_slug}"
             params = []
             if len(obj.target_conditions or []) == 1:
                 params.append(f"condition={obj.target_conditions[0]}")
@@ -473,6 +481,7 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
     brand_slug = serializers.CharField(source='spec.product.brand.slug', read_only=True)
     product_slug = serializers.CharField(source='spec.product.slug', read_only=True)
     spec_slug = serializers.CharField(source='spec.slug', read_only=True)
+    spec_slug_en = serializers.CharField(source='spec.slug_en', read_only=True)
 
     market = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
@@ -483,7 +492,7 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
             'id', 'product_id', 'name', 'storage', 'color', 'url',
             'condition', 'battery_new', 'current_price', 'old_price', 'image',
             # Añadimos los campos a la lista:
-            'category_slug', 'brand_slug', 'product_slug', 'spec_slug',
+            'category_slug', 'brand_slug', 'product_slug', 'spec_slug', 'spec_slug_en',
             'market', 'currency'
         ]
 

@@ -1,4 +1,4 @@
-// app/[lang]/[category]/[brand]/[product]/[spec]/page.tsx
+// app/[locale]/[category]/[brand]/[product]/[spec]/page.tsx
 
 import { getProductBySlugs, getHistoricalLowOffers } from "@/services/api";
 import { notFound } from "next/navigation";
@@ -6,7 +6,8 @@ import { Metadata } from "next";
 import { API_URL } from "@/services/api"
 import { absoluteUrl, hubPath, specPath, brandPath, categoryPath } from "@/lib/urls";
 import { t } from "@/lib/translations";
-import { formatPrice } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
+import { parseLocale, getCurrency, getLanguage, locales, getMarket } from "@/lib/i18n";
 
 // --- IMPORTANTE: Aquí extraemos los componentes interactivos a "Islas" ---
 import ProductViewClient from "@/components/product/ProductViewClient"; 
@@ -19,38 +20,39 @@ export const dynamic = 'force-dynamic'
 // permítele pasar y genérala bajo demanda (true). Si fuera false, daría un error 404.
 export const dynamicParams = true;
 
-// 3. GENERACIÓN DEL TIER 1 EN EL BUILD
+// 3. GENERACIÓN DEL TIER 1 EN EL BUILD (por cada locale/mercado)
 export async function generateStaticParams() {
-  try {
-    // Usamos la URL interna de tu API. 
-    // OJO: Al ejecutarse en el servidor (Docker), asegúrate de que esta variable 
-    // apunta al contenedor de Django (ej: http://backend:8000/api) y no a localhost.
-    const res = await fetch(`${API_URL}/products/top-specs/`);
-    
-    if (!res.ok) {
-      console.warn("No se pudo cargar el Tier 1, saltando pre-renderizado...");
-      return [];
+  const entries: { locale: string; category: string; brand: string; product: string; spec: string }[] = [];
+
+  for (const locale of locales) {
+    try {
+      const market = getMarket(locale);
+      const res = await fetch(`${API_URL}/products/top-specs/?market=${market}`);
+      
+      if (!res.ok) continue;
+      
+      const topSpecs = await res.json();
+      
+      topSpecs.forEach((item: any) => {
+        entries.push({
+          locale,
+          category: item.product__category__slug,
+          brand: item.product__brand__slug,
+          product: item.product__slug,
+          spec: item.slug
+        });
+      });
+    } catch (error) {
+      console.error(`Error en generateStaticParams (${locale}):`, error);
     }
-    
-    const topSpecs = await res.json();
-    
-    // Mapeamos las claves de Django a los [parámetros] exactos de tu carpeta en Next.js
-    return topSpecs.map((item: any) => ({
-      lang: 'es', // Dejamos 'es' fijo hasta que implementemos el multi-idioma real
-      category: item.product__category__slug,
-      brand: item.product__brand__slug,
-      product: item.product__slug,
-      spec: item.slug
-    }));
-  } catch (error) {
-    console.error("Error en generateStaticParams:", error);
-    return []; // Si hay un error, el build no explota, simplemente todo el catálogo será Tier 2
   }
+
+  return entries;
 }
 
 interface Props {
   params: Promise<{
-    lang: string;
+    locale: string;
     category: string;
     brand: string;
     product: string;
@@ -85,29 +87,33 @@ function getMin30(spec: any): number {
 
 // 1. GENERACIÓN DE METADATA DINÁMICA (SEO ELITE)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang, category, brand, product: productSlug, spec: specSlug } = await params;
-  const data = await getProductBySlugs(category, brand, productSlug, specSlug);
+  const { locale: rawLocale, category, brand, product: productSlug, spec: specSlug } = await params;
+  const locale = parseLocale(rawLocale);
+  const currency = getCurrency(locale);
+  const language = getLanguage(locale);
+
+  const data = await getProductBySlugs(category, brand, productSlug, specSlug, locale);
 
   if (!data) return { title: "Producto no encontrado" };
 
   // Diferenciamos cada variante con su capacidad, color y precio (patrón comparador)
   const spec = getActiveSpec(data);
-  const variant = [spec?.storage ? `${spec.storage}GB` : "", spec?.color ? t(spec.color) : ""]
+  const variant = [spec?.storage ? `${spec.storage}GB` : "", spec?.color ? t(spec.color, language) : ""]
     .filter(Boolean)
     .join(" ");
-  const price = formatPrice(getLowPrice(spec));
-  const min30 = formatPrice(getMin30(spec));
+  const price = formatCurrency(getLowPrice(spec), currency, language);
+  const min30 = formatCurrency(getMin30(spec), currency, language);
 
-  const pricePart = price ? `${price}€ ahora` : "";
-  const minPart = min30 ? ` (mín ${min30}€)` : "";
+  const pricePart = price !== "—" ? `${price} ahora` : "";
+  const minPart = min30 !== "—" ? ` (mín ${min30})` : "";
   const priceSuffix = pricePart ? ` — ${pricePart}${minPart}` : "";
 
   // Construimos la URL canónica que nos dio el Backend
-  const canonicalUrl = absoluteUrl(specPath(lang, data.category_slug, data.brand_slug, data.slug, specSlug));
+  const canonicalUrl = absoluteUrl(specPath(locale, data.category_slug, data.brand_slug, data.slug, specSlug));
 
   return {
     title: `${data.name}${variant ? ` ${variant}` : ""} Reacondicionado${priceSuffix} | RefurbTrack`,
-    description: `Historial de precios del ${data.name}${variant ? ` ${variant}` : ""} reacondicionado en Back Market${price ? ` — ${price}€ ahora` : ""}${min30 ? `, mínimo 30 días ${min30}€` : ""}. Compara condiciones y ahorra con garantía.`,
+    description: `Historial de precios del ${data.name}${variant ? ` ${variant}` : ""} reacondicionado en Back Market${price !== "—" ? ` — ${price} ahora` : ""}${min30 !== "—" ? `, mínimo 30 días ${min30}` : ""}. Compara condiciones y ahorra con garantía.`,
     alternates: { canonical: canonicalUrl },
     openGraph: {
       images: [data.image],
@@ -117,11 +123,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 // 2. EL COMPONENTE DE SERVIDOR
 export default async function Page({ params }: Props) {
-  const { lang, category, brand, product: productSlug, spec: specSlug } = await params;
+  const { locale: rawLocale, category, brand, product: productSlug, spec: specSlug } = await params;
+  const locale = parseLocale(rawLocale);
+  const currency = getCurrency(locale);
+  const language = getLanguage(locale);
   
   const [productData, hotOffers] = await Promise.all([
-    getProductBySlugs(category, brand, productSlug, specSlug),
-    getHistoricalLowOffers()
+    getProductBySlugs(category, brand, productSlug, specSlug, locale),
+    getHistoricalLowOffers(locale)
   ]);
 
   if (!productData) {
@@ -129,8 +138,6 @@ export default async function Page({ params }: Props) {
   }
 
   // 1. ENCONTRAR LA SPEC ACTIVA
-  // Gracias a tu vista en Django, sabemos exactamente qué spec de la lista es la de esta URL
-// 1. ENCONTRAR LA SPEC ACTIVA
 const specDetails = productData.specs?.find(
   (s: any) => s.id === productData.current_spec_id
 );
@@ -152,7 +159,7 @@ const validPrices = validOffers.map((o: any) => parseFloat(o.current_price));
 // 3. CONSTRUCCIÓN DEL JSON-LD REFORZADO
 // URL canónica de esta variante (la misma que en generateMetadata)
 const canonicalUrl = absoluteUrl(
-  specPath(lang, productData.category_slug, productData.brand_slug, productData.slug, specSlug)
+  specPath(locale, productData.category_slug, productData.brand_slug, productData.slug, specSlug)
 );
 
 // Las imágenes llegan como rutas relativas ("products/xxx.avif") desde el backend.
@@ -173,6 +180,9 @@ const brandName =
     ? productData.brand_slug.charAt(0).toUpperCase() + productData.brand_slug.slice(1)
     : "Back Market");
 
+// Moneda dinámica por mercado (Fase 4): EUR en es-es, GBP en en-gb.
+const priceCurrency = currency;
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Product",
@@ -185,14 +195,13 @@ const jsonLd = {
     "@type": "Brand",
     "name": brandName,
   },
-  // Solo emitimos el bloque de ofertas si hay stock real. Evita declarar
-  // "1 oferta a 0,00 €" cuando no hay nada a la venta.
+  // Solo emitimos el bloque de ofertas si hay stock real.
   ...(offerCount > 0
     ? {
         offers: [
           {
             "@type": "AggregateOffer",
-            "priceCurrency": "EUR",
+            "priceCurrency": priceCurrency,
             "lowPrice": Math.min(...validPrices).toFixed(2),
             "highPrice": Math.max(...validPrices).toFixed(2),
             "offerCount": offerCount,
@@ -202,7 +211,7 @@ const jsonLd = {
           ...validOffers.map((o: any) => ({
             "@type": "Offer",
             "price": parseFloat(o.current_price).toFixed(2),
-            "priceCurrency": "EUR",
+            "priceCurrency": priceCurrency,
             "availability": "https://schema.org/InStock",
             "itemCondition": "https://schema.org/RefurbishedCondition",
             "url": toAbsoluteUrl(o.url),
@@ -225,25 +234,25 @@ const breadcrumbLd = {
       "@type": "ListItem",
       "position": 1,
       "name": "Inicio",
-      "item": `${baseUrl}/${lang}`
+      "item": `${baseUrl}/${locale}`
     },
     {
       "@type": "ListItem",
       "position": 2,
       "name": category.charAt(0).toUpperCase() + category.slice(1),
-      "item": absoluteUrl(categoryPath(lang, category))
+      "item": absoluteUrl(categoryPath(locale, category))
     },
     {
       "@type": "ListItem",
       "position": 3,
       "name": productData.brand_slug,
-      "item": absoluteUrl(brandPath(lang, category, brand))
+      "item": absoluteUrl(brandPath(locale, category, brand))
     },
     {
       "@type": "ListItem",
       "position": 4,
       "name": productData.name,
-      "item": absoluteUrl(hubPath(lang, category, brand, productSlug))
+      "item": absoluteUrl(hubPath(locale, category, brand, productSlug))
     }
   ]
 };
@@ -265,7 +274,7 @@ const breadcrumbLd = {
       <ProductViewClient 
         initialProduct={productData} 
         initialHotOffers={hotOffers}
-        lang={lang}
+        locale={locale}
       />
     </main>
   );

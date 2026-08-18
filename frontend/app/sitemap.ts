@@ -1,6 +1,7 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next'
 import { API_URL } from "@/services/api"
+import { locales, getMarket } from "@/lib/i18n"
 
 // Añadimos ISR al sitemap: Que se regenere cada 1 hora (3600) o cada 24h (86400)
 // export const revalidate = 3600;
@@ -27,103 +28,100 @@ const blogSlugs = [
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // --- ZONA 1: RUTAS ESTÁTICAS Y DE EMPRESA ---
-  const mainRoutes: MetadataRoute.Sitemap = [
-    { url: `${baseUrl}/es`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-    { url: `${baseUrl}/es/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-    { url: `${baseUrl}/es/historial-precios-back-market`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 }
-  ]
+  const entries: MetadataRoute.Sitemap = []
 
-  // --- ZONA 2: RUTAS DEL BLOG (SEO Content) ---
-  const blogRoutes: MetadataRoute.Sitemap = blogSlugs.map(slug => ({
-    url: `${baseUrl}/es/blog/${slug}`,
-    lastModified: new Date(), 
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }))
+  // Recorremos cada locale (mercado) y emitimos sus URLs.
+  for (const locale of locales) {
+    const market = getMarket(locale)
 
-  // --- ZONA 3: RUTAS LEGALES ---
-  const legalRoutes: MetadataRoute.Sitemap = [
-    { url: `${baseUrl}/es/cookies`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-    { url: `${baseUrl}/es/how-it-works`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
-    { url: `${baseUrl}/es/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
-    { url: `${baseUrl}/es/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-    { url: `${baseUrl}/es/privacy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-    { url: `${baseUrl}/es/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-  ]
+    // --- ZONA 1: RUTAS ESTÁTICAS Y DE EMPRESA ---
+    entries.push(
+      { url: `${baseUrl}/${locale}`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
+      { url: `${baseUrl}/${locale}/historial-precios-back-market`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 }
+    )
 
-  // --- ZONA 4: RUTAS DINÁMICAS (Categorías, Marcas, Hubs y Productos) ---
-  let categoryEntries: MetadataRoute.Sitemap = []
-  let brandEntries: MetadataRoute.Sitemap = []
-  let hubEntries: MetadataRoute.Sitemap = []
-  let productEntries: MetadataRoute.Sitemap = []
-  
-
-  try {
-    const response = await fetch(`${API_URL}/products/sitemap-data/`, {
-      next: { revalidate: 3600 } 
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      
-      if (Array.isArray(data)) {
-        // Utilizamos Sets para garantizar que no haya URLs duplicadas
-        const uniqueCategories = new Set<string>()
-        const uniqueBrands = new Set<string>() // Guardaremos el formato "categoria/marca"
-        const uniqueHubs = new Set<string>()   // Guardaremos "categoria/marca/producto"
-
-        // 1. Extraemos URLs de productos y alimentamos los Sets de categorías/marcas/hubs
-        productEntries = data.map((item: SitemapItem) => {
-          uniqueCategories.add(item.product__category__slug)
-          uniqueBrands.add(`${item.product__category__slug}/${item.product__brand__slug}`)
-          uniqueHubs.add(`${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}`)
-
-          return {
-            url: `${baseUrl}/es/${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}/${item.slug}`,
-            lastModified: new Date(item.last_updated),
-            changeFrequency: 'daily',
-            priority: 0.8, 
-          }
-        })
-
-        // 2. Generamos las entradas para las Landing Pages de Categoría
-        categoryEntries = Array.from(uniqueCategories).map(category => ({
-          url: `${baseUrl}/es/${category}`,
-          lastModified: new Date(), // Idealmente, podrías calcular la fecha más reciente de los productos de esta categoría
-          changeFrequency: 'daily',
-          priority: 0.9, // Muy alta prioridad, es una página pilar
-        }))
-
-        // 3. Generamos las entradas para las Landing Pages de Marca
-        brandEntries = Array.from(uniqueBrands).map(catBrand => ({
-          url: `${baseUrl}/es/${catBrand}`,
+    // --- ZONA 2: RUTAS DEL BLOG (solo es-es: el contenido está en español) ---
+    if (locale === 'es-es') {
+      entries.push(
+        { url: `${baseUrl}/${locale}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
+        ...blogSlugs.map(slug => ({
+          url: `${baseUrl}/${locale}/blog/${slug}`,
           lastModified: new Date(),
-          changeFrequency: 'daily',
-          priority: 0.85, // Alta prioridad, justo debajo de la categoría padre
+          changeFrequency: 'weekly' as const,
+          priority: 0.7,
         }))
-
-        // 4. Generamos las entradas para los Hubs de modelo (índice por modelo)
-        hubEntries = Array.from(uniqueHubs).map(catBrandProduct => ({
-          url: `${baseUrl}/es/${catBrandProduct}`,
-          lastModified: new Date(),
-          changeFrequency: 'daily',
-          priority: 0.85,
-        }))
-      }
+      )
     }
-  } catch (error) {
-    console.error("❌ Error generando sitemap dinámico:", error)
+
+    // --- ZONA 3: RUTAS LEGALES ---
+    entries.push(
+      { url: `${baseUrl}/${locale}/cookies`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+      { url: `${baseUrl}/${locale}/how-it-works`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
+      { url: `${baseUrl}/${locale}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
+      { url: `${baseUrl}/${locale}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+      { url: `${baseUrl}/${locale}/privacy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+      { url: `${baseUrl}/${locale}/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
+    )
+
+    // --- ZONA 4: RUTAS DINÁMICAS (Categorías, Marcas, Hubs y Productos) ---
+    const uniqueCategories = new Set<string>()
+    const uniqueBrands = new Set<string>()
+    const uniqueHubs = new Set<string>()
+
+    try {
+      const response = await fetch(`${API_URL}/products/sitemap-data/?market=${market}`, {
+        next: { revalidate: 3600 }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+
+        if (Array.isArray(data)) {
+          for (const item of data as SitemapItem[]) {
+            uniqueCategories.add(item.product__category__slug)
+            uniqueBrands.add(`${item.product__category__slug}/${item.product__brand__slug}`)
+            uniqueHubs.add(`${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}`)
+
+            entries.push({
+              url: `${baseUrl}/${locale}/${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}/${item.slug}`,
+              lastModified: new Date(item.last_updated),
+              changeFrequency: 'daily',
+              priority: 0.8,
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error generando sitemap dinámico (${locale}):`, error)
+    }
+
+    for (const category of uniqueCategories) {
+      entries.push({
+        url: `${baseUrl}/${locale}/${category}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.9,
+      })
+    }
+
+    for (const catBrand of uniqueBrands) {
+      entries.push({
+        url: `${baseUrl}/${locale}/${catBrand}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.85,
+      })
+    }
+
+    for (const catBrandProduct of uniqueHubs) {
+      entries.push({
+        url: `${baseUrl}/${locale}/${catBrandProduct}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.85,
+      })
+    }
   }
 
-  // Devolvemos el array final combinando todas las zonas generadas
-  return [
-    ...mainRoutes, 
-    ...categoryEntries, 
-    ...brandEntries, 
-    ...hubEntries,
-    ...blogRoutes, 
-    ...legalRoutes, 
-    ...productEntries
-  ]
+  return entries
 }

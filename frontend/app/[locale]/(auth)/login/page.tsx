@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, LogIn } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import { API_URL } from "@/services/api"
+import { parseLocale } from "@/lib/i18n"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,6 +21,8 @@ export default function LoginPage() {
   
   const { login } = useAuth()
   const router = useRouter()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,7 +31,7 @@ export default function LoginPage() {
 
     try {
       await login({ email, password })
-      router.push("/es") // Redirigir a la home tras login
+      router.push(`/${locale}`) // Redirigir a la home tras login
     } catch (err: any) {
       setError(err.message || "Error al iniciar sesión")
     } finally {
@@ -61,7 +64,7 @@ export default function LoginPage() {
       localStorage.setItem('userEmail', data.user.email);
       
       // Forzamos la recarga para que el AuthContext lea los datos
-      window.location.href = "/es";
+      window.location.href = `/${locale}`;
     } catch (err: any) {
       setError(err.message || "Error al conectar con Google")
     } finally {
@@ -104,7 +107,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Contraseña</Label>
-                <Link href="/es/forgot-password" className="text-sm text-emerald-600 hover:underline">
+                <Link href={`/${locale}/forgot-password`} className="text-sm text-emerald-600 hover:underline">
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
@@ -155,7 +158,7 @@ export default function LoginPage() {
 
             <div className="text-center text-sm">
               ¿No tienes cuenta?{" "}
-              <Link href="/es/register" className="font-medium text-emerald-600 hover:underline">
+              <Link href={`/${locale}/register`} className="font-medium text-emerald-600 hover:underline">
                 Regístrate gratis
               </Link>
             </div>

@@ -1,7 +1,14 @@
+"use client"
+
 import Link from "next/link"
 import { Twitter, Instagram } from "lucide-react"
+import { useParams } from "next/navigation"
+import { parseLocale } from "@/lib/i18n"
 
 export function Footer() {
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+
   return (
     <footer className="bg-background border-t border-border pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,7 +42,7 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Productos</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/es/smartphone/apple" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/smartphone/apple`} className="hover:text-emerald-600 transition-colors">
                   iPhones
                 </Link>
               </li>
@@ -61,22 +68,22 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Compañía</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/es/about" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/about`} className="hover:text-emerald-600 transition-colors">
                   Sobre Nosotros
                 </Link>
               </li>
               <li>
-                <Link href="/es/how-it-works" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/how-it-works`} className="hover:text-emerald-600 transition-colors">
                   Cómo funciona
                 </Link>
               </li>
               <li>
-                <Link href="/es/blog" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/blog`} className="hover:text-emerald-600 transition-colors">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link href="/es/contact" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/contact`} className="hover:text-emerald-600 transition-colors">
                   Contacto
                 </Link>
               </li>
@@ -88,17 +95,17 @@ export function Footer() {
             <h4 className="font-bold text-foreground mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/es/privacy" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/privacy`} className="hover:text-emerald-600 transition-colors">
                   Privacidad
                 </Link>
               </li>
               <li>
-                <Link href="/es/terms" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/terms`} className="hover:text-emerald-600 transition-colors">
                   Términos
                 </Link>
               </li>
               <li>
-                <Link href="/es/cookies" className="hover:text-emerald-600 transition-colors">
+                <Link href={`/${locale}/cookies`} className="hover:text-emerald-600 transition-colors">
                   Cookies
                 </Link>
               </li>
@@ -116,7 +123,7 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               Podemos ganar una comisión cuando entras en los enlaces para hacer una compra.
               Haz clic {" "}
-              <a href="/es/how-it-works" className="text-emerald-600 hover:underline">
+              <a href={`/${locale}/how-it-works`} className="text-emerald-600 hover:underline">
               aquí 
               </a>
               {" "} para saber con mas detalle cómo ganamos dinero. 

@@ -1,4 +1,6 @@
-export default function CookiesPage() {
+export default async function CookiesPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+
   return (
     <div className="space-y-6 text-sm md:text-base leading-relaxed">
       <h1 className="text-3xl font-bold mb-6">Política de Cookies</h1>
@@ -173,8 +175,8 @@ export default function CookiesPage() {
         Si tienes preguntas sobre nuestra política de cookies, puedes contactarnos en:
       </p>
       <ul className="list-none space-y-2 my-4">
-        <li><strong>Formulario de contacto:</strong> <a href="/es/contact" className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
-        <li><strong>Consulta también:</strong> <a href="/es/privacy" className="text-emerald-600 hover:underline">Política de Privacidad</a></li>
+        <li><strong>Formulario de contacto:</strong> <a href={`/${locale}/contact`} className="text-emerald-600 hover:underline">contáctanos aquí</a></li>
+        <li><strong>Consulta también:</strong> <a href={`/${locale}/privacy`} className="text-emerald-600 hover:underline">Política de Privacidad</a></li>
       </ul>
 
       <h3 className="text-xl font-bold mt-8">Recursos externos útiles</h3>

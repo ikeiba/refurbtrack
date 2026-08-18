@@ -1,7 +1,8 @@
-// app/[lang]/page.tsx
+// app/[locale]/page.tsx
 import { getProducts, getHistoricalLowOffers } from "@/services/api"
 import HomePageClient from "@/components/home-page-client"
 import { Metadata } from "next"
+import { parseLocale } from "@/lib/i18n"
 
 // Añade esta línea mágica para activar el ISR
 // export const revalidate = 600;
@@ -11,14 +12,18 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Promise<{ lang: string }> 
+  params: Promise<{ locale: string }> 
 }): Promise<Metadata> {
-  const lang = (await params).lang;
+  const { locale } = await params;
   
   return {
-    // Esto asegura que la Home oficial SIEMPRE es /es (sin parámetros)
+    // La Home oficial SIEMPRE apunta al locale correcto
     alternates: {
-      canonical: `/${lang}` 
+      canonical: `/${locale}`,
+      languages: {
+        "es-es": "/es-es",
+        "en-gb": "/en-gb",
+      },
     }
   }
 }
@@ -27,25 +32,21 @@ export async function generateMetadata({
 export default async function HomePage({ 
   params 
 }: { 
-  params: Promise<{ lang: string }> 
+  params: Promise<{ locale: string }> 
 }) {
-  // 2. Resolvemos el idioma (obligatorio en Next.js 16 para rutas dinámicas)
+  // 2. Resolvemos el locale (obligatorio en Next.js 16 para rutas dinámicas)
   const resolvedParams = await params;
-  const lang = resolvedParams.lang;
+  const locale = parseLocale(resolvedParams.locale);
 
-  // 3. Tu lógica de fetch en paralelo (¡Perfecta!)
+  // 3. Fetch en paralelo filtrando por mercado (Fase 4)
   const [products, hotOffers] = await Promise.all([
-    getProducts(),
-    getHistoricalLowOffers()
+    getProducts(locale),
+    getHistoricalLowOffers(locale)
   ])
 
   return (
     <main>
-      {/* Pasamos los datos ya resueltos al componente interactivo.
-        Si en el futuro HomePageClient necesita traducir algo, 
-        solo tendrás que pasarle el lang como prop (lang={lang}).
-      */}
-      <HomePageClient initialProducts={products} initialHotOffers={hotOffers} />
+      <HomePageClient initialProducts={products} initialHotOffers={hotOffers} locale={locale} />
     </main>
   )
 }

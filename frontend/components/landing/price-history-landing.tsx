@@ -3,14 +3,15 @@ import Link from "next/link"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { Faq, type FaqItem } from "@/components/faq"
 import { FeaturedPriceChart } from "@/components/landing/featured-price-chart"
-import { formatEur, formatDateEs, formatSignedPercent } from "@/lib/format"
+import { formatCurrency, formatDate, formatSignedPercent } from "@/lib/format"
 import { hubPath, categoryPath } from "@/lib/urls"
 import { getColorHex } from "@/lib/utils"
 import { t } from "@/lib/translations"
 import type { ProductSummary, FeaturedHistory } from "@/lib/types"
+import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n"
 
 interface PriceHistoryLandingProps {
-  lang: string
+  locale: string
   products: ProductSummary[]
   featured: FeaturedHistory
 }
@@ -48,9 +49,13 @@ const LANDING_FAQ: FaqItem[] = [
   },
 ]
 
-export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLandingProps) {
+export function PriceHistoryLanding({ locale, products, featured }: PriceHistoryLandingProps) {
+  const resolvedLocale = parseLocale(locale)
+  const language = getLanguage(resolvedLocale)
+  const currency = getCurrency(resolvedLocale)
+
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${lang}` },
+    { label: "Inicio", href: `/${resolvedLocale}` },
     { label: "Historial de precios de Back Market" },
   ]
 
@@ -58,7 +63,7 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
   const models = products.filter((p) => p.category_slug && p.brand_slug && p.slug)
 
   const firstHub = models.length > 0
-    ? hubPath(lang, models[0].category_slug!, models[0].brand_slug!, models[0].slug)
+    ? hubPath(resolvedLocale, models[0].category_slug!, models[0].brand_slug!, models[0].slug)
     : null
 
   return (
@@ -94,7 +99,7 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {models.map((product) => {
-              const href = hubPath(lang, product.category_slug!, product.brand_slug!, product.slug)
+              const href = hubPath(resolvedLocale, product.category_slug!, product.brand_slug!, product.slug)
               const colors = product.available_colors ?? []
               const storages = product.available_storages ?? []
               return (
@@ -118,7 +123,7 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
                       </Link>
                       <div className="mt-1 flex items-baseline gap-2">
                         <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                          {product.min_price_cached ? `Desde ${formatEur(product.min_price_cached)}` : "Precio pendiente de registro"}
+                          {product.min_price_cached ? `Desde ${formatCurrency(product.min_price_cached, currency, language)}` : "Precio pendiente de registro"}
                         </span>
                       </div>
                       {typeof product.spec_count === "number" && (
@@ -136,7 +141,7 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
                           key={color}
                           className="h-4 w-4 rounded-full border border-border"
                           style={{ backgroundColor: getColorHex(color) }}
-                          title={t(color)}
+                          title={t(color, language)}
                         />
                       ))}
                       <span className="text-xs text-muted-foreground ml-1">
@@ -191,11 +196,11 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
           {stats ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <StatCard label="Precio actual" value={formatEur(stats.current)} />
-                <StatCard label="Mínimo 30 días" value={formatEur(stats.min30d)} />
-                <StatCard label="Media 30 días" value={formatEur(stats.avg30d)} />
-                <StatCard label="Máximo 30 días" value={formatEur(stats.max30d)} />
-                <StatCard label="Último registro" value={formatDateEs(stats.last_updated) || "—"} />
+                <StatCard label="Precio actual" value={formatCurrency(stats.current, currency, language)} />
+                <StatCard label="Mínimo 30 días" value={formatCurrency(stats.min30d, currency, language)} />
+                <StatCard label="Media 30 días" value={formatCurrency(stats.avg30d, currency, language)} />
+                <StatCard label="Máximo 30 días" value={formatCurrency(stats.max30d, currency, language)} />
+                <StatCard label="Último registro" value={formatDate(stats.last_updated, language) || "—"} />
               </div>
 
               <FeaturedPriceChart history={featured.history} name={stats.product_name} />
@@ -204,7 +209,7 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
                 <p className="mt-4 text-muted-foreground">
                   El precio actual del {stats.product_name} ({stats.storage} GB · {stats.color}) está un{" "}
                   <strong>{formatSignedPercent(stats.percentage_vs_average)}</strong> respecto a la media de los
-                  últimos 30 días ({formatEur(stats.avg30d)}).
+                  últimos 30 días ({formatCurrency(stats.avg30d, currency, language)}).
                 </p>
               )}
             </>
@@ -244,12 +249,12 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
           </p>
           <div className="divide-y divide-border rounded-lg border border-border bg-card">
             {models.map((product) => {
-              const href = hubPath(lang, product.category_slug!, product.brand_slug!, product.slug)
+              const href = hubPath(resolvedLocale, product.category_slug!, product.brand_slug!, product.slug)
               const colors = product.available_colors ?? []
               const details = [
                 `${product.spec_count ?? 0} configuraciones`,
                 `${colors.length} colores`,
-                product.min_price_cached ? `desde ${formatEur(product.min_price_cached)}` : null,
+                product.min_price_cached ? `desde ${formatCurrency(product.min_price_cached, currency, language)}` : null,
               ].filter(Boolean).join(" · ")
 
               return (
@@ -280,13 +285,13 @@ export function PriceHistoryLanding({ lang, products, featured }: PriceHistoryLa
         <section className="mt-16 border-t border-border pt-8">
           <h2 className="text-xl font-bold tracking-tight mb-4">Explora RefurbTrack</h2>
           <div className="flex flex-wrap gap-3 text-sm">
-            <Link href={categoryPath(lang, "smartphone")} className="text-muted-foreground hover:text-emerald-600 transition-colors">
+            <Link href={categoryPath(resolvedLocale, "smartphone")} className="text-muted-foreground hover:text-emerald-600 transition-colors">
               Smartphones reacondicionados
             </Link>
             {models.slice(0, 6).map((p) => (
               <Link
                 key={p.id}
-                href={hubPath(lang, p.category_slug!, p.brand_slug!, p.slug)}
+                href={hubPath(resolvedLocale, p.category_slug!, p.brand_slug!, p.slug)}
                 className="text-muted-foreground hover:text-emerald-600 transition-colors"
               >
                 Precio del {p.name} reacondicionado

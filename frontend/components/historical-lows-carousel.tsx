@@ -8,6 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { OfferSummary, HistoricalLowsCarouselProps } from "@/lib/types"
 import { t } from "@/lib/translations"
+import { useParams } from "next/navigation"
+import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
+import type { Currency, Language } from "@/lib/i18n"
 
 export const getConditionStyles = (condition: string) => {
   switch (condition) {
@@ -26,6 +30,10 @@ export const getConditionStyles = (condition: string) => {
 
 export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const currency = getCurrency(locale)
+  const language = getLanguage(locale)
 
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
@@ -75,6 +83,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
                 key={offer.id} 
                 offer={offer} 
                 onClick={() => onOfferClick(offer)} 
+                language={language}
+                currency={currency}
             />
           ))}
         </div>
@@ -90,9 +100,11 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
 interface CompactOfferCardProps {
   offer: OfferSummary
   onClick: () => void
+  language?: Language
+  currency?: Currency
 }
 
-function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
+function CompactOfferCardOption1({ offer, onClick, language = "es", currency = "EUR" }: CompactOfferCardProps) {
   const current = Number(offer.current_price)
   const previous = Number(offer.old_price) 
   const savings = Math.round(((previous - current) / previous) * 100)
@@ -111,13 +123,13 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
             "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm",
             getConditionStyles(offer.condition)
         )}>
-            {t(offer.condition)}
+            {t(offer.condition, language)}
         </Badge>
 
         {/* Badge Batería */}
         {offer.battery_new && (
              <Badge className="absolute right-2 top-2 z-10 bg-emerald-600 px-1.5 py-0.5 text-[10px] border-0 gap-1">
-                <BatteryFull className="w-3 h-3" /> {t("new")}
+                <BatteryFull className="w-3 h-3" /> {t("new", language)}
              </Badge>
         )}
 
@@ -161,18 +173,18 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <span>{offer.storage}</span>
                         <span className="text-[8px] opacity-40">●</span>
-                        <span>{t(offer.color)}</span>
+                        <span>{t(offer.color, language)}</span>
                     </p>
 
                     {/* Precios (Vertical) */}
                     <div className="mt-1">
                         {previous > current && (
                             <p className="text-[11px] text-muted-foreground line-through decoration-muted-foreground/60">
-                                {previous}€
+                                {formatCurrency(previous, currency, language)}
                             </p>
                         )}
                         <p className="text-xl font-bold text-orange-600 dark:text-orange-500 leading-none">
-                            {current}€
+                            {formatCurrency(current, currency, language)}
                         </p>
                     </div>
                 </div>
@@ -207,7 +219,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
 // OPCIÓN 2: Precios arriba derecha y Botón ancho abajo
 // =====================================================================
 
-function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
+function CompactOfferCardOption2({ offer, onClick, language = "es", currency = "EUR" }: CompactOfferCardProps) {
     const current = Number(offer.current_price)
     const previous = Number(offer.old_price)
     const savings = Math.round(((previous - current) / previous) * 100)
@@ -226,12 +238,12 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
               "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm",
               getConditionStyles(offer.condition)
           )}>
-              {t(offer.condition)}
+              {t(offer.condition, language)}
           </Badge>
   
           {offer.battery_new && (
                <Badge className="absolute right-2 top-2 z-10 bg-emerald-600 px-1.5 py-0.5 text-[10px] border-0 gap-1">
-                  <BatteryFull className="w-3 h-3" /> {t("new")}
+                  <BatteryFull className="w-3 h-3" /> {t("new", language)}
                </Badge>
           )}
   
@@ -272,7 +284,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                           <span>{offer.storage}</span>
                           <span className="text-[8px] opacity-40">●</span>
-                          <span>{t(offer.color)}</span>
+                          <span>{t(offer.color, language)}</span>
                       </p>
                   </div>
 
@@ -280,11 +292,11 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                   <div className="flex flex-col items-end shrink-0">
                         {previous > current && (
                             <p className="text-[10px] text-muted-foreground line-through">
-                                {previous}€
+                                {formatCurrency(previous, currency, language)}
                             </p>
                         )}
                         <p className="text-xl font-bold text-emerald-600 dark:text-emerald-500 leading-none">
-                            {current}€
+                            {formatCurrency(current, currency, language)}
                         </p>
                   </div>
               </div>

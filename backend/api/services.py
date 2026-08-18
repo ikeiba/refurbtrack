@@ -149,6 +149,7 @@ def _spec_stats(spec, history_by_offer, market=None):
 
     return {
         "slug": spec.slug,
+        "slug_en": spec.slug_en,
         "storage": spec.storage,
         "color": spec.color,
         "image": str(spec.image) if spec.image else None,

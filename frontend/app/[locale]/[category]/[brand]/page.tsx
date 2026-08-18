@@ -1,4 +1,4 @@
-// app/[lang]/[category]/[brand]/page.tsx
+// app/[locale]/[category]/[brand]/page.tsx
 import { getProducts } from "@/services/api";
 import { FamilyGrid } from "@/components/family-grid"; // Ajusta según tu import real
 import { generateBrandCopy } from "@/lib/seo-utils";
@@ -8,13 +8,14 @@ import { Metadata } from "next";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper"; 
+import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n";
 
 // export const revalidate = 600; // Cacheamos en servidor por 1 hora
 export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{
-    lang: string;
+    locale: string;
     category: string;
     brand: string; // <-- Nuevo parámetro capturado por Next.js
   }>;
@@ -22,7 +23,7 @@ interface Props {
 
 // SEO Elite: Metadata ultra específica
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang, category, brand } = await params;
+  const { locale, category, brand } = await params;
   const prettyCat = category.charAt(0).toUpperCase() + category.slice(1);
   const seoBrandName = getSEOBrandAlias(category, brand);
 
@@ -30,14 +31,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Ej: Apple Smartphone Reacondicionados al Mejor Precio
     title: `${seoBrandName} Reacondicionados - Historial de Precios | RefurbTrack`,
     description: `Compara precios históricos de ${prettyCat}s ${seoBrandName} reacondicionados en Back Market. Encuentra la mejor oferta con garantía.`,
-    alternates: { canonical: `/${lang}/${category}/${brand}` }
+    alternates: { canonical: `/${locale}/${category}/${brand}` }
   };
 }
 
 export default async function BrandPage({ params }: Props) {
-  const { lang, category, brand } = await params;
+  const { locale: rawLocale, category, brand } = await params;
+  const locale = parseLocale(rawLocale);
   
-  const allProducts = await getProducts();
+  const allProducts = await getProducts(locale);
   
   // FILTRO DOBLE: Comprobamos que coincidan categoría Y marca
   const brandProducts = allProducts.filter(
@@ -45,7 +47,7 @@ export default async function BrandPage({ params }: Props) {
            p.brand_slug?.toLowerCase() === brand.toLowerCase()
   );
 
-  // Si no hay productos (ej: /es/smartphone/marca-inventada), 404
+  // Si no hay productos (ej: /es-es/smartphone/marca-inventada), 404
   if (brandProducts.length === 0) notFound();
 
   // Capitalizamos para usarlos en el texto
@@ -53,14 +55,20 @@ export default async function BrandPage({ params }: Props) {
   const prettyBrand = brand.charAt(0).toUpperCase() + brand.slice(1);
   
   
-  // Generamos el texto usando la nueva función
+  // Generamos el texto usando la nueva función (moneda e idioma del mercado)
   const seoBrandName = getSEOBrandAlias(category, brand);
-  const seoCopy = generateBrandCopy(seoBrandName, prettyCat, brandProducts);
+  const seoCopy = generateBrandCopy(
+    seoBrandName,
+    prettyCat,
+    brandProducts,
+    getCurrency(locale),
+    getLanguage(locale)
+  );
 
   // BREADCRUMBS: Ahora con 3 niveles (Inicio > Categoría > Marca)
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${lang}` },
-    { label: prettyCat, href: `/${lang}/${category}` },
+    { label: "Inicio", href: `/${locale}` },
+    { label: prettyCat, href: `/${locale}/${category}` },
     { label: prettyBrand } // La página actual sin href
   ];
 
@@ -81,7 +89,7 @@ export default async function BrandPage({ params }: Props) {
           </p>
         </header>
 
-        <FamilyGrid products={brandProducts} />
+        <FamilyGrid products={brandProducts} locale={locale} />
         
       </main>
     </div>

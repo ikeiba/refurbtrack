@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, UserPlus } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import { API_URL } from "@/services/api"
 import { track } from "@/lib/analytics"
+import { parseLocale } from "@/lib/i18n"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -22,6 +23,8 @@ export default function RegisterPage() {
   
   const { register, login } = useAuth()
   const router = useRouter()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,7 +48,7 @@ export default function RegisterPage() {
       await login({ email, password })
       track('signup', { method: 'password' })
       // Redirigir a la pantalla de inicio
-      router.push("/es")
+      router.push(`/${locale}`)
     } catch (err: any) {
       setError(err.message || "Error al crear la cuenta")
     } finally {
@@ -80,7 +83,7 @@ export default function RegisterPage() {
       track('signup', { method: 'google' })
 
       // Forzamos la recarga para que el AuthContext lea los datos
-      window.location.href = "/es";
+      window.location.href = `/${locale}`;
     } catch (err: any) {
       setError(err.message || "Error al conectar con Google")
     } finally {
@@ -179,7 +182,7 @@ export default function RegisterPage() {
 
             <div className="text-center text-sm">
               ¿Ya tienes cuenta?{" "}
-              <Link href="/es/login" className="font-medium text-emerald-600 hover:underline">
+              <Link href={`/${locale}/login`} className="font-medium text-emerald-600 hover:underline">
                 Inicia sesión
               </Link>
             </div>

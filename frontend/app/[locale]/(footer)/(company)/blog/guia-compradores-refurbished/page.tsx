@@ -4,12 +4,12 @@ import type { Metadata } from 'next'
 import { absoluteUrl, blogPostPath } from '@/lib/urls'
 
 interface Props {
-  params: Promise<{ lang: string }>
+  params: Promise<{ locale: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params
-  const canonical = absoluteUrl(blogPostPath(lang, 'guia-compradores-refurbished'))
+  const { locale } = await params
+  const canonical = absoluteUrl(blogPostPath(locale, 'guia-compradores-refurbished'))
   const title = 'Guía Completa para Comprar Dispositivos Reacondicionados | RefurbTrack'
   const description =
     'Todo lo que necesitas saber antes de comprar un móvil, tablet o portátil reacondicionado: estados, garantía, batería y cómo evaluar si vale la pena.'
@@ -22,7 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function BlogPost() {
+export default async function BlogPost({ params }: Props) {
+  const { locale } = await params
+
   const post = {
     title: '📖 Guía Completa para Compradores de Dispositivos Reacondicionados',
     date: '2026-01-15',
@@ -33,7 +35,7 @@ export default function BlogPost() {
 
   return (
     <div className="space-y-8">
-      <Link href="/es/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+      <Link href={`/${locale}/blog`} className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
       </Link>
@@ -199,7 +201,7 @@ export default function BlogPost() {
       </article>
 
       <div className="pt-8 border-t space-y-4">
-        <Link href="/es/blog" className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
+        <Link href={`/${locale}/blog`} className="inline-flex items-center gap-2 text-emerald-600 hover:underline">
         <ArrowLeft className="w-4 h-4" />
         Volver al blog
         </Link>
