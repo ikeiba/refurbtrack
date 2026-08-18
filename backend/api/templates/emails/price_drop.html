@@ -320,12 +320,12 @@
                 <!-- PRICE HIGHLIGHT -->
                 <div class="price-box">
                     <div>
-                        <div class="current-price">{{ current_price }}€</div>
+                        <div class="current-price">{{ current_price }}{{ currency_symbol }}</div>
                         <div class="price-label">Precio Actual</div>
                     </div>
                     {% if old_price %}
                     <div class="old-price">
-                        <div class="old-price-value">{{ old_price }}€</div>
+                        <div class="old-price-value">{{ old_price }}{{ currency_symbol }}</div>
                         <div class="old-price-label">Precio Anterior</div>
                     </div>
                     {% endif %}
@@ -339,7 +339,7 @@
                         {% if target_price %}
                         <div class="criteria-item">
                             <div class="criteria-label">💰 Objetivo</div>
-                            <div class="criteria-value">{{ target_price }}€</div>
+                            <div class="criteria-value">{{ target_price }}{{ currency_symbol }}</div>
                         </div>
                         {% endif %}
                         

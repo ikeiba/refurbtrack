@@ -19,7 +19,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 
 
-from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Offer, ClickEvent
+from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Offer, ClickEvent, Market, ProductMarketStats, SpecMarketStats
 from .serializers import (
     AlertSerializer,
     ProductListSerializer, 
@@ -29,7 +29,7 @@ from .serializers import (
     UserRegistrationSerializer,
     ContactMessageSerializer
 )
-from .services import send_contact_email, build_model_hub, get_featured_history
+from .services import send_contact_email, build_model_hub, get_featured_history, market_offer_q
 from .bot_detection import should_track_click
 
 from django.contrib.auth.tokens import default_token_generator
@@ -55,12 +55,41 @@ import os
 
 
 # --- 1. VIEWSET PRINCIPAL (Catálogo) ---
+
+def resolve_market(request):
+    """
+    Resuelve el Market a partir de los query params `?market=ES|UK` o
+    `?locale=es-es|en-gb`. Fallback al mercado ES (sembrándolo si no existe).
+    """
+    code = request.query_params.get('market')
+    locale = request.query_params.get('locale')
+
+    market = None
+    if code:
+        market = Market.objects.filter(code__iexact=code).first()
+    if market is None and locale:
+        market = Market.objects.filter(locale__iexact=locale).first()
+    if market is None:
+        market = Market.objects.filter(code='ES').first()
+    if market is None:
+        market = Market.seed().get('ES')
+    return market
+
+
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Maneja el listado de productos (Home) y el detalle (Configurador).
     """
     # Queryset base (se sobrescribe abajo para optimizar)
     queryset = Product.objects.all()
+
+    def get_market(self):
+        return resolve_market(self.request)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['market'] = self.get_market()
+        return context
 
     def get_serializer_class(self):
         """
@@ -73,24 +102,33 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         """
-        Optimización de Consultas (Solving N+1 Problem).
+        Optimización de Consultas (Solving N+1 Problem), con prefetch de
+        ofertas y caches de stats filtradas por mercado.
         """
+        market = self.get_market()
         # AÑADIMOS EL .order_by('id') AQUÍ
         # Si prefieres que salgan de más nuevo a más viejo, cámbialo por '-id'
         queryset = Product.objects.all().order_by('id')
 
+        offers_qs = Offer.objects.filter(market_offer_q(market))
+        specs_qs = Spec.objects.prefetch_related(
+            Prefetch('offers', queryset=offers_qs),
+            Prefetch('market_stats', queryset=SpecMarketStats.objects.filter(market=market)),
+        )
+
         if self.action == 'retrieve':
             # Si estamos viendo el detalle, necesitamos traer TODO el árbol de golpe.
-            # Usamos 'prefetch_related' para hacer joins eficientes en SQL:
-            # Trae las Specs Y TAMBIÉN sus Offers hijas en una sola operación optimizada.
             queryset = queryset.prefetch_related(
-                'specs',
-                'specs__offers'
+                Prefetch('specs', queryset=specs_qs),
+                Prefetch('market_stats', queryset=ProductMarketStats.objects.filter(market=market)),
             )
         else:
-            # Para el listado, traemos las specs para evitar N+1 al calcular
-            # default_spec_slug, available_colors, available_storages y spec_count.
-            queryset = queryset.prefetch_related('specs')
+            # Para el listado, traemos las specs (con sus stats de mercado) para
+            # evitar N+1 al calcular default_spec_slug, available_colors, etc.
+            queryset = queryset.prefetch_related(
+                Prefetch('specs', queryset=specs_qs),
+                Prefetch('market_stats', queryset=ProductMarketStats.objects.filter(market=market)),
+            )
 
         return queryset
 
@@ -157,7 +195,16 @@ class HistoricalLowOffersView(generics.ListAPIView):
     """
     serializer_class = HistoricalLowOfferSerializer
 
+    def get_market(self):
+        return resolve_market(self.request)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['market'] = self.get_market()
+        return context
+
     def get_queryset(self):
+        market = self.get_market()
         # 1. Calculamos el momento de corte (hace 24 horas)
         time_threshold = timezone.now() - timedelta(hours=24)
 
@@ -170,6 +217,8 @@ class HistoricalLowOffersView(generics.ListAPIView):
             
             # Seguridad extra: que tenga precio
             current_price__isnull=False 
+        ).filter(
+            market_offer_q(market)
         ).select_related(
             'spec', 'spec__product'
         ).order_by('?'
@@ -452,7 +501,9 @@ def redirect_to_store(request, offer_uuid):
     
     # 2. Si la oferta no tiene URL por algún motivo, redirigimos a una fallback
     if not offer.url:
-        return redirect("https://www.backmarket.es")
+        market = offer.market or Market.objects.filter(code=offer.country).first()
+        domain = market.domain if market else 'backmarket.es'
+        return redirect(f"https://www.{domain}")
 
     # 3. Guardamos la telemetría síncronamente (rápido en PostgreSQL)
     #    Solo si es un clic humano: descartamos bots/crawlers y golpes directos.
@@ -489,28 +540,43 @@ class ProductResolveBySlugView(APIView):
     """
     Cerebro del SEO: Resuelve la jerarquía de slugs y devuelve el detalle.
     URL: /api/products/resolve/?cat=...&brand=...&prod=...&spec=...
+    Acepta `?market=ES|UK` (o `?locale=es-es|en-gb`) y `?lang=es|en` para
+    resolver el Spec por `slug` (ES) o `slug_en` (EN).
     """
     permission_classes = []  # Pública para SEO
 
     def get(self, request):
+        market = resolve_market(request)
         category_slug = request.query_params.get('cat')
         brand_slug = request.query_params.get('brand')
         product_slug = request.query_params.get('prod')
         spec_slug = request.query_params.get('spec')
+        lang = request.query_params.get('lang') or market.language
+
+        slug_filter = {'slug': spec_slug} if lang == 'es' else {'slug_en': spec_slug}
 
         spec = get_object_or_404(
             Spec.objects.select_related(
                 'product',
                 'product__brand',
                 'product__category'
-            ).prefetch_related('offers'),
-            slug=spec_slug,
+            ),
             product__slug=product_slug,
             product__brand__slug=brand_slug,
-            product__category__slug=category_slug
+            product__category__slug=category_slug,
+            **slug_filter
         )
 
-        serializer = ProductDetailSerializer(spec.product)
+        # Re-fetch del producto con el árbol prefetcheado y filtrado por mercado.
+        product = Product.objects.prefetch_related(
+            Prefetch('specs', queryset=Spec.objects.prefetch_related(
+                Prefetch('offers', queryset=Offer.objects.filter(market_offer_q(market))),
+                Prefetch('market_stats', queryset=SpecMarketStats.objects.filter(market=market)),
+            )),
+            Prefetch('market_stats', queryset=ProductMarketStats.objects.filter(market=market)),
+        ).get(pk=spec.product_id)
+
+        serializer = ProductDetailSerializer(product, context={'market': market})
         data = serializer.data
         data['current_spec_id'] = spec.id
 
@@ -525,6 +591,7 @@ class ModelHubView(APIView):
     permission_classes = []
 
     def get(self, request):
+        market = resolve_market(request)
         category_slug = request.query_params.get('cat')
         brand_slug = request.query_params.get('brand')
         product_slug = request.query_params.get('prod')
@@ -536,7 +603,7 @@ class ModelHubView(APIView):
             category__slug=category_slug,
         )
 
-        return Response(build_model_hub(product))
+        return Response(build_model_hub(product, market))
 
 
 class FeaturedHistoryView(APIView):
@@ -547,21 +614,38 @@ class FeaturedHistoryView(APIView):
     permission_classes = []
 
     def get(self, request):
-        return Response(get_featured_history())
+        market = resolve_market(request)
+        return Response(get_featured_history(market))
 
 
 @api_view(['GET'])
 def sitemap_data(request):
-    # Traemos solo los slugs necesarios para construir las URLs
-    # Usamos values() para que la consulta a la DB sea ultra ligera (solo strings)
-    specs = Spec.objects.select_related('product', 'product__category', 'product__brand').values(
+    market = resolve_market(request)
+    slug_field = 'slug' if market.language == 'es' else 'slug_en'
+
+    # Solo specs con al menos una oferta en el mercado solicitado.
+    market_offers = Offer.objects.filter(market_offer_q(market))
+    specs = Spec.objects.filter(offers__in=market_offers).distinct().select_related(
+        'product', 'product__category', 'product__brand'
+    ).values(
         'product__category__slug',
         'product__brand__slug',
         'product__slug',
-        'slug',
+        slug_field,
         'last_updated'
     )
-    return Response(list(specs))
+
+    data = [
+        {
+            'product__category__slug': s['product__category__slug'],
+            'product__brand__slug': s['product__brand__slug'],
+            'product__slug': s['product__slug'],
+            'slug': s[slug_field],
+            'last_updated': s['last_updated'],
+        }
+        for s in specs
+    ]
+    return Response(data)
 
 
 @api_view(['GET'])
@@ -571,16 +655,29 @@ def top_specs_for_build(request):
     Endpoint ultraligero para el SSG de Next.js.
     Devuelve solo los slugs de las 50 especificaciones más relevantes.
     """
-    specs = Spec.objects.select_related(
+    market = resolve_market(request)
+    slug_field = 'slug' if market.language == 'es' else 'slug_en'
+
+    market_offers = Offer.objects.filter(market_offer_q(market))
+    specs = Spec.objects.filter(offers__in=market_offers).distinct().select_related(
         'product', 'product__category', 'product__brand'
     ).order_by('-last_updated')[:50].values(
         'product__category__slug',
         'product__brand__slug',
         'product__slug',
-        'slug'
+        slug_field
     )
-    
-    return Response(list(specs))
+
+    data = [
+        {
+            'product__category__slug': s['product__category__slug'],
+            'product__brand__slug': s['product__brand__slug'],
+            'product__slug': s['product__slug'],
+            'slug': s[slug_field],
+        }
+        for s in specs
+    ]
+    return Response(data)
 
 
 

@@ -5,9 +5,12 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import Category, Brand, Product, Spec, Offer, PriceHistory
+from .models import (
+    Category, Brand, Product, Spec, Offer, PriceHistory,
+    Market, SpecMarketStats, ProductMarketStats,
+)
 from . import insights
-from .services import build_model_hub, get_featured_history
+from .services import build_model_hub, get_featured_history, recompute_market_stats
 
 
 class InsightsPureFunctionsTests(TestCase):
@@ -138,3 +141,107 @@ class ModelHubEndpointTests(TestCase):
             url, {"cat": "smartphone", "brand": "apple", "prod": "iphone-15", "spec": "inexistente"}
         )
         self.assertEqual(response.status_code, 404)
+
+
+class MarketAwareServicesTests(TestCase):
+    def setUp(self):
+        self.markets = Market.seed()
+        self.es = self.markets['ES']
+        self.uk = self.markets['UK']
+
+        self.category = Category.objects.create(name="Smartphone", slug="smartphone")
+        self.brand = Brand.objects.create(name="Apple", slug="apple")
+        self.product = Product.objects.create(
+            category=self.category, brand=self.brand,
+            name="iPhone 15", slug="iphone-15", market_price=Decimal("959.00"),
+        )
+        self.spec = Spec.objects.create(
+            product=self.product, slug="reacondicionado-128gb-negro",
+            slug_en="refurbished-128gb-black",
+            back_market_uuid="uuid-128", storage="128", color="Black",
+        )
+        self.offer_es = Offer.objects.create(
+            spec=self.spec, condition="Good", battery_new=False,
+            country="ES", market=self.es,
+        )
+        self.offer_uk = Offer.objects.create(
+            spec=self.spec, condition="Good", battery_new=False,
+            country="UK", market=self.uk,
+        )
+
+    def test_signals_recompute_only_market_stats(self):
+        PriceHistory.objects.create(offer=self.offer_es, price=Decimal("300.00"))
+        PriceHistory.objects.create(offer=self.offer_uk, price=Decimal("500.00"))
+
+        es_stat = SpecMarketStats.objects.get(spec=self.spec, market=self.es)
+        uk_stat = SpecMarketStats.objects.get(spec=self.spec, market=self.uk)
+        self.assertEqual(es_stat.min_price_cached, Decimal("300.00"))
+        self.assertEqual(uk_stat.min_price_cached, Decimal("500.00"))
+
+        # Los campos legacy de Spec quedan congelados (sin dual-write).
+        self.assertIsNone(Spec.objects.get(id=self.spec.id).min_price_cached)
+
+        es_prod = ProductMarketStats.objects.get(product=self.product, market=self.es)
+        uk_prod = ProductMarketStats.objects.get(product=self.product, market=self.uk)
+        self.assertEqual(es_prod.min_price_cached, Decimal("300.00"))
+        self.assertEqual(uk_prod.min_price_cached, Decimal("500.00"))
+
+    def test_recompute_market_stats_is_market_scoped(self):
+        self.offer_es.current_price = Decimal("300.00")
+        self.offer_es.save()
+        self.offer_uk.current_price = Decimal("500.00")
+        self.offer_uk.save()
+
+        recompute_market_stats(self.spec, self.es)
+        recompute_market_stats(self.spec, self.uk)
+
+        es_stat = SpecMarketStats.objects.get(spec=self.spec, market=self.es)
+        uk_stat = SpecMarketStats.objects.get(spec=self.spec, market=self.uk)
+        self.assertEqual(es_stat.min_price_cached, Decimal("300.00"))
+        self.assertEqual(uk_stat.min_price_cached, Decimal("500.00"))
+
+    def test_build_model_hub_filters_offers_by_market(self):
+        self.offer_es.current_price = Decimal("300.00")
+        self.offer_es.save()
+        self.offer_uk.current_price = Decimal("500.00")
+        self.offer_uk.save()
+
+        hub_es = build_model_hub(self.product, self.es)
+        hub_uk = build_model_hub(self.product, self.uk)
+
+        self.assertEqual(hub_es["summary"]["lowest_current_price"], 300.0)
+        self.assertEqual(hub_uk["summary"]["lowest_current_price"], 500.0)
+
+    def test_model_hub_endpoint_resolves_market_and_currency(self):
+        url = reverse("model-hub")
+        response = self.client.get(
+            url, {"cat": "smartphone", "brand": "apple", "prod": "iphone-15", "market": "UK"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["name"], "iPhone 15")
+
+    def test_product_list_exposes_market_and_currency(self):
+        url = reverse("product-list")
+        response = self.client.get(url, {"market": "UK"})
+        self.assertEqual(response.status_code, 200)
+        results = response.json()
+        self.assertIsInstance(results, list)
+        if results:
+            self.assertEqual(results[0]["market"], "UK")
+            self.assertEqual(results[0]["currency"], "GBP")
+
+    def test_resolve_endpoint_uses_slug_en_for_uk(self):
+        self.offer_es.current_price = Decimal("300.00")
+        self.offer_es.save()
+
+        url = reverse("product-resolve")
+        response = self.client.get(
+            url, {
+                "cat": "smartphone", "brand": "apple", "prod": "iphone-15",
+                "spec": "refurbished-128gb-black", "market": "UK",
+            }
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["currency"], "GBP")
+        self.assertEqual(data["current_spec_id"], self.spec.id)
