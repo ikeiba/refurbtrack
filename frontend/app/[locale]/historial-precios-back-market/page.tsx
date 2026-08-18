@@ -4,7 +4,8 @@ import { getProducts, getFeaturedHistory } from "@/services/api";
 import { PriceHistoryLanding } from "@/components/landing/price-history-landing";
 import { HeaderWrapper } from "@/components/header-wrapper";
 import { absoluteUrl, historyLandingPath } from "@/lib/urls";
-import { parseLocale } from "@/lib/i18n";
+import { parseLocale, getLanguage } from "@/lib/i18n";
+import { t } from "@/lib/translations";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,11 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
+  const language = getLanguage(locale);
   const canonical = absoluteUrl(historyLandingPath(locale));
 
-  const title = "Historial y rastreador de precios Back Market | RefurbTrack";
-  const description =
-    "Consulta el historial de precios de Back Market y sigue la evolución de los móviles reacondicionados. Descubre si el precio actual es una buena oferta antes de comprar.";
+  const title = t("meta_history_title", language);
+  const description = t("meta_history_description", language);
 
   return {
     title,
@@ -97,7 +98,7 @@ export default async function PriceHistoryLandingPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Inicio", item: `${base}/${locale}` },
+      { "@type": "ListItem", position: 1, name: t("home", getLanguage(locale)), item: `${base}/${locale}` },
       {
         "@type": "ListItem",
         position: 2,

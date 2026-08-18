@@ -12,6 +12,7 @@ import { ConsentProvider } from "@/context/ConsentContext"
 import { CookieBanner } from "@/components/CookieBanner"
 import { AnalyticsScripts } from "@/components/AnalyticsScripts"
 import { locales, getLanguage, parseLocale } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 const _inter = Inter({ subsets: ["latin"] })
 
@@ -20,11 +21,11 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com'
 // Metadata por locale (Fase 4): alternates con hreflang y canonical del locale.
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
+  const language = getLanguage(locale)
   return {
     metadataBase: new URL(baseUrl),
-    title: "RefurbTrack - Compara Precios de iPhones Reacondicionados en Back Market",
-    description:
-      "Compara precios históricos de iPhones reacondicionados en Back Market. Encuentra las mejores ofertas en tecnología reacondicionada.",
+    title: t("meta_default_title", language),
+    description: t("meta_default_description", language),
     alternates: {
       canonical: `/${locale}`,
       languages: {

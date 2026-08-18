@@ -1,15 +1,16 @@
 // components/ui/breadcrumbs.tsx
 import Link from "next/link";
 import { cn } from "@/lib/utils"; // Asumo que usas la utilidad estándar de Tailwind/shadcn
+import { t } from "@/lib/translations";
 
 export interface BreadcrumbItem {
   label: string;
   href?: string; // Si no tiene href, asumimos que es la página actual (el último nodo)
 }
 
-export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+export function Breadcrumbs({ items, language = "es" }: { items: BreadcrumbItem[]; language?: string }) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-6">
+    <nav aria-label={t("breadcrumb", language)} className="mb-6">
       <ol className="flex items-center space-x-2 text-sm text-muted-foreground">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

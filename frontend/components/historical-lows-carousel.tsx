@@ -57,8 +57,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
                 <Flame className="h-5 w-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600 dark:fill-emerald-400" />
             </div>
             <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground">Mínimos sostenibles</h2>
-                <p className="text-sm text-muted-foreground hidden sm:block">Precios mensuales más bajos en productos que dan una segunda vida a la tecnología.</p>
+                <h2 className="text-xl font-bold tracking-tight text-foreground">{t("sustainable_lows", language)}</h2>
+                <p className="text-sm text-muted-foreground hidden sm:block">{t("sustainable_lows_desc", language)}</p>
             </div>
           </div>
           
@@ -198,7 +198,7 @@ function CompactOfferCardOption1({ offer, onClick, language = "es", currency = "
                     onClick={(e) => e.stopPropagation()} // Evita que se dispare el onClick de la tarjeta
                     className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0 group transition-colors"
                   >
-                    Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    {t("view_on_backmarket", language)} <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
                   </a>
                 ) : (
                   <button 
@@ -206,7 +206,7 @@ function CompactOfferCardOption1({ offer, onClick, language = "es", currency = "
                     onClick={(e) => e.stopPropagation()}
                     className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-200 text-gray-500 shadow-sm shrink-0 cursor-not-allowed"
                   >
-                    No disponible
+                    {t("not_available", language)}
                   </button>
                 )}
             </div>
@@ -309,14 +309,14 @@ function CompactOfferCardOption2({ offer, onClick, language = "es", currency = "
                   rel="sponsored noopener" // 'sponsored' es obligatorio para SEO de afiliación
                   onClick={(e) => e.stopPropagation()} // Evita que se disparen eventos del contenedor padre
                   className="w-full flex justify-center items-center px-4 py-2 text-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm transition-colors rounded-md group/btn font-medium"                >
-                  Ver en Back Market <ExternalLink className="ml-4 w-4 h-4 opacity-70 group-hover/btn:opacity-100" />
+                  {t("view_on_backmarket", language)} <ExternalLink className="ml-4 w-4 h-4 opacity-70 group-hover/btn:opacity-100" />
                 </a>
               ) : (
                 <button 
                   disabled
                   className="w-full px-4 py-2 bg-gray-200 text-gray-500 cursor-not-allowed rounded-md"
                 >
-                  Sin enlace disponible
+                  {t("no_link_available", language)}
                 </button>
               )}
           </div>

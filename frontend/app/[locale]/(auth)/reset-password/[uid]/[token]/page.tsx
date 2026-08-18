@@ -10,7 +10,8 @@ import { Loader2, Lock, CheckCircle2 } from "lucide-react"
 import { confirmPasswordReset } from "@/services/api" // <--- IMPORTAR
 
 import Link from "next/link"
-import { parseLocale } from "@/lib/i18n"
+import { parseLocale, getLanguage } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 // Next.js pasa los parámetros de la URL como props al componente
 export default function ResetPasswordConfirmPage({ params }: { params: Promise<{ uid: string; token: string }> }) {
@@ -25,18 +26,19 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
   const router = useRouter()
   const urlParams = useParams()
   const locale = parseLocale(urlParams?.locale as string | undefined)
+  const language = getLanguage(locale)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden")
+      setError(t("passwords_mismatch", language))
       return
     }
 
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres")
+      setError(t("password_too_short", language))
       return
     }
 
@@ -71,20 +73,20 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
               {success ? <CheckCircle2 className="h-6 w-6 text-emerald-600" /> : <Lock className="h-6 w-6 text-emerald-600" />}
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Restablecer Contraseña</CardTitle>
-          {!success && <CardDescription>Introduce tu nueva contraseña</CardDescription>}
+          <CardTitle className="text-2xl font-bold">{t("reset_password", language)}</CardTitle>
+          {!success && <CardDescription>{t("enter_new_password", language)}</CardDescription>}
         </CardHeader>
 
         <CardContent>
           {success ? (
             <div className="text-center space-y-4">
-              <p className="text-emerald-700 font-medium">¡Contraseña actualizada correctamente!</p>
-              <p className="text-sm text-gray-500">Redirigiendo al login...</p>
+              <p className="text-emerald-700 font-medium">{t("password_updated", language)}</p>
+              <p className="text-sm text-gray-500">{t("redirecting_to_login", language)}</p>
               
               {/* Usamos asChild para que el botón se comporte como un enlace */}
               <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
                 <Link href={`/${locale}/login`}> {/* La URL es /es-es/login porque (auth) no cuenta */}
-                  Ir al Login ahora
+                  {t("go_to_login_now", language)}
                 </Link>
               </Button>
             </div>
@@ -97,7 +99,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="password">Nueva Contraseña</Label>
+                <Label htmlFor="password">{t("new_password", language)}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -108,7 +110,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm">Confirmar Contraseña</Label>
+                <Label htmlFor="confirm">{t("confirm_password", language)}</Label>
                 <Input
                   id="confirm"
                   type="password"
@@ -123,7 +125,7 @@ export default function ResetPasswordConfirmPage({ params }: { params: Promise<{
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Guardando...</> : "Cambiar Contraseña"}
+                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> {t("saving", language)}</> : t("change_password", language)}
               </Button>
             </form>
           )}

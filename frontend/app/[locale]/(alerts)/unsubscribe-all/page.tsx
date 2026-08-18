@@ -11,12 +11,14 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 // IMPORTAR LA FUNCIÓN
 import { unsubscribeSubscriber } from "@/services/api"
-import { parseLocale, getMarket } from "@/lib/i18n"
+import { parseLocale, getMarket, getLanguage } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 function UnsubscribeAllContent() {
   const searchParams = useSearchParams()
   const params = useParams()
   const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
   const token = searchParams.get("token")
   
   // Estados: 'confirm' (preguntar), 'loading' (procesando), 'success' (borrado), 'error' (fallo)
@@ -51,16 +53,15 @@ function UnsubscribeAllContent() {
         </div>
         
         <CardTitle>
-          {status === "confirm" && "¿Darte de baja de todo?"}
-          {status === "loading" && "Procesando baja..."}
-          {status === "success" && "Te echaremos de menos"}
-          {status === "error" && "Error"}
+          {status === "confirm" && t("unsubscribe_all_confirm", language)}
+          {status === "loading" && t("unsubscribe_all_loading", language)}
+          {status === "success" && t("miss_you", language)}
+          {status === "error" && t("error", language)}
         </CardTitle>
         
         {status === "confirm" && (
             <CardDescription className="pt-2">
-                Estás a punto de eliminar <strong>todas tus alertas</strong> y tu cuenta de suscriptor. 
-                Dejarás de recibir cualquier correo nuestro.
+                {t("unsubscribe_all_desc", language)}
             </CardDescription>
         )}
       </CardHeader>
@@ -74,11 +75,11 @@ function UnsubscribeAllContent() {
                     className="w-full" 
                     onClick={handleUnsubscribeAll}
                 >
-                    Sí, eliminar todas mis alertas
+                    {t("unsubscribe_all_confirm_btn", language)}
                 </Button>
                 <Link href={`/${locale}`}>
                     <Button variant="outline" className="w-full">
-                        Cancelar y volver al inicio
+                        {t("cancel_back_home", language)}
                     </Button>
                 </Link>
             </div>
@@ -88,11 +89,11 @@ function UnsubscribeAllContent() {
         {status === "success" && (
           <>
             <p className="text-muted-foreground">
-              Has sido dado de baja correctamente. Todas tus alertas han sido eliminadas de nuestro sistema.
+              {t("unsubscribe_all_success_desc", language)}
             </p>
             <Link href={`/${locale}`}>
                 <Button variant="outline" className="gap-2 mt-4">
-                    <ArrowLeft className="h-4 w-4"/> Volver al inicio
+                    <ArrowLeft className="h-4 w-4"/> {t("back_home", language)}
                 </Button>
             </Link>
           </>
@@ -102,12 +103,12 @@ function UnsubscribeAllContent() {
         {status === "error" && (
           <>
             <p className="text-muted-foreground">
-              El enlace ha caducado o no es válido. Ve a tu panel para gestionar tus alertas.
+              {t("unsubscribe_error_desc", language)}
             </p>
             <div className="pt-4">
               <Link href={`/${locale}`}>
                 <Button variant="outline" className="gap-2">
-                  <ArrowLeft className="h-4 w-4"/> Volver al inicio
+                  <ArrowLeft className="h-4 w-4"/> {t("back_home", language)}
                 </Button>
               </Link>
             </div>
@@ -131,7 +132,7 @@ export default function UnsubscribeAllPage() {
                 showSearch={false}
             />
             <div className="flex-1 flex items-center justify-center bg-muted/30 p-4">
-                <Suspense fallback={<div>Cargando...</div>}>
+                <Suspense fallback={<div>{t("loading", getLanguage(params?.locale as string | undefined))}</div>}>
                     <UnsubscribeAllContent />
                 </Suspense>
             </div>

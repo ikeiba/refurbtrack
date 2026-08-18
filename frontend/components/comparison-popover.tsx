@@ -74,7 +74,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
     const targetSpec = targetProduct.specs.find(s => s.color === color && s.storage === storage)
     
     if (!targetSpec) {
-        alert("Esa combinación de Color/GB no existe.")
+        alert(t("combination_not_found", language))
         return
     }
 
@@ -91,7 +91,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
       onCompare(targetOffer, label)
       setOpen(false)
     } else {
-      alert("No hay datos para esta combinación.")
+      alert(t("no_data_combination", language))
     }
   }
 
@@ -115,35 +115,35 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
       <PopoverTrigger asChild>
         <Button variant="outline" className="gap-2 border-dashed">
           <Plus className="w-4 h-4" />
-          Añadir Comparación
+          {t("add_comparison", language)}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 max-h-[90vh] overflow-y-auto" align="end">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Comparar precios</h4>
-            <p className="text-sm text-muted-foreground">Añade otra línea al gráfico.</p>
+            <h4 className="font-medium leading-none">{t("compare_prices", language)}</h4>
+            <p className="text-sm text-muted-foreground">{t("add_line_hint", language)}</p>
           </div>
           
           <div className="grid gap-3">
             {/* 1. Producto */}
             <div className="grid gap-1.5">
-              <Label>Modelo</Label>
+              <Label>{t("model_label", language)}</Label>
               <Select value={selectedProductId} onValueChange={handleProductChange}>
-                <SelectTrigger><SelectValue placeholder={loadingList ? "Cargando..." : "Seleccionar"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={loadingList ? t("loading", language) : t("select", language)} /></SelectTrigger>
                 <SelectContent>
                   {productList.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
-            {loadingDetails && <div className="flex gap-2 items-center text-sm text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin"/> Cargando opciones...</div>}
+            {loadingDetails && <div className="flex gap-2 items-center text-sm text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin"/> {t("loading_options", language)}</div>}
 
             {targetProduct && !loadingDetails && (
                 <>
                     {/* 2. Color */}
                     <div className="grid gap-1.5">
-                        <Label>Color</Label>
+                        <Label>{t("color", language)}</Label>
                         <Select value={color} onValueChange={setColor}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -157,7 +157,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
                     {/* 3. Capacidad */}
                     <div className="grid gap-1.5">
-                        <Label>Capacidad</Label>
+                        <Label>{t("capacity", language)}</Label>
                         <Select value={storage} onValueChange={setStorage}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -168,7 +168,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
                     {/* 4. Estado */}
                     <div className="grid gap-1.5">
-                        <Label>Estado</Label>
+                        <Label>{t("condition", language)}</Label>
                         <Select value={condition} onValueChange={setCondition}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -182,7 +182,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
                     {/* 5. Batería */}
                     <div className="grid gap-1.5">
-                        <Label>Batería</Label>
+                        <Label>{t("battery", language)}</Label>
                         <Select value={batteryNew} onValueChange={setBatteryNew}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -193,7 +193,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
                         </Select>
                     </div>
 
-                    <Button onClick={handleConfirm} className="w-full mt-2">Ver en gráfico</Button>
+                    <Button onClick={handleConfirm} className="w-full mt-2">{t("view_on_chart", language)}</Button>
                 </>
             )}
           </div>

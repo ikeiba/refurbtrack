@@ -11,7 +11,8 @@ import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import { API_URL } from "@/services/api"
-import { parseLocale } from "@/lib/i18n"
+import { parseLocale, getLanguage } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -23,6 +24,7 @@ export default function LoginPage() {
   const router = useRouter()
   const params = useParams()
   const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +35,7 @@ export default function LoginPage() {
       await login({ email, password })
       router.push(`/${locale}`) // Redirigir a la home tras login
     } catch (err: any) {
-      setError(err.message || "Error al iniciar sesión")
+      setError(err.message || t("login_error", language))
     } finally {
       setIsSubmitting(false)
     }
@@ -50,7 +52,7 @@ export default function LoginPage() {
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
 
-      if (!res.ok) throw new Error("Error autenticando con Google");
+      if (!res.ok) throw new Error(t("google_connect_error", language));
       
       const data = await res.json();
       
@@ -66,7 +68,7 @@ export default function LoginPage() {
       // Forzamos la recarga para que el AuthContext lea los datos
       window.location.href = `/${locale}`;
     } catch (err: any) {
-      setError(err.message || "Error al conectar con Google")
+      setError(err.message || t("google_connect_error", language))
     } finally {
       setIsSubmitting(false)
     }
@@ -81,9 +83,9 @@ export default function LoginPage() {
                   <LogIn className="h-6 w-6 text-emerald-600" />
               </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Bienvenido de nuevo</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">{t("welcome_back", language)}</CardTitle>
           <CardDescription className="text-center">
-            Introduce tus credenciales para acceder a tu panel
+            {t("welcome_back_desc", language)}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -94,11 +96,11 @@ export default function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email", language)}</Label>
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="tu@email.com" 
+                placeholder={t("email_placeholder", language)} 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
@@ -106,9 +108,9 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password">{t("password", language)}</Label>
                 <Link href={`/${locale}/forgot-password`} className="text-sm text-emerald-600 hover:underline">
-                  ¿Olvidaste tu contraseña?
+                  {t("forgot_password", language)}
                 </Link>
               </div>
               <Input 
@@ -128,10 +130,10 @@ export default function LoginPage() {
             >
               {isSubmitting ? (
                   <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Conectando...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("connecting", language)}
                   </>
               ) : (
-                  "Iniciar Sesión"
+                  t("login", language)
               )}
             </Button>
 
@@ -142,7 +144,7 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white dark:bg-gray-950 px-2 text-gray-500">
-                  O continúa con
+                  {t("or_continue_with", language)}
                 </span>
               </div>
             </div>
@@ -151,15 +153,15 @@ export default function LoginPage() {
             <div className="flex justify-center w-full">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => setError("Error en el pop-up de Google")}
+                onError={() => setError(t("google_popup_error", language))}
                 theme="outline"
               />
             </div>
 
             <div className="text-center text-sm">
-              ¿No tienes cuenta?{" "}
+              {t("dont_have_account", language)}{" "}
               <Link href={`/${locale}/register`} className="font-medium text-emerald-600 hover:underline">
-                Regístrate gratis
+                {t("sign_up_free", language)}
               </Link>
             </div>
           </CardFooter>

@@ -7,6 +7,7 @@ import { HeaderWrapper } from "@/components/header-wrapper";
 import { absoluteUrl, hubPath } from "@/lib/urls";
 import { formatCurrency } from "@/lib/format";
 import { parseLocale, getCurrency, getLanguage, getSpecSlug } from "@/lib/i18n";
+import { t } from "@/lib/translations";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const hub = await getModelHub(category, brand, product, locale);
 
-  if (!hub) return { title: "Modelo no encontrado" };
+  if (!hub) return { title: t("model_not_found", language) };
 
   const canonical = absoluteUrl(hubPath(locale, category, brand, product));
 
@@ -46,14 +47,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const price = formatCurrency(current, currency, language);
   const min30 = formatCurrency(getHubMin30(hub), currency, language);
 
-  const pricePart = price !== "—" ? `${price} ahora` : "";
-  const minPart = min30 !== "—" ? ` (mín ${min30})` : "";
+  const pricePart = price !== "—" ? t("hub_price_suffix", language, { price }) : "";
+  const minPart = min30 !== "—" ? t("hub_min_suffix", language, { price: min30 }) : "";
 
-  const title = `${hub.name} reacondicionado${pricePart ? ` — ${pricePart}${minPart}` : ""} | RefurbTrack`;
+  const title = `${hub.name} ${t("refurbished", language).toLowerCase()}${pricePart ? ` — ${pricePart}${minPart}` : ""} | RefurbTrack`;
   const description =
     current !== null
-      ? `Precios e historial del ${hub.name} reacondicionado en Back Market. Compara sus ${hub.summary.config_count} configuraciones — ${price} ahora${min30 !== "—" ? `, mínimo 30 días ${min30}` : ""}.`
-      : `Precios e historial del ${hub.name} reacondicionado en Back Market. Compara sus ${hub.summary.config_count} configuraciones y su evolución de precios.`;
+      ? t("hub_meta_desc_with", language, {
+          productName: hub.name,
+          count: hub.summary.config_count,
+          price,
+          minPart: min30 !== "—" ? t("hub_meta_min_part", language, { price: min30 }) : "",
+        })
+      : t("hub_meta_desc_without", language, {
+          productName: hub.name,
+          count: hub.summary.config_count,
+        });
 
   return {
     title,
@@ -70,6 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductHubPage({ params }: Props) {
   const { locale: rawLocale, category, brand, product } = await params;
   const locale = parseLocale(rawLocale);
+  const language = getLanguage(locale);
 
   const [hub, allProducts] = await Promise.all([
     getModelHub(category, brand, product, locale),
@@ -97,7 +107,7 @@ export default async function ProductHubPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Inicio", item: `${base}/${locale}` },
+      { "@type": "ListItem", position: 1, name: t("home", language), item: `${base}/${locale}` },
       { "@type": "ListItem", position: 2, name: category, item: `${base}/${locale}/${category}` },
       { "@type": "ListItem", position: 3, name: brand, item: `${base}/${locale}/${category}/${brand}` },
       { "@type": "ListItem", position: 4, name: hub.name, item: absoluteUrl(hubPath(locale, category, brand, product)) },
@@ -107,7 +117,7 @@ export default async function ProductHubPage({ params }: Props) {
   const itemListLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Configuraciones del ${hub.name} reacondicionado`,
+    name: t("configurations_of", language, { productName: hub.name }),
     numberOfItems: hub.summary.config_count,
     itemListElement: hub.storage_groups.flatMap((g) => g.specs).map((spec, i) => ({
       "@type": "ListItem",

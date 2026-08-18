@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { useConsent } from '@/context/ConsentContext'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { parseLocale } from '@/lib/i18n'
+import { parseLocale, getLanguage } from '@/lib/i18n'
+import { t } from '@/lib/translations'
 
 export function CookieBanner() {
   const params = useParams()
   const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
   const { consent, acceptAll, rejectAll, updateConsent } = useConsent()
   const [showConfig, setShowConfig] = useState(false)
   const [localConsent, setLocalConsent] = useState({ analytics: false, marketing: false })
@@ -30,39 +32,38 @@ export function CookieBanner() {
         {!showConfig ? (
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <p className="text-sm">
-              Utilizamos cookies propias y de terceros para analizar nuestro tráfico y mejorar tu experiencia. 
-              Puedes aceptar todas las cookies, rechazarlas o configurar tus preferencias. Lee nuestra{' '}
-              <Link href={`/${locale}/cookies`} className="underline font-semibold text-blue-600">Política de Cookies</Link>.
+              {t("cookie_banner_text", language)}
+              <Link href={`/${locale}/cookies`} className="underline font-semibold text-blue-600">{t("cookie_policy_link", language)}</Link>.
             </p>
             <div className="flex flex-wrap gap-2 shrink-0">
               <button onClick={() => setShowConfig(true)} className="text-sm px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium">
-                Configurar
+                {t("configure", language)}
               </button>
               <button onClick={rejectAll} className="text-sm px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium">
-                Rechazar
+                {t("reject", language)}
               </button>
               <button onClick={acceptAll} className="text-sm px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
-                Aceptar todas
+                {t("accept_all", language)}
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <h3 className="font-semibold text-lg">Configuración de Cookies</h3>
-            <p className="text-sm">Selecciona qué tipo de cookies permites instalar en tu navegador.</p>
+            <h3 className="font-semibold text-lg">{t("cookie_config_title", language)}</h3>
+            <p className="text-sm">{t("cookie_config_desc", language)}</p>
             
             <div className="flex items-center justify-between p-3 border rounded-md">
               <div>
-                <p className="font-medium text-sm">Cookies Técnicas (Estrictamente necesarias)</p>
-                <p className="text-xs text-gray-500">Necesarias para que la web funcione. No se pueden desactivar.</p>
+                <p className="font-medium text-sm">{t("technical_cookies", language)}</p>
+                <p className="text-xs text-gray-500">{t("technical_cookies_desc", language)}</p>
               </div>
               <input type="checkbox" checked disabled className="h-4 w-4 accent-blue-600" />
             </div>
 
             <div className="flex items-center justify-between p-3 border rounded-md">
               <div>
-                <p className="font-medium text-sm">Cookies de Analítica</p>
-                <p className="text-xs text-gray-500">Nos permiten entender cómo interactúas con la web (Google Analytics, Clarity).</p>
+                <p className="font-medium text-sm">{t("analytics_cookies", language)}</p>
+                <p className="text-xs text-gray-500">{t("analytics_cookies_desc", language)}</p>
               </div>
               <input 
                 type="checkbox" 
@@ -74,8 +75,8 @@ export function CookieBanner() {
 
             <div className="flex items-center justify-between p-3 border rounded-md">
               <div>
-                <p className="font-medium text-sm">Cookies de Marketing / Afiliación</p>
-                <p className="text-xs text-gray-500">Necesarias para el seguimiento de compras y enlaces de afiliados (Awin).</p>
+                <p className="font-medium text-sm">{t("marketing_cookies", language)}</p>
+                <p className="text-xs text-gray-500">{t("marketing_cookies_desc", language)}</p>
               </div>
               <input 
                 type="checkbox" 
@@ -87,7 +88,7 @@ export function CookieBanner() {
 
             <div className="flex gap-2 justify-end mt-2">
               <button onClick={handleSavePreferences} className="text-sm px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
-                Guardar preferencias
+                {t("save_preferences", language)}
               </button>
             </div>
           </div>

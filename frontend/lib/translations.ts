@@ -117,7 +117,9 @@ const ES: Record<string, string> = {
   cookies: "Cookies",
   footer_copyright: "© 2026 RefurbTrack. Todos los derechos reservados.",
   affiliate_disclosure:
-    "Podemos ganar una comisión cuando entras en los enlaces para hacer una compra. Haz clic aquí para saber con más detalle cómo ganamos dinero.",
+    "Podemos ganar una comisión cuando entras en los enlaces para hacer una compra. Haz clic ",
+  affiliate_disclosure_after:
+    " para saber con más detalle cómo ganamos dinero.",
   footer_here: "aquí",
 
   // --- BREADCRUMBS ---
@@ -149,6 +151,7 @@ const ES: Record<string, string> = {
   max_30d: "Máximo (30d)",
   calculated_from_records: "Calculado sobre registros",
   no_history_for_config: "No hay historial suficiente para esta configuración.",
+  no_price_records: "Todavía no hay registros de precios suficientes para mostrar una evolución real.",
   also_interesting: "También te podría interesar",
   about_product: "Sobre el {productName}",
   new_battery: "Batería Nueva",
@@ -224,6 +227,7 @@ const ES: Record<string, string> = {
   explore_more: "Explorar más",
   view_bm_history: "Ver historial de precios de Back Market",
   view_other_iphones: "Ver otros modelos de iPhone",
+  seo_section_title: "Precios e historial del {productName}",
   faq_title: "Preguntas frecuentes",
 
   // --- DASHBOARD ---
@@ -353,8 +357,35 @@ const ES: Record<string, string> = {
     "Historial y rastreador de precios Back Market | RefurbTrack",
   meta_history_description:
     "Consulta el historial de precios de Back Market y sigue la evolución de los móviles reacondicionados. Descubre si el precio actual es una buena oferta antes de comprar.",
+  history_landing_title: "Historial de precios de Back Market",
+  view_price_history: "Ver historial de precios",
+  tracked_products: "Productos que rastreamos",
+  tracked_products_desc: "Estos son los modelos cuyo precio estamos siguiendo en Back Market.",
+  pending_price: "Precio pendiente de registro",
+  configs_suffix: "{count} configuraciones",
+  how_tracker_works: "Cómo funciona el rastreador de precios",
+  real_history_example: "Ejemplo real de historial de precios",
+  current_price_stat: "Precio actual",
+  min_30_days: "Mínimo 30 días",
+  avg_30_days: "Media 30 días",
+  max_30_days: "Máximo 30 días",
+  good_time_buy: "¿Es un buen momento para comprar?",
+  history_by_model: "Historial de precios por modelo",
+  explore: "Explora RefurbTrack",
+  smartphones_refurbished: "Smartphones reacondicionados",
+  price_of_refurbished: "Precio del {name} reacondicionado",
+  colors_count: "{count} colores",
+  from_lower: "desde {price}",
   hub_price_suffix: "{price} ahora",
   hub_min_suffix: " (mín {price})",
+  configurations_of: "Configuraciones del {productName} reacondicionado",
+  hub_meta_desc_with:
+    "Precios e historial del {productName} reacondicionado en Back Market. Compara sus {count} configuraciones — {price} ahora{minPart}.",
+  hub_meta_desc_without:
+    "Precios e historial del {productName} reacondicionado en Back Market. Compara sus {count} configuraciones y su evolución de precios.",
+  hub_meta_min_part: ", mínimo 30 días {price}",
+  spec_meta_description:
+    "Historial de precios del {productName} reacondicionado en Back Market{priceNow}{minPart}. Compara condiciones y ahorra con garantía.",
 };
 
 // Diccionario Inglés (clave EN → valor EN).
@@ -460,7 +491,9 @@ const EN: Record<string, string> = {
   cookies: "Cookies",
   footer_copyright: "© 2026 RefurbTrack. All rights reserved.",
   affiliate_disclosure:
-    "We may earn a commission when you click links to make a purchase. Click here to learn more about how we make money.",
+    "We may earn a commission when you click links to make a purchase. Click ",
+  affiliate_disclosure_after:
+    " to learn more about how we make money.",
   footer_here: "here",
 
   // --- BREADCRUMBS ---
@@ -492,6 +525,7 @@ const EN: Record<string, string> = {
   max_30d: "Max (30d)",
   calculated_from_records: "Calculated from records",
   no_history_for_config: "Not enough history for this configuration.",
+  no_price_records: "Not enough price records yet to show a real evolution.",
   also_interesting: "You might also like",
   about_product: "About the {productName}",
   new_battery: "New Battery",
@@ -567,6 +601,7 @@ const EN: Record<string, string> = {
   explore_more: "Explore more",
   view_bm_history: "View Back Market price history",
   view_other_iphones: "View other iPhone models",
+  seo_section_title: "Prices and history of the {productName}",
   faq_title: "Frequently asked questions",
 
   // --- DASHBOARD ---
@@ -694,8 +729,35 @@ const EN: Record<string, string> = {
     "Back Market price history and tracker | RefurbTrack",
   meta_history_description:
     "Check Back Market price history and track how refurbished phones evolve. Discover whether the current price is a good deal before you buy.",
+  history_landing_title: "Back Market price history",
+  view_price_history: "View price history",
+  tracked_products: "Products we track",
+  tracked_products_desc: "These are the models whose prices we're tracking on Back Market.",
+  pending_price: "Price pending recording",
+  configs_suffix: "{count} configurations",
+  how_tracker_works: "How the price tracker works",
+  real_history_example: "Real price history example",
+  current_price_stat: "Current price",
+  min_30_days: "Min 30 days",
+  avg_30_days: "Avg 30 days",
+  max_30_days: "Max 30 days",
+  good_time_buy: "Is it a good time to buy?",
+  history_by_model: "Price history by model",
+  explore: "Explore RefurbTrack",
+  smartphones_refurbished: "Refurbished smartphones",
+  price_of_refurbished: "Price of the refurbished {name}",
+  colors_count: "{count} colors",
+  from_lower: "from {price}",
   hub_price_suffix: "{price} now",
   hub_min_suffix: " (min {price})",
+  configurations_of: "Configurations of the refurbished {productName}",
+  hub_meta_desc_with:
+    "Prices and history of the refurbished {productName} on Back Market. Compare its {count} configurations — {price} now{minPart}.",
+  hub_meta_desc_without:
+    "Prices and history of the refurbished {productName} on Back Market. Compare its {count} configurations and price evolution.",
+  hub_meta_min_part: ", min 30 days {price}",
+  spec_meta_description:
+    "Price history of the refurbished {productName} on Back Market{priceNow}{minPart}. Compare conditions and save with confidence.",
 };
 
 // Mapa inverso ES → EN, útil para generar slugs o etiquetas en inglés.

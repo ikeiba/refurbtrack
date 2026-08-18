@@ -7,6 +7,7 @@ import { Metadata } from "next";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper";
 import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n";
+import { t } from "@/lib/translations";
 
 // export const revalidate = 600; // Cachear 1 hora (ISR)
 export const dynamic = 'force-dynamic'
@@ -22,10 +23,11 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, category } = await params;
   const prettyCategory = category.charAt(0).toUpperCase() + category.slice(1);
+  const language = getLanguage(locale);
 
   return {
-    title: `Compara ${prettyCategory} Reacondicionados | RefurbTrack`,
-    description: `Compara precios históricos de ${prettyCategory} reacondicionados en Back Market. Encuentra la mejor oferta con garantía.`,
+    title: t("meta_category_title", language, { category: prettyCategory }),
+    description: t("meta_category_description", language, { category: prettyCategory }),
     alternates: {
       canonical: `/${locale}/${category}`
     }
@@ -35,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CategoryPage({ params }: Props) {
   const { locale: rawLocale, category } = await params;
   const locale = parseLocale(rawLocale);
+  const language = getLanguage(locale);
 
   // 1. Obtener TODOS los productos del mercado
   const allProducts = await getProducts(locale);
@@ -61,7 +64,7 @@ export default async function CategoryPage({ params }: Props) {
 
   // Definimos la ruta para esta página específica
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${locale}` },
+    { label: t("home", language), href: `/${locale}` },
     { label: prettyCategory } // No pasamos href porque es la página actual
   ];
 
@@ -73,12 +76,12 @@ export default async function CategoryPage({ params }: Props) {
       <main className="container mx-auto px-4 pt-8">
         
         {/* 2. Red de enlaces internos estáticos */}
-        <Breadcrumbs items={breadcrumbNodes} />
+        <Breadcrumbs items={breadcrumbNodes} language={language} />
         
         {/* Cabecera SEO */}
         <header className="mb-10 max-w-3xl">
           <h1 className="text-4xl font-extrabold tracking-tight mb-4 capitalize">
-            {prettyCategory} Reacondicionados
+            {t("category_heading", language, { category: prettyCategory })}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             {seoCopy}

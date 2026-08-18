@@ -265,9 +265,9 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
       maxDate:  formatDate(maxDate),
       avg:      avg30d,
       date:     lastUpdateDate,
-      battery:  activeOffer.battery_new ? "Batería Nueva" : "Batería Estándar"
+      battery:  activeOffer.battery_new ? t("new_battery", language) : t("standard_battery", language)
     }
-  }, [activeOffer, chartData])
+  }, [activeOffer, chartData, language])
 
   // ─── IMAGEN ACTIVA ────────────────────────────────────────────────────────
   const finalImage = useMemo(() => {
@@ -290,7 +290,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
   // Justo antes del return, define los nodos del breadcrumb:
   const modelHubHref = hubPath(locale, initialProduct.category_slug, initialProduct.brand_slug, initialProduct.slug);
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${locale}` },
+    { label: t("home", language), href: `/${locale}` },
     { label: initialProduct.category_slug, href: `/${locale}/${initialProduct.category_slug}` },
     { label: initialProduct.brand_slug, href: `/${locale}/${initialProduct.category_slug}/${initialProduct.brand_slug}` },
     { label: initialProduct.name, href: modelHubHref },
@@ -316,7 +316,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
       <div className="container mx-auto px-4 py-8">
         {/* BREADCRUMBS (Ruta de navegación SEO) */}
         {/* BREADCRUMBS (Componente Reutilizable) */}
-        <Breadcrumbs items={breadcrumbNodes} />
+        <Breadcrumbs items={breadcrumbNodes} language={language} />
 
         <div className="grid md:grid-cols-2 gap- items-start">
 
@@ -340,7 +340,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                 {initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color, language)}
                 {Number(activeSpec.min_price_cached) > 0 && (
                   <span className="block mt-1 text-xl font-semibold text-emerald-600">
-                    Desde {formatCurrency(activeSpec.min_price_cached, currency, language)}
+                    {t("from", language)} {formatCurrency(activeSpec.min_price_cached, currency, language)}
                   </span>
                 )}
               </h1>
@@ -349,14 +349,14 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                 className="shrink-0 inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md text-sm font-medium border border-border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <Table className="h-4 w-4" />
-                Ver tabla comparativa
+                {t("view_comparison_table", language)}
               </Link>
             </div>
             <Separator />
 
             {/* ALMACENAMIENTO (Ahora como Enlaces Estáticos) */}
             <div>
-              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Almacenamiento</h3>
+              <h3 className="mb-3 text-sm font-medium text-muted-foreground">{t("storage", language)}</h3>
               <div className="flex flex-wrap gap-2">
                 {storages.map((storage) => {
                   const isSelected = activeSpec.storage === storage;
@@ -387,7 +387,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
 
             {/* COLOR (Ahora como Enlaces Estáticos) */}
             <div className="mt-6">
-              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Color</h3>
+              <h3 className="mb-3 text-sm font-medium text-muted-foreground">{t("color", language)}</h3>
               <div className="flex flex-wrap gap-3">
                 {colors.map((c) => (
                   <Link
@@ -403,7 +403,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                     style={{ backgroundColor: getColorHex(c) }}
                     title={t(c, language)}
                     // Aria-label es vital para accesibilidad y SEO si el enlace no tiene texto visible
-                    aria-label={`Ver modelo en color ${c}`}
+                    aria-label={t("view_model_in_color", language, { color: t(c, language) })}
                   />
                 ))}
               </div>
@@ -413,7 +413,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
             {/* ESTADO + BATERÍA */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Estado</h3>
+                <h3 className="mb-3 text-sm font-medium text-muted-foreground">{t("condition", language)}</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {["Fair", "Good", "Excellent", "Premium"].map((cond) => (
                     <Button
@@ -429,7 +429,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                 </div>
               </div>
               <div>
-                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Batería</h3>
+                <h3 className="mb-3 text-sm font-medium text-muted-foreground">{t("battery", language)}</h3>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant={!selectedBattery ? "default" : "outline"}
@@ -452,7 +452,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
             {/* CAJA DE PRECIO */}
             <div className="rounded-lg border border-border bg-muted/30 p-4">
               <div>
-                <p className="text-sm text-muted-foreground">Configuración seleccionada</p>
+                <p className="text-sm text-muted-foreground">{t("selected_configuration", language)}</p>
                 <p className="mt-1 font-semibold text-lg">
                   {initialProduct.name} · {activeSpec.storage}GB · {t(activeSpec.color, language)} · {t(selectedCondition, language)} · {priceStats?.battery}
                 </p>
@@ -464,7 +464,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                       <p className="text-3xl font-bold text-emerald-600">{formatCurrency(activeOffer.current_price, currency, language)}</p>
                       {priceStats?.date && (
                         <span className="text-xs text-muted-foreground" suppressHydrationWarning>
-                            Registrado el {priceStats.date}
+                            {t("recorded_on", language, { date: priceStats.date })}
                         </span>
                       )}
                     </div>
@@ -475,12 +475,12 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                       onClick={() => track('outbound_click', { store: 'Back Market', model: initialProduct.name, url: activeOffer.url })}
                       className="w-full h-11 inline-flex items-center justify-center rounded-md text-base font-medium shadow-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all"
                     >
-                      Ver oferta en Back Market
+                      {t("view_offer_on", language)}
                       <ExternalLink className="ml-4 w-5 h-5 opacity-80" />
                     </a>
                   </div>
                 ) : (
-                  <p className="text-xl text-muted-foreground py-2">Sin stock para esta combinación</p>
+                  <p className="text-xl text-muted-foreground py-2">{t("out_of_stock_combination", language)}</p>
                 )}
               </div>
             </div>
@@ -495,7 +495,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                 setIsAlertOpen(true)
               }}
             >
-              <Bell className="w-5 h-5" /> Alerta
+              <Bell className="w-5 h-5" /> {t("alert", language)}
             </Button>
           </div>
         </div>
@@ -504,7 +504,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
         <div className="mt-20">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              <TrendingDown className="w-6 h-6 text-primary" /> Histórico de Precios
+              <TrendingDown className="w-6 h-6 text-primary" /> {t("price_history_title", language)}
             </h2>
             {/* FIX 4: ComparisonPopover restored */}
           </div>
@@ -515,7 +515,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
               <Card className="p-4 border shadow-sm bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900">
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
-                    <Calendar className="w-3 h-3" /> Último Registro
+                    <Calendar className="w-3 h-3" /> {t("last_record", language)}
                   </span>
                   <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{formatCurrency(priceStats.current, currency, language)}</span>
                   <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
@@ -526,33 +526,33 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
               <Card className="p-4 border shadow-sm">
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
-                    <ArrowDown className="w-3 h-3 text-green-600" /> Mínimo (30d)
+                    <ArrowDown className="w-3 h-3 text-green-600" /> {t("min_30d", language)}
                   </span>
                   <span className="text-2xl font-bold mt-1">{formatCurrency(priceStats.min, currency, language)}</span>
                   {/* En la tarjeta de Mínimo */}
                   <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
-                    {priceStats.minDate !== "N/A" ? `Registrado el ${priceStats.minDate}` : ""}
+                    {priceStats.minDate !== "N/A" ? t("recorded_on", language, { date: priceStats.minDate }) : ""}
                   </span>
                 </div>
               </Card>
               <Card className="p-4 border shadow-sm">
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
-                    <Activity className="w-3 h-3 text-blue-600" /> Media (30d)
+                    <Activity className="w-3 h-3 text-blue-600" /> {t("avg_30d", language)}
                   </span>
                   <span className="text-2xl font-bold mt-1">{formatCurrency(priceStats.avg, currency, language)}</span>
-                  <span className="text-[10px] text-muted-foreground mt-1">Calculado sobre registros</span>
+                  <span className="text-[10px] text-muted-foreground mt-1">{t("calculated_from_records", language)}</span>
                 </div>
               </Card>
               <Card className="p-4 border shadow-sm">
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3 text-red-600" /> Máximo (30d)
+                    <ArrowUp className="w-3 h-3 text-red-600" /> {t("max_30d", language)}
                   </span>
                   <span className="text-2xl font-bold mt-1">{formatCurrency(priceStats.max, currency, language)}</span>
                     {/* En la tarjeta de Máximo */}
                     <span className="text-[10px] text-muted-foreground mt-1" suppressHydrationWarning>
-                    {priceStats.maxDate !== "N/A" ? `Registrado el ${priceStats.maxDate}` : ""}
+                    {priceStats.maxDate !== "N/A" ? t("recorded_on", language, { date: priceStats.maxDate }) : ""}
                     </span>
                 </div>
               </Card>
@@ -562,7 +562,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           {/* 1. Título a la izquierda */}
           <h3 className="text-lg font-semibold text-foreground">
-            Evolución del precio
+            {t("price_evolution", language)}
           </h3>
           
           {/* 2. Grupo de controles a la derecha (o debajo en móviles) */}
@@ -611,7 +611,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
                 <TrendingDown className="w-10 h-10 mb-2 opacity-20" />
-                <p>No hay historial suficiente para esta configuración.</p>
+                <p>{t("no_history_for_config", language)}</p>
               </div>
             )}
           </Card>
@@ -620,7 +620,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
           {initialHotOffers.length > 0 && (
             <div className="mt-12">
               <h2 className="text-2xl font-bold flex items-center gap-2 mb-6">
-                <Sparkles className="w-6 h-6 text-primary" /> También te podría interesar
+                <Sparkles className="w-6 h-6 text-primary" /> {t("also_interesting", language)}
               </h2>
               {/* FIX 2: Internal navigation restored */}
               <HistoricalLowsCarousel
@@ -641,7 +641,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
           <div className="mt-10 pt-5 border-border">
             <h2 className="text-2xl font-bold flex items-center gap-2 mb-6">
               {/* Añadimos un icono consistente con el resto del diseño */}
-              <Info className="w-6 h-6 text-primary" /> Sobre el {initialProduct.name}
+              <Info className="w-6 h-6 text-primary" /> {t("about_product", language, { productName: initialProduct.name })}
             </h2>
             
             {/* Usamos el mismo diseño de "Card" que usaste en la gráfica para integrarlo */}

@@ -17,6 +17,7 @@ import { X } from "lucide-react" // Necesitamos este icono
 import { cn } from "@/lib/utils"
 import { parseLocale, getLanguage, getCurrency } from "@/lib/i18n"
 import { formatCurrency } from "@/lib/format"
+import { t } from "@/lib/translations"
 
 interface PricePoint {
   timestamp: string
@@ -136,7 +137,7 @@ export default function PriceHistoryChart({ series, onRemoveSeries, locale }: Pr
               <button 
                 onClick={() => onRemoveSeries(s.name)}
                 className="ml-1 hover:bg-black/10 rounded-full p-0.5 transition-colors"
-                title="Eliminar de la comparativa"
+                title={t("remove_from_comparison", language)}
               >
                 <X className="w-3 h-3" />
               </button>

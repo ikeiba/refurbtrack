@@ -47,7 +47,7 @@ export default function DashboardPage() {
 
   const handleHeaderSearch = (query: string) => {
     const trimmed = query.trim()
-    router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/")
+    router.push(trimmed ? `/${locale}?q=${encodeURIComponent(trimmed)}` : `/${locale}`)
   }
 
   // 2. FUNCIONES MANEJADORAS
@@ -55,9 +55,9 @@ export default function DashboardPage() {
     try {
         await unsubscribeAllAlerts()
         setAlerts([]) // Limpiamos la lista visualmente
-        toast({ title: "Baja completada", description: "Has dejado de seguir todos los productos." })
+        toast({ title: t("unsubscribe_completed", language), description: t("unsubscribed_all", language) })
     } catch (error) {
-        toast({ title: "Error", description: "No se pudo procesar la baja", variant: "destructive" })
+        toast({ title: t("error", language), description: t("could_not_process", language), variant: "destructive" })
     }
   }
 
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         localStorage.clear()
         window.location.href = "/" // Redirigir a home recargando
     } catch (error) {
-        toast({ title: "Error", description: "No se pudo eliminar la cuenta", variant: "destructive" })
+        toast({ title: t("error", language), description: t("could_not_delete_account", language), variant: "destructive" })
     }
   }
 
@@ -101,9 +101,9 @@ export default function DashboardPage() {
     try {
         await deleteAlert(id) // <--- Llamada limpia sin token
         setAlerts(prev => prev.filter(a => a.id !== id))
-        toast({ title: "Alerta eliminada", className: "bg-emerald-50 text-emerald-800 border-emerald-200" })
+        toast({ title: t("alert_deleted", language), className: "bg-emerald-50 text-emerald-800 border-emerald-200" })
     } catch (error) {
-        toast({ title: "Error", description: "No se pudo eliminar", variant: "destructive" })
+        toast({ title: t("error", language), description: t("could_not_delete", language), variant: "destructive" })
     } finally {
         setDeletingId(null)
     }
@@ -126,8 +126,8 @@ export default function DashboardPage() {
             <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="flex items-center justify-between mb-8">
         <div>
-            <h1 className="text-3xl font-bold tracking-tight">Mi Panel</h1>
-            <p className="text-muted-foreground">Gestiona tus alertas de precios activas para {user}</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t("my_panel", language)}</h1>
+            <p className="text-muted-foreground">{t("manage_alerts_for", language, { user })}</p>
         </div>
       </div>
 
@@ -138,13 +138,13 @@ export default function DashboardPage() {
                 <div className="h-16 w-16 bg-emerald-100 rounded-full flex items-center justify-center">
                     <Bell className="h-8 w-8 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold">No tienes alertas activas</h3>
+                <h3 className="text-xl font-semibold">{t("no_active_alerts", language)}</h3>
                 <p className="text-muted-foreground max-w-sm">
-                    Busca un producto que te guste y crea una alerta para que te avisemos cuando baje de precio.
+                    {t("no_active_alerts_desc", language)}
                 </p>
                 <Link href={`/${locale}`}>
                     <Button className="mt-4 bg-emerald-600 hover:bg-emerald-700">
-                        Explorar Productos <ArrowRight className="ml-2 h-4 w-4" />
+                        {t("explore_products", language)} <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 </Link>
             </div>
@@ -176,58 +176,34 @@ export default function DashboardPage() {
                                     {alert.product_name || `Producto ${alert.product}`}
                                 </span>
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-medium">
-                                    Activa
+                                    {t("active", language)}
                                 </span>
                             </div>
                             <p className="text-muted-foreground text-sm mb-2">
-                                Avisar si baja de <span className="font-bold text-foreground">{formatCurrency(alert.price_threshold, currency, language)}</span>
+                                {t("notify_drop_below", language, { price: formatCurrency(alert.price_threshold, currency, language) })}
                             </p>
                             
                             {/* Filtros aplicados */}
                             <div className="flex flex-wrap gap-2 text-xs">
                                 {/* Almacenamiento */}
-                                {alert.target_storages?.length > 0 ? (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Almacenamiento: {alert.target_storages.join(", ")}GB
-                                    </span>
-                                ) : (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Almacenamiento: Cualquiera
-                                    </span>
-                                )}
+                                <span className="bg-secondary px-2 py-1 rounded">
+                                    {t("storage_suffix", language, { values: alert.target_storages?.length > 0 ? `${alert.target_storages.join(", ")}GB` : t("any", language) })}
+                                </span>
 
                                 {/* Color */}
-                                {alert.target_colors?.length > 0 ? (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Color: {alert.target_colors.map((c: string) => t(c, language)).join(", ")}
-                                    </span>
-                                ) : (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Color: Cualquiera
-                                    </span>
-                                )}
+                                <span className="bg-secondary px-2 py-1 rounded">
+                                    {t("color_suffix", language, { values: alert.target_colors?.length > 0 ? alert.target_colors.map((c: string) => t(c, language)).join(", ") : t("any", language) })}
+                                </span>
 
                                 {/* Estado */}
-                                {alert.target_conditions?.length > 0 ? (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Estado: {alert.target_conditions.map((c: string) => t(c, language)).join(", ")}
-                                    </span>
-                                ) : (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Estado: Cualquiera
-                                    </span>
-                                )}
+                                <span className="bg-secondary px-2 py-1 rounded">
+                                    {t("condition_suffix", language, { values: alert.target_conditions?.length > 0 ? alert.target_conditions.map((c: string) => t(c, language)).join(", ") : t("any", language) })}
+                                </span>
 
                                 {/* Batería */}
-                                {alert.battery_new !== null ? (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Batería: {alert.battery_new ? "Nueva" : "Estándar"}
-                                    </span>
-                                ) : (
-                                    <span className="bg-secondary px-2 py-1 rounded">
-                                        Batería: Cualquiera
-                                    </span>
-                                )}
+                                <span className="bg-secondary px-2 py-1 rounded">
+                                    {t("battery_suffix", language, { values: alert.battery_new !== null ? (alert.battery_new ? t("new", language) : t("standard", language)) : t("any", language) })}
+                                </span>
                             </div>
                         </div>
 
@@ -240,7 +216,7 @@ export default function DashboardPage() {
                             >
                                 <Button variant="outline" size="sm" className="w-full gap-2 text-xs h-9">
                                     <Activity className="h-3.5 w-3.5" />
-                                    Historial
+                                    {t("history", language)}
                                 </Button>
                             </Link>
 
@@ -255,7 +231,7 @@ export default function DashboardPage() {
                             >
                                 <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2 text-xs h-9">
                                 <ShoppingCart className="h-3.5 w-3.5" />
-                                Comprar
+                                {t("buy", language)}
                                 </Button>
                             </a>
                             
@@ -284,7 +260,7 @@ export default function DashboardPage() {
       <div className="mt-28 pt-6 border-t">
         <h3 className="text-sm font-semibold mb-6 text-slate-900 dark:text-slate-100 flex items-center justify-center gap-2">
             <AlertTriangle className="h-4 w-4 text-red-500" />
-            Zona de Peligro
+            {t("danger_zone", language)}
         </h3>
         
         <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -293,31 +269,31 @@ export default function DashboardPage() {
             <Card className="border-orange-200 bg-orange-50/30 dark:bg-orange-950/20 dark:border-orange-900/50 hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-400">
-                        Detener Notificaciones
+                        {t("stop_notifications", language)}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                        Elimina todas tus alertas sin borrar tu cuenta.
+                        {t("stop_notifications_desc", language)}
                     </p>
                     
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button size="sm" variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-100 text-xs h-9">
-                                Eliminar alertas
+                                {t("delete_alerts", language)}
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                <AlertDialogTitle>{t("are_you_sure", language)}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Esto eliminará tus {alerts.length} alertas activas.
+                                    {t("will_delete_n_alerts", language, { count: alerts.length })}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogCancel>{t("cancel", language)}</AlertDialogCancel>
                                 <AlertDialogAction onClick={handleUnsubscribeAll} className="bg-orange-600 hover:bg-orange-700">
-                                    Sí, eliminar
+                                    {t("yes_delete", language)}
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
@@ -329,31 +305,31 @@ export default function DashboardPage() {
             <Card className="border-red-200 bg-red-50/30 dark:bg-red-950/20 dark:border-red-900/50 hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-red-700 dark:text-red-400">
-                        Eliminar Cuenta
+                        {t("delete_account", language)}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                        Borra permanentemente tu cuenta y todos tus datos.
+                        {t("delete_account_desc", language)}
                     </p>
                     
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button size="sm" variant="destructive" className="w-full bg-red-600 hover:bg-red-700 text-xs h-9">
-                                Eliminar cuenta
+                                {t("delete_account", language)}
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar cuenta permanentemente?</AlertDialogTitle>
+                                <AlertDialogTitle>{t("delete_account_confirm", language)}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Esto borrará tu usuario <strong>{user}</strong> y todos tus datos. No se puede deshacer.
+                                    {t("delete_account_confirm_desc", language, { user })}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogCancel>{t("cancel", language)}</AlertDialogCancel>
                                 <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700">
-                                    Sí, eliminar
+                                    {t("yes_delete", language)}
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>

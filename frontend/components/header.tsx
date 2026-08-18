@@ -208,7 +208,7 @@ export function Header({
                     {/* MENÚ PARA USUARIO REGISTRADO */}
                     <DropdownMenuLabel>
                         <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">Mi Cuenta</p>
+                            <p className="text-sm font-medium leading-none">{t("my_account", language)}</p>
                             <p className="text-xs leading-none text-muted-foreground truncate">
                                 {user}
                             </p>
@@ -218,31 +218,31 @@ export function Header({
                     <DropdownMenuItem asChild>
                       <Link href={`/${locale}/dashboard`} className="flex w-full items-center cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Mi Panel</span>
+                        <span>{t("my_panel", language)}</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
                         <LogOut className="mr-2 h-4 w-4" />
-                        <span>Cerrar Sesión</span>
+                        <span>{t("logout", language)}</span>
                     </DropdownMenuItem>
                 </>
               ) : (
                 <>
                     {/* MENÚ PARA INVITADO */}
-                    <DropdownMenuLabel>Acceso Usuarios</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("user_access", language)}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href={`/${locale}/login`} className="flex w-full items-center cursor-pointer">
                         <LogIn className="mr-2 h-4 w-4" />
-                        <span>Iniciar Sesión</span>
+                        <span>{t("login", language)}</span>
                       </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem asChild>
                       <Link href={`/${locale}/register`} className="flex w-full items-center cursor-pointer">
                         <UserPlus className="mr-2 h-4 w-4" />
-                        <span>Registrarse</span>
+                        <span>{t("register", language)}</span>
                       </Link>
                     </DropdownMenuItem>
                 </>

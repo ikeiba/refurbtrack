@@ -9,6 +9,7 @@ import { Metadata } from "next";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper"; 
 import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n";
+import { t } from "@/lib/translations";
 
 // export const revalidate = 600; // Cacheamos en servidor por 1 hora
 export const dynamic = 'force-dynamic'
@@ -26,11 +27,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, category, brand } = await params;
   const prettyCat = category.charAt(0).toUpperCase() + category.slice(1);
   const seoBrandName = getSEOBrandAlias(category, brand);
+  const language = getLanguage(locale);
 
   return {
     // Ej: Apple Smartphone Reacondicionados al Mejor Precio
-    title: `${seoBrandName} Reacondicionados - Historial de Precios | RefurbTrack`,
-    description: `Compara precios históricos de ${prettyCat}s ${seoBrandName} reacondicionados en Back Market. Encuentra la mejor oferta con garantía.`,
+    title: t("meta_brand_title", language, { brand: seoBrandName }),
+    description: t("meta_brand_description", language, { category: prettyCat, brand: seoBrandName }),
     alternates: { canonical: `/${locale}/${category}/${brand}` }
   };
 }
@@ -38,6 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BrandPage({ params }: Props) {
   const { locale: rawLocale, category, brand } = await params;
   const locale = parseLocale(rawLocale);
+  const language = getLanguage(locale);
   
   const allProducts = await getProducts(locale);
   
@@ -67,7 +70,7 @@ export default async function BrandPage({ params }: Props) {
 
   // BREADCRUMBS: Ahora con 3 niveles (Inicio > Categoría > Marca)
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${locale}` },
+    { label: t("home", language), href: `/${locale}` },
     { label: prettyCat, href: `/${locale}/${category}` },
     { label: prettyBrand } // La página actual sin href
   ];
@@ -78,11 +81,11 @@ export default async function BrandPage({ params }: Props) {
 
       <main className="container mx-auto px-4 pt-8">
         
-        <Breadcrumbs items={breadcrumbNodes} />
+        <Breadcrumbs items={breadcrumbNodes} language={language} />
         
         <header className="mb-10 max-w-3xl">
           <h1 className="text-4xl font-extrabold tracking-tight mb-4 capitalize">
-            {seoBrandName} Reacondicionados
+            {t("category_heading", language, { category: seoBrandName })}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             {seoCopy}

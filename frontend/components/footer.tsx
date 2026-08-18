@@ -3,11 +3,13 @@
 import Link from "next/link"
 import { Twitter, Instagram } from "lucide-react"
 import { useParams } from "next/navigation"
-import { parseLocale } from "@/lib/i18n"
+import { parseLocale, getLanguage } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 export function Footer() {
   const params = useParams()
   const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
 
   return (
     <footer className="bg-background border-t border-border pt-12 pb-8">
@@ -22,7 +24,7 @@ export function Footer() {
               {/* 1. Inyectamos el SVG directamente desde la carpeta public */}
               <img 
                 src="/favicon.svg" 
-                alt="Logo de RefurbTrack" 
+                alt={t("logo_alt", language)} 
                 className="h-8 w-8" 
               />
               
@@ -33,21 +35,21 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Facilitando la transición hacia una economía circular y sostenible a través de la transparencia en precios de tecnología reacondicionada.
+              {t("footer_tagline", language)}
             </p>
           </div>
 
           {/* COLUMNA 2: PRODUCTOS */}
           <div>
-            <h4 className="font-bold text-foreground mb-4">Productos</h4>
+            <h4 className="font-bold text-foreground mb-4">{t("footer_products", language)}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link href={`/${locale}/smartphone/apple`} className="hover:text-emerald-600 transition-colors">
-                  iPhones
+                  {t("footer_iphones", language)}
                 </Link>
               </li>
               <li>
-                  En breve...
+                  {t("footer_coming_soon", language)}
               </li>
               {/*
               <li>
@@ -65,26 +67,26 @@ export function Footer() {
 
           {/* COLUMNA 3: COMPAÑÍA */}
           <div>
-            <h4 className="font-bold text-foreground mb-4">Compañía</h4>
+            <h4 className="font-bold text-foreground mb-4">{t("footer_company", language)}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link href={`/${locale}/about`} className="hover:text-emerald-600 transition-colors">
-                  Sobre Nosotros
+                  {t("about_us", language)}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/how-it-works`} className="hover:text-emerald-600 transition-colors">
-                  Cómo funciona
+                  {t("how_it_works", language)}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/blog`} className="hover:text-emerald-600 transition-colors">
-                  Blog
+                  {t("blog", language)}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/contact`} className="hover:text-emerald-600 transition-colors">
-                  Contacto
+                  {t("contact", language)}
                 </Link>
               </li>
             </ul>
@@ -92,21 +94,21 @@ export function Footer() {
 
           {/* COLUMNA 4: LEGAL */}
           <div>
-            <h4 className="font-bold text-foreground mb-4">Legal</h4>
+            <h4 className="font-bold text-foreground mb-4">{t("footer_legal", language)}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link href={`/${locale}/privacy`} className="hover:text-emerald-600 transition-colors">
-                  Privacidad
+                  {t("privacy", language)}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/terms`} className="hover:text-emerald-600 transition-colors">
-                  Términos
+                  {t("terms", language)}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/cookies`} className="hover:text-emerald-600 transition-colors">
-                  Cookies
+                  {t("cookies", language)}
                 </Link>
               </li>
             </ul>
@@ -116,17 +118,16 @@ export function Footer() {
         {/* LÍNEA DIVISORIA Y COPYRIGHT */}
         <div className="border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2026 RefurbTrack. Todos los derechos reservados.
+            {t("footer_copyright", language)}
           </p>
           
           <div className="flex gap-8">
             <p className="text-sm text-muted-foreground">
-              Podemos ganar una comisión cuando entras en los enlaces para hacer una compra.
-              Haz clic {" "}
+              {t("affiliate_disclosure", language)}
               <a href={`/${locale}/how-it-works`} className="text-emerald-600 hover:underline">
-              aquí 
+                {t("footer_here", language)}
               </a>
-              {" "} para saber con mas detalle cómo ganamos dinero. 
+              {t("affiliate_disclosure_after", language)}
             </p>
           </div>
           {/* REDES SOCIALES */}

@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { WhyRefurbished } from "@/components/why-refurbished"
 import { useRouter, useSearchParams, useParams } from "next/navigation"
 import type { ProductSummary, OfferSummary } from "@/lib/types"
-import { parseLocale } from "@/lib/i18n"
+import { parseLocale, getLanguage } from "@/lib/i18n"
 import { getSpecSlug } from "@/lib/i18n"
 
 interface HomePageClientProps {
@@ -33,6 +33,7 @@ export default function HomePageClient({ initialProducts, initialHotOffers, loca
   // 2. ¡ELIMINADO useSearchParams de aquí! El padre ya no lo sabe.
   const params = useParams()
   const resolvedLocale = parseLocale(locale ?? (params?.locale as string | undefined))
+  const resolvedLanguage = getLanguage(resolvedLocale)
   
   const [selectedCountry, setSelectedCountry] = useState("ES")
   
@@ -97,7 +98,7 @@ export default function HomePageClient({ initialProducts, initialHotOffers, loca
 
       {!searchQuery && (
         <div className="mt-12">
-          <WhyRefurbished />
+          <WhyRefurbished language={resolvedLanguage} />
         </div>
       )}
 

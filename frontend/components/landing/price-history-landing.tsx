@@ -55,8 +55,8 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
   const currency = getCurrency(resolvedLocale)
 
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${resolvedLocale}` },
-    { label: "Historial de precios de Back Market" },
+    { label: t("home", language), href: `/${resolvedLocale}` },
+    { label: t("history_landing_title", language) },
   ]
 
   const stats = featured.stats
@@ -69,12 +69,12 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
   return (
     <div className="min-h-screen bg-background pb-20">
       <main className="container mx-auto px-4 pt-8">
-        <Breadcrumbs items={breadcrumbNodes} />
+        <Breadcrumbs items={breadcrumbNodes} language={language} />
 
         {/* HERO */}
         <header className="max-w-3xl mb-14">
           <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
-            Historial de precios de Back Market
+            {t("history_landing_title", language)}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Consulta cómo evolucionan los precios de móviles reacondicionados en Back Market,
@@ -86,16 +86,16 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
               href={firstHub}
               className="mt-6 inline-flex items-center justify-center h-11 px-6 rounded-md text-base font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
             >
-              Ver historial de precios
+              {t("view_price_history", language)}
             </Link>
           )}
         </header>
 
         {/* PRODUCTOS QUE RASTREAMOS */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold tracking-tight mb-2">Productos que rastreamos</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-2">{t("tracked_products", language)}</h2>
           <p className="text-muted-foreground mb-6">
-            Estos son los modelos cuyo precio estamos siguiendo en Back Market.
+            {t("tracked_products_desc", language)}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {models.map((product) => {
@@ -123,12 +123,12 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
                       </Link>
                       <div className="mt-1 flex items-baseline gap-2">
                         <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                          {product.min_price_cached ? `Desde ${formatCurrency(product.min_price_cached, currency, language)}` : "Precio pendiente de registro"}
+                          {product.min_price_cached ? `${t("from", language)} ${formatCurrency(product.min_price_cached, currency, language)}` : t("pending_price", language)}
                         </span>
                       </div>
                       {typeof product.spec_count === "number" && (
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {product.spec_count} configuraciones
+                          {t("configs_suffix", language, { count: product.spec_count })}
                         </p>
                       )}
                     </div>
@@ -145,7 +145,7 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
                         />
                       ))}
                       <span className="text-xs text-muted-foreground ml-1">
-                        {colors.length} {colors.length === 1 ? "color" : "colores"}
+                        {t("colors_count", language, { count: colors.length })}
                       </span>
                     </div>
                   )}
@@ -161,7 +161,7 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
                   )}
 
                   <Link href={href} className="text-sm font-medium text-emerald-600 hover:underline mt-auto">
-                    Ver historial de precios
+                    {t("view_price_history", language)}
                   </Link>
                 </div>
               )
@@ -171,7 +171,7 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
 
         {/* CÓMO FUNCIONA EL RASTREADOR DE PRECIOS */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">Cómo funciona el rastreador de precios</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-6">{t("how_tracker_works", language)}</h2>
           <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               "RefurbTrack registra los precios de las configuraciones disponibles en Back Market.",
@@ -191,19 +191,19 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
 
         {/* SECCIÓN PRINCIPAL DE DATOS (DEMO REAL) */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">Ejemplo real de historial de precios</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-6">{t("real_history_example", language)}</h2>
 
           {stats ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <StatCard label="Precio actual" value={formatCurrency(stats.current, currency, language)} />
-                <StatCard label="Mínimo 30 días" value={formatCurrency(stats.min30d, currency, language)} />
-                <StatCard label="Media 30 días" value={formatCurrency(stats.avg30d, currency, language)} />
-                <StatCard label="Máximo 30 días" value={formatCurrency(stats.max30d, currency, language)} />
-                <StatCard label="Último registro" value={formatDate(stats.last_updated, language) || "—"} />
+                <StatCard label={t("current_price_stat", language)} value={formatCurrency(stats.current, currency, language)} />
+                <StatCard label={t("min_30_days", language)} value={formatCurrency(stats.min30d, currency, language)} />
+                <StatCard label={t("avg_30_days", language)} value={formatCurrency(stats.avg30d, currency, language)} />
+                <StatCard label={t("max_30_days", language)} value={formatCurrency(stats.max30d, currency, language)} />
+                <StatCard label={t("last_record", language)} value={formatDate(stats.last_updated, language) || "—"} />
               </div>
 
-              <FeaturedPriceChart history={featured.history} name={stats.product_name} />
+              <FeaturedPriceChart history={featured.history} name={stats.product_name} locale={resolvedLocale} />
 
               {stats.percentage_vs_average !== null && stats.avg30d !== null && stats.current !== null && (
                 <p className="mt-4 text-muted-foreground">
@@ -223,7 +223,7 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
 
         {/* ¿ES UN BUEN MOMENTO PARA COMPRAR? */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">¿Es un buen momento para comprar?</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-6">{t("good_time_buy", language)}</h2>
           <div className="rounded-lg border border-border bg-card p-6">
             {stats?.position_label ? (
               <p className="text-lg text-muted-foreground leading-relaxed">
@@ -242,7 +242,7 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
 
         {/* HISTORIAL POR MODELO */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold tracking-tight mb-2">Historial de precios por modelo</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-2">{t("history_by_model", language)}</h2>
           <p className="text-muted-foreground mb-6">
             Consulta el precio de cada iPhone reacondicionado, compara sus configuraciones y revisa
             su evolución en Back Market antes de comprar.
@@ -252,16 +252,16 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
               const href = hubPath(resolvedLocale, product.category_slug!, product.brand_slug!, product.slug)
               const colors = product.available_colors ?? []
               const details = [
-                `${product.spec_count ?? 0} configuraciones`,
-                `${colors.length} colores`,
-                product.min_price_cached ? `desde ${formatCurrency(product.min_price_cached, currency, language)}` : null,
+                `${t("configs_suffix", language, { count: product.spec_count ?? 0 })}`,
+                `${t("colors_count", language, { count: colors.length })}`,
+                product.min_price_cached ? `${t("from_lower", language, { price: formatCurrency(product.min_price_cached, currency, language) })}` : null,
               ].filter(Boolean).join(" · ")
 
               return (
                 <div key={product.id} className="flex flex-col sm:flex-row sm:items-center gap-2 px-5 py-4">
                   <div className="flex-1 min-w-0">
                     <Link href={href} className="font-semibold text-foreground hover:text-emerald-600 transition-colors">
-                      {product.name} reacondicionado
+                      {product.name} {t("refurbished", language).toLowerCase()}
                     </Link>
                     <p className="text-sm text-muted-foreground">{details}</p>
                   </div>
@@ -269,7 +269,7 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
                     href={href}
                     className="shrink-0 inline-flex items-center gap-1 text-sm font-medium text-emerald-600 hover:underline"
                   >
-                    Comparar precios
+                    {t("compare_prices", language)}
                     <span aria-hidden="true">→</span>
                   </Link>
                 </div>
@@ -279,14 +279,14 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
         </section>
 
         {/* FAQ */}
-        <Faq items={LANDING_FAQ} />
+        <Faq items={LANDING_FAQ} title={t("faq_title", language)} />
 
         {/* ENLACES INTERNOS */}
         <section className="mt-16 border-t border-border pt-8">
-          <h2 className="text-xl font-bold tracking-tight mb-4">Explora RefurbTrack</h2>
+          <h2 className="text-xl font-bold tracking-tight mb-4">{t("explore", language)}</h2>
           <div className="flex flex-wrap gap-3 text-sm">
             <Link href={categoryPath(resolvedLocale, "smartphone")} className="text-muted-foreground hover:text-emerald-600 transition-colors">
-              Smartphones reacondicionados
+              {t("smartphones_refurbished", language)}
             </Link>
             {models.slice(0, 6).map((p) => (
               <Link
@@ -294,7 +294,7 @@ export function PriceHistoryLanding({ locale, products, featured }: PriceHistory
                 href={hubPath(resolvedLocale, p.category_slug!, p.brand_slug!, p.slug)}
                 className="text-muted-foreground hover:text-emerald-600 transition-colors"
               >
-                Precio del {p.name} reacondicionado
+                {t("price_of_refurbished", language, { name: p.name })}
               </Link>
             ))}
           </div>

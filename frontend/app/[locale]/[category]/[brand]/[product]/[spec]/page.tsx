@@ -94,7 +94,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const data = await getProductBySlugs(category, brand, productSlug, specSlug, locale);
 
-  if (!data) return { title: "Producto no encontrado" };
+  if (!data) return { title: t("product_not_found", language) };
 
   // Diferenciamos cada variante con su capacidad, color y precio (patrón comparador)
   const spec = getActiveSpec(data);
@@ -104,16 +104,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const price = formatCurrency(getLowPrice(spec), currency, language);
   const min30 = formatCurrency(getMin30(spec), currency, language);
 
-  const pricePart = price !== "—" ? `${price} ahora` : "";
-  const minPart = min30 !== "—" ? ` (mín ${min30})` : "";
+  const pricePart = price !== "—" ? t("hub_price_suffix", language, { price }) : "";
+  const minPart = min30 !== "—" ? t("hub_min_suffix", language, { price: min30 }) : "";
   const priceSuffix = pricePart ? ` — ${pricePart}${minPart}` : "";
 
   // Construimos la URL canónica que nos dio el Backend
   const canonicalUrl = absoluteUrl(specPath(locale, data.category_slug, data.brand_slug, data.slug, specSlug));
 
   return {
-    title: `${data.name}${variant ? ` ${variant}` : ""} Reacondicionado${priceSuffix} | RefurbTrack`,
-    description: `Historial de precios del ${data.name}${variant ? ` ${variant}` : ""} reacondicionado en Back Market${price !== "—" ? ` — ${price} ahora` : ""}${min30 !== "—" ? `, mínimo 30 días ${min30}` : ""}. Compara condiciones y ahorra con garantía.`,
+    title: `${data.name}${variant ? ` ${variant}` : ""} ${t("refurbished", language)}${priceSuffix} | RefurbTrack`,
+    description: t("spec_meta_description", language, {
+      productName: `${data.name}${variant ? ` ${variant}` : ""}`,
+      priceNow: price !== "—" ? ` — ${t("hub_price_suffix", language, { price })}` : "",
+      minPart: min30 !== "—" ? t("hub_meta_min_part", language, { price: min30 }) : "",
+    }),
     alternates: { canonical: canonicalUrl },
     openGraph: {
       images: [data.image],
@@ -233,7 +237,7 @@ const breadcrumbLd = {
     {
       "@type": "ListItem",
       "position": 1,
-      "name": "Inicio",
+      "name": t("home", language),
       "item": `${baseUrl}/${locale}`
     },
     {

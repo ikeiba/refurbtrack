@@ -11,12 +11,14 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 // IMPORTAR LA FUNCIÓN
 import { unsubscribeAlert } from "@/services/api"
-import { parseLocale, getMarket } from "@/lib/i18n"
+import { parseLocale, getMarket, getLanguage } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams()
   const params = useParams()
   const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
   const token = searchParams.get("token")
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
 
@@ -41,27 +43,27 @@ function UnsubscribeContent() {
           {status === "error" && <XCircle className="h-12 w-12 text-red-500" />}
         </div>
         <CardTitle>
-          {status === "loading" && "Procesando..."}
-          {status === "success" && "Alerta Eliminada"}
-          {status === "error" && "Error"}
+          {status === "loading" && t("processing", language)}
+          {status === "success" && t("alert_removed", language)}
+          {status === "error" && t("error", language)}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {status === "success" && (
           <p className="text-muted-foreground">
-            Has dejado de seguir este producto. Ya no recibirás más correos sobre él.
+            {t("unsubscribe_success_desc", language)}
           </p>
         )}
         {status === "error" && (
           <p className="text-muted-foreground">
-            El enlace ha caducado o no es válido. Ve a tu panel para gestionar tus alertas.
+            {t("unsubscribe_error_desc", language)}
           </p>
         )}
         
         <div className="pt-4">
             <Link href={`/${locale}`}>
                 <Button variant="outline" className="gap-2">
-                    <ArrowLeft className="h-4 w-4"/> Volver al inicio
+                    <ArrowLeft className="h-4 w-4"/> {t("back_home", language)}
                 </Button>
             </Link>
         </div>
@@ -83,7 +85,7 @@ export default function UnsubscribePage() {
                 showSearch={false}
             />
             <div className="flex-1 flex items-center justify-center bg-muted/30 p-4">
-                <Suspense fallback={<div>Cargando...</div>}>
+                <Suspense fallback={<div>{t("loading", getLanguage(params?.locale as string | undefined))}</div>}>
                     <UnsubscribeContent />
                 </Suspense>
             </div>

@@ -1,6 +1,7 @@
 import { TreePine, Sprout } from "lucide-react"
+import { t } from "@/lib/translations"
 
-export function WhyRefurbished() {
+export function WhyRefurbished({ language = "es" }: { language?: string }) {
   return (
     <section className="py-12 container mx-auto px-4">
       <div className="relative overflow-hidden rounded-[3rem] bg-emerald-600/90 px-6 py-12 text-center text-white shadow-xl shadow-emerald-600/20 sm:px-12">
@@ -14,13 +15,11 @@ export function WhyRefurbished() {
           </div>
 
           <h3 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            ¿Por qué comprar reacondicionado?
+            {t("why_refurbished_title", language)}
           </h3>
 
           <p className="mx-auto max-w-2xl text-lg text-emerald-50 opacity-90">
-            Un teléfono nuevo requiere la extracción de 200kg de materias primas. 
-            Al elegir uno reacondicionado, evitas el 90% de ese impacto y prolongas 
-            la vida de un producto perfectamente funcional.
+            {t("why_refurbished_text", language)}
           </p>
         </div>
 

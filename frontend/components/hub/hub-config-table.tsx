@@ -63,14 +63,14 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
             <table className="w-full min-w-[760px] text-sm">
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Configuración</th>
-                  <th className="px-4 py-3 font-medium">Precio actual</th>
-                  <th className="px-4 py-3 font-medium">Mínimo 30d</th>
-                  <th className="px-4 py-3 font-medium">Media 30d</th>
-                  <th className="px-4 py-3 font-medium">Estado</th>
-                  <th className="px-4 py-3 font-medium">Alerta</th>
-                  <th className="px-4 py-3 font-medium">Back Market</th>
-                  <th className="px-4 py-3 font-medium">Histórico</th>
+                  <th className="px-4 py-3 font-medium">{t("configuration", language)}</th>
+                  <th className="px-4 py-3 font-medium">{t("current_price_col", language)}</th>
+                  <th className="px-4 py-3 font-medium">{t("min_30d_col", language)}</th>
+                  <th className="px-4 py-3 font-medium">{t("avg_30d_col", language)}</th>
+                  <th className="px-4 py-3 font-medium">{t("condition_col", language)}</th>
+                  <th className="px-4 py-3 font-medium">{t("alert_col", language)}</th>
+                  <th className="px-4 py-3 font-medium">{t("backmarket_col", language)}</th>
+                  <th className="px-4 py-3 font-medium">{t("history_col", language)}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -93,10 +93,10 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
                           size="sm"
                           className="gap-1.5"
                           onClick={() => setAlertSpec(spec)}
-                          aria-label={`Crear alerta para ${hub.name} ${spec.storage} GB ${t(spec.color, language)}`}
+                          aria-label={t("create_alert_for", language, { name: `${hub.name} ${spec.storage} GB ${t(spec.color, language)}` })}
                         >
                           <Bell className="h-4 w-4" />
-                          Alerta
+                          {t("alert", language)}
                         </Button>
                       </td>
                       <td className="px-4 py-3">
@@ -107,7 +107,7 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
                             rel="sponsored noopener"
                             className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                           >
-                            Ver oferta
+                            {t("see_offer", language)}
                             <ExternalLink className="h-3.5 w-3.5 opacity-70" />
                           </a>
                         ) : (
@@ -119,7 +119,7 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
                           href={specPath(resolvedLocale, hub.category_slug, hub.brand_slug, hub.slug, getSpecSlug(spec, resolvedLocale))}
                           className="text-emerald-600 hover:underline font-medium"
                         >
-                          Ver historial
+                          {t("view_history", language)}
                         </Link>
                       </td>
                     </tr>

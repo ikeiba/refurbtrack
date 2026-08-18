@@ -116,7 +116,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
   const lastUpdated = hub.summary.last_updated
 
   const breadcrumbNodes = [
-    { label: "Inicio", href: `/${resolvedLocale}` },
+    { label: t("home", language), href: `/${resolvedLocale}` },
     { label: category, href: `/${resolvedLocale}/${category}` },
     { label: brand, href: `/${resolvedLocale}/${category}/${brand}` },
     { label: hub.name },
@@ -134,16 +134,15 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
   return (
     <div className="min-h-screen bg-background pb-20">
       <main className="container mx-auto px-4 pt-8">
-        <Breadcrumbs items={breadcrumbNodes} />
+        <Breadcrumbs items={breadcrumbNodes} language={language} />
 
         {/* HERO + RESUMEN DE PRECIOS (imagen y resumen en paralelo) */}
         <header className="mb-12">
           <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight mb-3">
-            {hub.name} reacondicionado: precios e historial
+            {t("hub_title", language, { productName: hub.name })}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
-            Consulta los precios e historial del {hub.name} reacondicionado en Back Market
-            y compara sus distintas configuraciones para comprar en el momento justo.
+            {t("hub_subtitle", language, { productName: hub.name })}
           </p>
 
           <div className="mt-8 flex flex-col md:flex-row md:items-center gap-6">
@@ -152,7 +151,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={imageSrc}
-                  alt={`${hub.name} reacondicionado`}
+                  alt={`${hub.name} ${t("refurbished", language).toLowerCase()}`}
                   className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal"
                 />
               ) : (
@@ -161,13 +160,13 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
             </div>
 
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
-              <SummaryCard label="Precio actual más bajo" value={formatCurrency(lowest, currency, language)} hint="Lo más barato ahora" />
-              <SummaryCard label="Precio medio actual" value={formatCurrency(avg, currency, language)} hint="Media de configuraciones" />
-              <SummaryCard label="Mínimo histórico" value={formatCurrency(histMin, currency, language)} hint="Lo más barato registrado" />
+              <SummaryCard label={t("lowest_current", language)} value={formatCurrency(lowest, currency, language)} hint={t("cheapest_now_hint", language)} />
+              <SummaryCard label={t("avg_current", language)} value={formatCurrency(avg, currency, language)} hint={t("avg_configs_hint", language)} />
+              <SummaryCard label={t("historical_min", language)} value={formatCurrency(histMin, currency, language)} hint={t("cheapest_recorded_hint", language)} />
               <SummaryCard
-                label="Configuraciones"
+                label={t("configurations", language)}
                 value={String(hub.summary.config_count)}
-                hint={`Actualizado: ${formatDate(lastUpdated, language) || "—"}`}
+                hint={t("updated_suffix", language, { date: formatDate(lastUpdated, language) || "—" })}
               />
             </div>
           </div>
@@ -180,7 +179,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
 
         {/* EVOLUCIÓN DEL PRECIO */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">Evolución del precio</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-6">{t("price_evolution", language)}</h2>
           <p className="text-muted-foreground leading-relaxed mb-4">
             Cada configuración del {hub.name} (capacidad, color y estado) tiene su propia evolución
             de precios. Para evitar mezclar series incompatibles, el historial se consulta por
@@ -193,7 +192,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
                   href={specPath(resolvedLocale, category, brand, product, getSpecSlug(spec, resolvedLocale))}
                   className="block rounded-lg border border-border px-4 py-3 hover:border-emerald-500/40 hover:bg-muted/30 transition-colors"
                 >
-                  <span className="font-medium">Ver historial de precios del {hub.name} {spec.storage} GB {t(spec.color, language)}</span>
+                  <span className="font-medium">{t("view_price_history_of", language, { name: hub.name, storage: spec.storage, color: t(spec.color, language) })}</span>
                 </Link>
               </li>
             ))}
@@ -202,7 +201,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
 
         {/* MEJOR PRECIO / INSIGHTS */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">¿Cuál es el mejor precio?</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-6">{t("best_price", language)}</h2>
           <div className="space-y-3">
             {hub.insights.cheapest_spec && (() => {
               const spec = hub.storage_groups.flatMap((g) => g.specs).find((s) => s.slug === hub.insights.cheapest_spec)
@@ -210,7 +209,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
               return (
                 <InsightCard>
                   La configuración más barata ahora mismo es el {hub.name} {spec.storage} GB {t(spec.color, language)} a {formatCurrency(spec.current_price, currency, language)}.{" "}
-                  <Link href={specPath(resolvedLocale, category, brand, product, getSpecSlug(spec, resolvedLocale))} className="text-emerald-600 hover:underline">Ver historial</Link>
+                  <Link href={specPath(resolvedLocale, category, brand, product, getSpecSlug(spec, resolvedLocale))} className="text-emerald-600 hover:underline">{t("view_history", language)}</Link>
                 </InsightCard>
               )
             })()}
@@ -245,7 +244,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
         {/* CONTENIDO SEO ÚTIL */}
         {seoParagraphs.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-2xl font-bold tracking-tight mb-6">Precios e historial del {hub.name}</h2>
+            <h2 className="text-2xl font-bold tracking-tight mb-6">{t("seo_section_title", language, { productName: hub.name })}</h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed">
               {seoParagraphs.map((p, i) => <p key={i}>{p}</p>)}
             </div>
@@ -253,14 +252,14 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
         )}
 
         {/* FAQ */}
-        <Faq items={faq} />
+        <Faq items={faq} title={t("faq_title", language)} />
 
         {/* ENLACES INTERNOS */}
         <section className="mt-16 border-t border-border pt-8">
-          <h2 className="text-xl font-bold tracking-tight mb-4">Explorar más</h2>
+          <h2 className="text-xl font-bold tracking-tight mb-4">{t("explore_more", language)}</h2>
           <div className="flex flex-wrap gap-3 mb-6">
             <Link href={historyLandingPath(resolvedLocale)} className="text-emerald-600 hover:underline font-medium">
-              Ver historial de precios de Back Market
+              {t("view_bm_history", language)}
             </Link>
             {otherModels.slice(0, 8).map((m) => (
               <Link
@@ -273,7 +272,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
             ))}
           </div>
           <Link href={historyLandingPath(resolvedLocale)} className="text-sm text-muted-foreground hover:underline">
-            Ver otros modelos de iPhone
+            {t("view_other_iphones", language)}
           </Link>
         </section>
       </main>
