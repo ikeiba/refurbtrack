@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 # ¡AÑADIDO ClickEvent a las importaciones!
-from .models import Subscriber, Product, Spec, Offer, PriceHistory, Alert, ClickEvent, Category, Brand
+from .models import Subscriber, Product, Spec, Offer, PriceHistory, Alert, ClickEvent, Category, Brand, Market, ProductMarketStats, SpecMarketStats
 from django.utils.html import format_html
 from django.urls import reverse
 
@@ -38,6 +38,28 @@ class BrandAdmin(admin.ModelAdmin):
     def slug_display(self, obj):
         return format_html('<code>/{}</code>', obj.slug)
     slug_display.short_description = 'URL Path'
+
+# --- MERCADOS (Internacionalización) ---
+@admin.register(Market)
+class MarketAdmin(admin.ModelAdmin):
+    list_display = ('code', 'country_code', 'currency', 'domain', 'language', 'locale')
+    list_editable = ('currency', 'domain', 'language', 'locale')
+    search_fields = ('code', 'domain', 'locale')
+
+# --- STATS POR MERCADO (verificación del backfill) ---
+@admin.register(ProductMarketStats)
+class ProductMarketStatsAdmin(admin.ModelAdmin):
+    list_select_related = ('product', 'market')
+    list_display = ('product', 'market', 'min_price_cached', 'lowest_ever_price', 'market_price', 'last_updated')
+    list_filter = ('market',)
+    search_fields = ('product__name',)
+
+@admin.register(SpecMarketStats)
+class SpecMarketStatsAdmin(admin.ModelAdmin):
+    list_select_related = ('spec', 'spec__product', 'market')
+    list_display = ('spec', 'market', 'min_price_cached', 'lowest_ever_price', 'last_updated')
+    list_filter = ('market',)
+    search_fields = ('spec__product__name', 'spec__slug', 'spec__slug_en')
 
 # --- NIVEL 1: PRODUCTO (Actualizado para SEO) ---
 @admin.register(Product)
@@ -76,9 +98,10 @@ class SpecAdmin(admin.ModelAdmin):
         'storage', 
         'color', 
         'spec_slug_display', # <--- AÑADIDO
+        'slug_en',           # <--- AÑADIDO (slug EN)
         'min_price_cached',
     )
-    search_fields = ('product__name', 'slug', 'back_market_uuid')
+    search_fields = ('product__name', 'slug', 'slug_en', 'back_market_uuid')
     list_filter = ('product__brand', 'storage', 'color')
     
     def get_product_name(self, obj):
@@ -105,6 +128,7 @@ class OfferAdmin(admin.ModelAdmin):
         'get_color',            
         'battery_status',       
         'get_colored_condition',
+        'market',              # <--- AÑADIDO
         'current_price',
         'deal_score',
         'go_to_backmarket',     
@@ -112,7 +136,7 @@ class OfferAdmin(admin.ModelAdmin):
         'last_updated'
     )
     
-    list_filter = ('condition', 'battery_new', 'country', 'spec__product')
+    list_filter = ('condition', 'battery_new', 'country', 'market', 'spec__product')
     search_fields = ('spec__product__name', 'spec__back_market_uuid', 'url', 'uuid') # Añadido 'uuid' al buscador
     
     # ¡NUEVO! Añadido 'uuid' a los campos de solo lectura
@@ -237,13 +261,14 @@ class AlertAdmin(admin.ModelAdmin):
     list_display = (
         'subscriber', 
         'product', 
+        'market',            # <--- AÑADIDO
         'price_threshold', 
         'show_targets', 
         'notified', 
         'last_notified', 
         'repeat'         
     )
-    list_filter = ('notified', 'repeat', 'product')
+    list_filter = ('notified', 'repeat', 'country', 'market', 'product')
     search_fields = ('subscriber__email', 'product__name')
 
     def show_targets(self, obj):
