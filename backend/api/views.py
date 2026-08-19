@@ -29,7 +29,7 @@ from .serializers import (
     UserRegistrationSerializer,
     ContactMessageSerializer
 )
-from .services import send_contact_email, build_model_hub, get_featured_history, market_offer_q
+from .services import send_contact_email, build_model_hub, get_featured_history, market_offer_q, market_language, email_template
 from .bot_detection import should_track_click
 
 from django.contrib.auth.tokens import default_token_generator
@@ -428,11 +428,16 @@ class PasswordResetRequestView(APIView):
                 'user': user,
                 'reset_link': reset_link
             }
-            html_msg = render_to_string('emails/password_reset.html', context)
+            template = email_template('emails/password_reset', market)
+            if market_language(market) == 'en':
+                subject = '🔐 Reset password - RefurbTrack'
+            else:
+                subject = '🔐 Recuperar contraseña - RefurbTrack'
+            html_msg = render_to_string(template, context)
             plain_msg = strip_tags(html_msg)
             
             send_mail(
-                subject='🔐 Recuperar contraseña - RefurbTrack',
+                subject=subject,
                 message=plain_msg,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],

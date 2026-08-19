@@ -30,6 +30,25 @@ def market_locale(market):
     return market.locale
 
 
+def market_language(market):
+    """Devuelve el código de idioma ('es'|'en') de un Market (fallback 'es')."""
+    if market is None or not market.language:
+        return 'es'
+    return market.language
+
+
+def email_template(base_name, market):
+    """
+    Selecciona la plantilla de email según el idioma del Market.
+    Los mercados en inglés usan el sufijo `_en`; el resto usan la plantilla
+    en español (por defecto). `base_name` es la ruta sin sufijo de locale,
+    ej. 'emails/price_drop'.
+    """
+    if market_language(market) == 'en':
+        return f'{base_name}_en.html'
+    return f'{base_name}.html'
+
+
 def market_offer_q(market, prefix=''):
     """
     Q object para filtrar ofertas por mercado, con fallback al campo legacy
@@ -524,13 +543,20 @@ def send_alert_email(alert, offer):
             'currency_symbol': symbol,
         }
 
-        html_msg = render_to_string('emails/price_drop.html', context)
+        # Idioma de la plantilla y del asunto según el mercado de la oferta.
+        template = email_template('emails/price_drop', market)
+        if market_language(market) == 'en':
+            subject = f'📉 Price drop! {alert.product.name} at {offer.current_price}{symbol}'
+        else:
+            subject = f'📉 ¡Bajada de precio! {alert.product.name} a {offer.current_price}{symbol}'
+
+        html_msg = render_to_string(template, context)
         plain_msg = strip_tags(html_msg)
 
         print(f"📧 Enviando alerta a {alert.subscriber.email} por {offer.current_price}{symbol}")
 
         send_mail(
-            subject=f'📉 ¡Bajada de precio! {alert.product.name} a {offer.current_price}{symbol}',
+            subject=subject,
             message=plain_msg,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[alert.subscriber.email],

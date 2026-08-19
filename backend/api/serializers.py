@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Market
-from .services import market_offer_q, offer_market, market_symbol, market_stat_value, market_locale
+from .services import market_offer_q, offer_market, market_symbol, market_stat_value, market_locale, market_language, email_template
 from django.contrib.auth.models import User
 from django.core.mail import send_mail # <--- 1. IMPORTAR ESTO
 from django.conf import settings # Para acceder al remitente por defecto
@@ -440,15 +440,20 @@ class AlertSerializer(serializers.ModelSerializer):
                 'unsubscribe_all_url': f"{base_url}/{locale}/unsubscribe-all?token={token_subscriber}"
             }
 
-            # B. Renderizamos el HTML
-            html_message = render_to_string('emails/alert_confirmation.html', context)
+            # B. Renderizamos el HTML (idioma según el mercado de la alerta)
+            template = email_template('emails/alert_confirmation', market)
+            if market_language(market) == 'en':
+                subject = f'🔔 Alert activated: {product.name}'
+            else:
+                subject = f'🔔 Alerta activada: {product.name}'
+            html_message = render_to_string(template, context)
             
             # C. Creamos la versión de texto plano (quitando etiquetas HTML)
             plain_message = strip_tags(html_message)
             
             # D. Enviamos el correo (Fíjate en los parámetros nuevos)
             send_mail(
-                subject=f'🔔 Alerta activada: {product.name}',
+                subject=subject,
                 message=plain_message, # Versión texto plano (obligatoria)
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
