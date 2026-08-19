@@ -99,6 +99,10 @@ const ES: Record<string, string> = {
   user_access: "Acceso Usuarios",
   login: "Iniciar Sesión",
   register: "Registrarse",
+  market_switch_title: "¿Cambiar de mercado?",
+  market_switch_message:
+    "Al cambiar de mercado, no solo cambia el idioma, sino el marketplace de Back Market que estamos rastreando (los precios y modelos variarán).",
+  confirm: "Confirmar",
 
   // --- FOOTER ---
   footer_tagline:
@@ -546,6 +550,10 @@ const EN: Record<string, string> = {
   user_access: "User Access",
   login: "Log in",
   register: "Sign up",
+  market_switch_title: "Switch market?",
+  market_switch_message:
+    "When you change market, not only the language changes, but also the Back Market marketplace we are tracking (prices and models will vary).",
+  confirm: "Confirm",
 
   // --- FOOTER ---
   footer_tagline:

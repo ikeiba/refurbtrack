@@ -1,11 +1,8 @@
 import type { Product, Country } from "./types"
 
 export const countries: Country[] = [
-  { code: "ES", name: "Spain", flag: "🇪🇸" }
-  /*{ code: "FR", name: "France", flag: "🇫🇷" },
-  { code: "DE", name: "Germany", flag: "🇩🇪" },
-  { code: "IT", name: "Italy", flag: "🇮🇹" },
-  { code: "UK", name: "United Kingdom", flag: "🇬🇧" },*/
+  { code: "ES", name: "Spain", flag: "🇪🇸" },
+  { code: "UK", name: "United Kingdom", flag: "🇬🇧" },
 ]
 
 export const models = [
