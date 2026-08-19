@@ -230,13 +230,15 @@ export async function deleteUserAccount() {
 }
 
 // 1. Solicitar el email de recuperación
-export async function requestPasswordReset(email: string) {
+// `locale` (ej. 'es-es' | 'en-gb') permite al backend construir el enlace
+// de reset con el prefijo de locale correcto en vez de hardcodear /es/.
+export async function requestPasswordReset(email: string, locale?: string | null) {
   const res = await fetch(`${API_URL}/auth/forgot-password/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, locale }),
   })
 
   // Si el backend devuelve error (ej: 404), lanzamos excepción para que la capture el componente

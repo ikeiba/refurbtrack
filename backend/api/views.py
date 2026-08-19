@@ -76,6 +76,27 @@ def resolve_market(request):
     return market
 
 
+def resolve_market_from_request(request):
+    """
+    Resuelve el Market a partir de `market`/`locale` presentes en el body o en
+    los query params (fallback ES). Para endpoints POST como el reset de
+    contraseña, donde el locale llega en el body.
+    """
+    code = request.data.get('market') or request.query_params.get('market')
+    locale = request.data.get('locale') or request.query_params.get('locale')
+
+    market = None
+    if code:
+        market = Market.objects.filter(code__iexact=code).first()
+    if market is None and locale:
+        market = Market.objects.filter(locale__iexact=locale).first()
+    if market is None:
+        market = Market.objects.filter(code='ES').first()
+    if market is None:
+        market = Market.seed().get('ES')
+    return market
+
+
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Maneja el listado de productos (Home) y el detalle (Configurador).
@@ -397,8 +418,10 @@ class PasswordResetRequestView(APIView):
             # URL del Frontend (Ajusta localhost:3000 si es necesario)
             base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
 
-            # Añadimos el /es/ para que Next.js no devuelva un 404
-            reset_link = f"{base_url}/es/reset-password/{uid}/{token}"
+            # Prefijo de locale dinámico (ej. /es-es/ o /en-gb/) para evitar 404 en Next.js
+            market = resolve_market_from_request(request)
+            locale = market.locale if market and market.locale else 'es-es'
+            reset_link = f"{base_url}/{locale}/reset-password/{uid}/{token}"
             
             # Renderizamos el email
             context = {
@@ -502,8 +525,9 @@ def redirect_to_store(request, offer_uuid):
     # 2. Si la oferta no tiene URL por algún motivo, redirigimos a una fallback
     if not offer.url:
         market = offer.market or Market.objects.filter(code=offer.country).first()
-        domain = market.domain if market else 'backmarket.es'
-        return redirect(f"https://www.{domain}")
+        if market is None:
+            market = Market.objects.filter(code='ES').first() or Market.seed().get('ES')
+        return redirect(f"https://www.{market.domain}")
 
     # 3. Guardamos la telemetría síncronamente (rápido en PostgreSQL)
     #    Solo si es un clic humano: descartamos bots/crawlers y golpes directos.

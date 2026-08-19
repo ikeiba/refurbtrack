@@ -23,6 +23,13 @@ def market_symbol(market):
     return CURRENCY_SYMBOL.get(market.currency, '€')
 
 
+def market_locale(market):
+    """Devuelve el locale del Market para prefijar URLs del frontend (fallback es-es)."""
+    if market is None or not market.locale:
+        return 'es-es'
+    return market.locale
+
+
 def market_offer_q(market, prefix=''):
     """
     Q object para filtrar ofertas por mercado, con fallback al campo legacy
@@ -67,14 +74,31 @@ def _find_market_stat(obj, market):
 def market_stat_value(obj, market, stat_attr, legacy_attr):
     """
     Lee un campo de caché desde la tabla de stats por mercado (fuente de
-    verdad), con fallback al campo legacy del modelo base (transición/tests).
+    verdad). El fallback al campo legacy SOLO se permite para el mercado ES
+    (o en transición sin mercado); nunca filtra un valor legacy EUR a un
+    mercado no-ES.
     """
     if market is None:
         return getattr(obj, legacy_attr)
     stat = _find_market_stat(obj, market)
     if stat is not None:
         return getattr(stat, stat_attr)
-    return getattr(obj, legacy_attr)
+    if market.code == 'ES':
+        return getattr(obj, legacy_attr)
+    return None
+
+
+def _market_stat_or_legacy(market, stat, stat_attr, legacy_obj, legacy_attr):
+    """
+    Resuelve un valor de caché a nivel de producto: fila de stats del mercado
+    si existe; si no, solo hereda el campo legacy cuando el mercado es ES (o en
+    transición sin mercado). Devuelve None para mercados no-ES sin fila.
+    """
+    if stat is not None:
+        return getattr(stat, stat_attr)
+    if market is None or market.code == 'ES':
+        return getattr(legacy_obj, legacy_attr)
+    return None
 
 def _numeric_storage(storage: str) -> int:
     """Ordena almacenamientos numéricamente (64, 128, 256, 512, 1000)."""
@@ -212,13 +236,10 @@ def build_model_hub(product: Product, market=None) -> dict:
 
     # 3. Resumen a nivel de modelo.
     current_prices = [s["current_price"] for s in spec_payloads if s["current_price"] is not None]
-    historical_min = (
-        insights.num(prod_stat.lowest_ever_price) if prod_stat is not None
-        else insights.num(product.lowest_ever_price)
+    historical_min = insights.num(
+        _market_stat_or_legacy(market, prod_stat, 'lowest_ever_price', product, 'lowest_ever_price')
     )
-    last_updated = (
-        prod_stat.last_updated if prod_stat is not None else product.last_updated
-    )
+    last_updated = _market_stat_or_legacy(market, prod_stat, 'last_updated', product, 'last_updated')
     summary = {
         "lowest_current_price": insights.current_price(current_prices),
         "avg_current_price": insights.avg_30d(current_prices),
@@ -261,13 +282,11 @@ def build_model_hub(product: Product, market=None) -> dict:
         "image": str(product.image) if product.image else None,
         "category_slug": product.category.slug,
         "brand_slug": product.brand.slug,
-        "market_price": (
-            insights.num(prod_stat.market_price) if prod_stat is not None
-            else insights.num(product.market_price)
+        "market_price": insights.num(
+            _market_stat_or_legacy(market, prod_stat, 'market_price', product, 'market_price')
         ),
-        "lowest_ever_price": (
-            insights.num(prod_stat.lowest_ever_price) if prod_stat is not None
-            else insights.num(product.lowest_ever_price)
+        "lowest_ever_price": insights.num(
+            _market_stat_or_legacy(market, prod_stat, 'lowest_ever_price', product, 'lowest_ever_price')
         ),
         "storage_groups": ordered_groups,
         "summary": summary,
@@ -445,6 +464,7 @@ def send_alert_email(alert, offer):
         # Mercado de la oferta (para moneda y enlaces) con fallback al country.
         market = offer_market(offer)
         symbol = market_symbol(market)
+        locale = market_locale(market)
 
         # Generamos tokens 
         token_alert = signer.sign(alert.id)
@@ -490,14 +510,14 @@ def send_alert_email(alert, offer):
             'product_image': final_image_url,
             
             # FIX CRÍTICO: Reconstruimos la URL usando el UUID directamente hacia el backend
-            'offer_url': f"{backend_url}/api/out/{offer.uuid}/?src=email" if hasattr(offer, 'uuid') else f"{base_url}/es",
+            'offer_url': f"{backend_url}/api/out/{offer.uuid}/?src=email" if hasattr(offer, 'uuid') else f"{base_url}/{locale}",
             
             # LINKS FRONTEND
-            'unsubscribe_url': f"{base_url}/es/unsubscribe?token={token_alert}",
-            'unsubscribe_all_url': f"{base_url}/es/unsubscribe-all?token={token_subscriber}",
-            'dashboard_url': f"{base_url}/es/dashboard",
-            'home_url': f"{base_url}/es",
-            'login_url': f"{base_url}/es/login",
+            'unsubscribe_url': f"{base_url}/{locale}/unsubscribe?token={token_alert}",
+            'unsubscribe_all_url': f"{base_url}/{locale}/unsubscribe-all?token={token_subscriber}",
+            'dashboard_url': f"{base_url}/{locale}/dashboard",
+            'home_url': f"{base_url}/{locale}",
+            'login_url': f"{base_url}/{locale}/login",
             'has_criteria': True,
             'target_price': alert.price_threshold,
             'country': alert.country,

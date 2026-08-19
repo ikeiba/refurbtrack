@@ -2,3 +2,6 @@
 local_ssl/
 docker-compose.override.yml
 .npmrc
+*.pyc
+__pycache__/
+*.diff

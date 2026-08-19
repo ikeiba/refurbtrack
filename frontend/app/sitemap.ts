@@ -2,6 +2,7 @@
 import { MetadataRoute } from 'next'
 import { API_URL } from "@/services/api"
 import { locales, getMarket } from "@/lib/i18n"
+import { blogPostSlugsForLocale } from "@/lib/blog"
 
 // Añadimos ISR al sitemap: Que se regenere cada 1 hora (3600) o cada 24h (86400)
 // export const revalidate = 3600;
@@ -18,15 +19,6 @@ interface SitemapItem {
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com'
 
-const blogSlugs = [
-  'guia-compradores-refurbished',
-  'impacto-ambiental-reacondicionado',
-  'diferencias-entre-marketplaces',
-  'estrategia-ahorro-temporal',
-  'falsos-mitos-reacondicionados',
-  'tendencias-mercado-refurbished-2026'
-]
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = []
 
@@ -40,18 +32,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { url: `${baseUrl}/${locale}/historial-precios-back-market`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 }
     )
 
-    // --- ZONA 2: RUTAS DEL BLOG (solo es-es: el contenido está en español) ---
-    if (locale === 'es-es') {
-      entries.push(
-        { url: `${baseUrl}/${locale}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-        ...blogSlugs.map(slug => ({
-          url: `${baseUrl}/${locale}/blog/${slug}`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
-        }))
-      )
-    }
+    // --- ZONA 2: RUTAS DEL BLOG (slugs localizados por mercado) ---
+    entries.push(
+      { url: `${baseUrl}/${locale}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
+      ...blogPostSlugsForLocale(locale).map(slug => ({
+        url: `${baseUrl}/${locale}/blog/${slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }))
+    )
 
     // --- ZONA 3: RUTAS LEGALES ---
     entries.push(

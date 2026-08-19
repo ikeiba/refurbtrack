@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
 
     try {
       // USAMOS LA FUNCIÓN IMPORTADA (Mucho más limpio)
-      await requestPasswordReset(email)
+      await requestPasswordReset(email, locale)
       setSubmitted(true)
     } catch (err: any) {
       setError(err.message || t("could_not_process", language))

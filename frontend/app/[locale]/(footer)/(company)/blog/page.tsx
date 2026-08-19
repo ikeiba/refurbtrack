@@ -2,6 +2,7 @@
 import type { Metadata } from "next"
 import { parseLocale, getLanguage } from "@/lib/i18n"
 import { t } from "@/lib/translations"
+import { blogCategoryKeyFromUrl } from "@/lib/blog"
 import { BlogES } from "@/components/content/blog/BlogES"
 import { BlogEN } from "@/components/content/blog/BlogEN"
 
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlogPage({ params, searchParams }: Props) {
   const [{ locale: raw }, { category }] = await Promise.all([params, searchParams])
   const locale = parseLocale(raw)
-  const selectedCategory = category || "Todas"
+  const selectedCategory = blogCategoryKeyFromUrl(category, locale)
 
   return locale === "en-gb"
     ? <BlogEN locale={locale} selectedCategory={selectedCategory} />

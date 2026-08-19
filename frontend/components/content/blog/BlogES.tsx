@@ -1,23 +1,24 @@
 // components/content/blog/BlogES.tsx
-// Índice del blog en español (texto original). Las categorías se usan como
-// valor del query param (?category=) y se comparten entre idiomas.
+// Índice del blog en español. Las URLs de categoría usan el slug del locale
+// (?category=Consejos en ES), compartiendo la fuente de verdad de lib/blog.ts.
 import Link from "next/link"
 import { Calendar, User, ArrowRight } from "lucide-react"
 import { getIntlLocale, getLanguage } from "@/lib/i18n"
 import { t } from "@/lib/translations"
+import { BLOG_CATEGORIES, blogCategoryLabel, blogCategorySlug, blogPostSlug } from "@/lib/blog"
+import type { BlogCategoryKey } from "@/lib/blog"
 
-const CATEGORIES = ["Todas", "Educación", "Sostenibilidad", "Comparativa", "Consejos", "Mercado"]
-
-const CATEGORY_LABELS: Record<string, string> = {
-  Todas: "Todas",
-  Educación: "Educación",
-  Sostenibilidad: "Sostenibilidad",
-  Comparativa: "Comparativa",
-  Consejos: "Consejos",
-  Mercado: "Mercado",
+interface BlogPostData {
+  slug: string
+  title: string
+  excerpt: string
+  category: BlogCategoryKey
+  date: string
+  readTime: string
+  author: string
 }
 
-const blogPosts = [
+const blogPosts: BlogPostData[] = [
   {
     slug: "guia-compradores-refurbished",
     title: "📖 Guía Completa para Compradores de Dispositivos Reacondicionados",
@@ -93,22 +94,22 @@ export function BlogES({ locale, selectedCategory }: { locale: string; selectedC
 
       {/* Categorías */}
       <div className="flex flex-wrap gap-2 justify-center mb-12">
-        {CATEGORIES.map((cat) => {
-          const href = cat === "Todas"
+        {BLOG_CATEGORIES.map((cat) => {
+          const href = cat.key === "Todas"
             ? `/${locale}/blog`
-            : `/${locale}/blog?category=${cat}`
+            : `/${locale}/blog?category=${blogCategorySlug(cat.key, locale)}`
 
           return (
             <Link
-              key={cat}
+              key={cat.key}
               href={href}
               className={`px-4 py-2 rounded-full font-medium transition-colors ${
-                cat === selectedCategory
+                cat.key === selectedCategory
                   ? "bg-emerald-600 text-white"
                   : "bg-muted hover:bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
-              {CATEGORY_LABELS[cat]}
+              {blogCategoryLabel(cat.key, locale)}
             </Link>
           )
         })}
@@ -117,13 +118,13 @@ export function BlogES({ locale, selectedCategory }: { locale: string; selectedC
       {/* Featured Post */}
       {filteredPosts.length > 0 && (
         <div className="mb-12">
-          <Link href={`/${locale}/blog/${filteredPosts[0].slug}`}>
+          <Link href={`/${locale}/blog/${blogPostSlug(filteredPosts[0].slug, locale)}`}>
             <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20 p-8 rounded-2xl border border-emerald-200 dark:border-emerald-800 hover:shadow-lg transition-shadow cursor-pointer">
               <div className="flex items-center gap-2 mb-3">
                 <span className="inline-block px-3 py-1 bg-emerald-600 text-white text-xs font-bold rounded-full">
                   📌 {t("featured", language)}
                 </span>
-                <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[filteredPosts[0].category]}</span>
+                <span className="text-xs text-muted-foreground">{blogCategoryLabel(filteredPosts[0].category, locale)}</span>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold mb-3 text-emerald-900 dark:text-emerald-100">
                 {filteredPosts[0].title}
@@ -157,11 +158,11 @@ export function BlogES({ locale, selectedCategory }: { locale: string; selectedC
       {filteredPosts.length > 1 && (
         <div className="grid md:grid-cols-2 gap-6">
           {filteredPosts.slice(1).map((post) => (
-            <Link key={post.slug} href={`/${locale}/blog/${post.slug}`}>
+            <Link key={post.slug} href={`/${locale}/blog/${blogPostSlug(post.slug, locale)}`}>
               <div className="bg-card border rounded-xl p-6 hover:shadow-md transition-shadow h-full cursor-pointer flex flex-col">
                 <div className="flex items-start justify-between mb-3">
                   <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded">
-                    {CATEGORY_LABELS[post.category]}
+                    {blogCategoryLabel(post.category, locale)}
                   </span>
                   <span className="text-xs text-muted-foreground">{post.readTime}</span>
                 </div>

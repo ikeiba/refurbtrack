@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Market
-from .services import market_offer_q, offer_market, market_symbol, market_stat_value
+from .services import market_offer_q, offer_market, market_symbol, market_stat_value, market_locale
 from django.contrib.auth.models import User
 from django.core.mail import send_mail # <--- 1. IMPORTAR ESTO
 from django.conf import settings # Para acceder al remitente por defecto
@@ -303,7 +303,10 @@ class AlertSerializer(serializers.ModelSerializer):
             ]
             spec = matching[0] if matching else None
         else:
-            spec = min(specs, key=lambda s: s.min_price_cached or float('inf')) if specs else None
+            spec = min(
+                specs,
+                key=lambda s: market_stat_value(s, market, 'min_price_cached', 'min_price_cached') or float('inf')
+            ) if specs else None
 
         if spec:
             spec_slug = spec.slug_en if (lang == 'en' and spec.slug_en) else spec.slug
@@ -338,7 +341,7 @@ class AlertSerializer(serializers.ModelSerializer):
             return f"/api/out/{best_offer.uuid}/"
         if market is not None:
             return f"https://www.{market.domain}"
-        return "https://www.backmarket.es"
+        return None
 
     def create(self, validated_data):
         # Extraemos el ID del producto y el email
@@ -403,12 +406,13 @@ class AlertSerializer(serializers.ModelSerializer):
 
             # C. --- CORRECCIÓN DE LA URL DEL PRODUCTO (Usando tu lógica SEO) ---
             # Llamamos a tu función para obtener la ruta exacta: /smartphones/apple/iphone-13...
+            locale = market_locale(market)
             target_path = self.get_target_path(alert)
             if target_path:
-                product_url = f"{base_url}/es{target_path}"
+                product_url = f"{base_url}/{locale}{target_path}"
             else:
                 # Fallback por si acaso falla algo en el target_path
-                product_url = f"{base_url}/es/{product.category.slug}/{product.brand.slug}/{product.slug}"
+                product_url = f"{base_url}/{locale}/{product.category.slug}/{product.brand.slug}/{product.slug}"
 
             context = {
                 'product_name': product.name,
@@ -425,15 +429,15 @@ class AlertSerializer(serializers.ModelSerializer):
                 'currency_symbol': market_symbol(market),
                 'has_criteria': bool(alert.target_storages or alert.target_colors or alert.target_conditions or alert.battery_new),
                 
-                # LINKS DE ACCIÓN (Añadido el prefijo /es/ para evitar 404 en Next.js)
+                # LINKS DE ACCIÓN (prefijo de locale dinámico, ej. /es-es/ o /en-gb/)
                 'product_url': product_url,
-                'home_url': f"{base_url}/es",
-                'dashboard_url': f"{base_url}/es/dashboard",
-                'login_url': f"{base_url}/es/login",
+                'home_url': f"{base_url}/{locale}",
+                'dashboard_url': f"{base_url}/{locale}/dashboard",
+                'login_url': f"{base_url}/{locale}/login",
                 
                 # LINKS DE BORRADO
-                'unsubscribe_url': f"{base_url}/es/unsubscribe?token={token_alert}",
-                'unsubscribe_all_url': f"{base_url}/es/unsubscribe-all?token={token_subscriber}"
+                'unsubscribe_url': f"{base_url}/{locale}/unsubscribe?token={token_alert}",
+                'unsubscribe_all_url': f"{base_url}/{locale}/unsubscribe-all?token={token_subscriber}"
             }
 
             # B. Renderizamos el HTML
