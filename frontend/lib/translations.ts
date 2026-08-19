@@ -386,6 +386,79 @@ const ES: Record<string, string> = {
   hub_meta_min_part: ", mínimo 30 días {price}",
   spec_meta_description:
     "Historial de precios del {productName} reacondicionado en Back Market{priceNow}{minPart}. Compara condiciones y ahorra con garantía.",
+
+  // --- PÁGINAS LEGALES / EMPRESA (SEO CORTA) ---
+  meta_privacy_title: "Política de Privacidad | RefurbTrack",
+  meta_privacy_description:
+    "Cómo protegemos tus datos personales en RefurbTrack: qué información recopilamos, para qué la usamos y cuáles son tus derechos RGPD.",
+  meta_terms_title: "Términos y Condiciones | RefurbTrack",
+  meta_terms_description:
+    "Condiciones de uso de RefurbTrack: naturaleza del servicio, relación con vendedores externos, responsabilidades y limitaciones.",
+  meta_cookies_title: "Política de Cookies | RefurbTrack",
+  meta_cookies_description:
+    "Qué cookies utiliza RefurbTrack, para qué sirven, cómo gestionarlas y por qué son necesarias para nuestro modelo de negocio.",
+  meta_about_title: "Sobre Nosotros | RefurbTrack",
+  meta_about_description:
+    "RefurbTrack: tecnología reacondicionada con propósito. Conoce nuestra misión, valores e impacto ambiental.",
+  meta_how_it_works_title: "Cómo Funciona RefurbTrack | RefurbTrack",
+  meta_how_it_works_description:
+    "Descubre en 5 pasos cómo rastreamos precios, analizamos la evolución y te alertamos para que compres en el momento justo.",
+  meta_contact_title: "Contacto | RefurbTrack",
+  meta_contact_description:
+    "Contacta con el equipo de RefurbTrack: dudas sobre la plataforma, errores en los datos o sugerencias de mejora.",
+  meta_blog_title: "Blog de RefurbTrack | RefurbTrack",
+  meta_blog_description:
+    "Guías, análisis y consejos para comprar tecnología reacondicionada de forma inteligente y ahorrar dinero.",
+
+  // --- SEO ARTÍCULOS DE BLOG ---
+  meta_blog_guia_title: "Guía Completa para Comprar Dispositivos Reacondicionados | RefurbTrack",
+  meta_blog_guia_description:
+    "Todo lo que necesitas saber antes de comprar un móvil, tablet o portátil reacondicionado: estados, garantía, batería y cómo evaluar si vale la pena.",
+  meta_blog_impacto_title: "Impacto Ambiental de Comprar Reacondicionado: Cuánto Ahorras | RefurbTrack",
+  meta_blog_impacto_description:
+    "Análisis del CO2 evitado, agua ahorrada y residuos prevenidos por cada dispositivo reacondicionado, con datos verificables frente a dispositivos nuevos.",
+  meta_blog_marketplaces_title: "Back Market vs Amazon Renewed vs eBay: Comparativa Completa | RefurbTrack",
+  meta_blog_marketplaces_description:
+    "Comparativa de los principales marketplaces de reacondicionados: precios, garantías, devoluciones y cuál elegir según tus necesidades.",
+  meta_blog_ahorro_title: "5 Estrategias para Ahorrar: Timing y Patrones de Precio | RefurbTrack",
+  meta_blog_ahorro_description:
+    "Descubre cuándo son más baratos los dispositivos reacondicionados: patrones estacionales, Black Friday y lanzamientos de Apple para comprar en el momento ideal.",
+  meta_blog_mitos_title: "7 Mitos Sobre Dispositivos Reacondicionados Desmentidos | RefurbTrack",
+  meta_blog_mitos_description:
+    "¿Duran menos? ¿Tienen baterías degradadas? Desmentimos los mitos más comunes sobre reacondicionados con datos reales.",
+  meta_blog_tendencias_title: "Tendencias del Mercado Refurbished 2026: Crecimiento y Oportunidades | RefurbTrack",
+  meta_blog_tendencias_description:
+    "Análisis del crecimiento del mercado de reacondicionados, modelos más demandados y predicciones para 2026 basadas en datos de RefurbTrack.",
+
+  // --- UI BLOG (corta) ---
+  back_to_blog: "Volver al blog",
+  read_more: "Leer más",
+  read: "Leer",
+  featured: "DESTACADO",
+  no_posts_in_category: "No hay artículos en esta categoría",
+  all_categories: "Todas",
+
+  // --- FORMULARIO DE CONTACTO (corta) ---
+  contact_full_name: "Nombre completo *",
+  contact_full_name_placeholder: "Tu nombre",
+  contact_subject: "Asunto *",
+  contact_subject_placeholder: "Selecciona un asunto",
+  contact_subject_suggestion: "💡 Sugerencia de mejora",
+  contact_subject_collab: "🤝 Propuesta de colaboración",
+  contact_subject_technical: "🔧 Problema técnico",
+  contact_subject_other: "📩 Otro",
+  contact_message: "Mensaje *",
+  contact_message_placeholder:
+    "Describe tu consulta con el máximo detalle posible. Si reportas un error, incluye la URL del producto afectado.",
+  contact_consent: "Al enviar este formulario, aceptas nuestra ",
+  contact_privacy_link: "Política de Privacidad",
+  contact_consent_after: ". Solo usaremos tu email para responder a tu consulta.",
+  contact_send: "Enviar Mensaje",
+  contact_sending: "Enviando...",
+  contact_sent_title: "✓ Mensaje enviado correctamente",
+  contact_sent_desc:
+    "Gracias por escribirnos. Te responderemos en un plazo de 24-48 horas laborables.",
+  contact_send_error: "No se pudo enviar el mensaje",
 };
 
 // Diccionario Inglés (clave EN → valor EN).
@@ -758,6 +831,79 @@ const EN: Record<string, string> = {
   hub_meta_min_part: ", min 30 days {price}",
   spec_meta_description:
     "Price history of the refurbished {productName} on Back Market{priceNow}{minPart}. Compare conditions and save with confidence.",
+
+  // --- LEGAL / COMPANY PAGES (SHORT SEO) ---
+  meta_privacy_title: "Privacy Policy | RefurbTrack",
+  meta_privacy_description:
+    "How RefurbTrack protects your personal data: what information we collect, how we use it and what your GDPR rights are.",
+  meta_terms_title: "Terms and Conditions | RefurbTrack",
+  meta_terms_description:
+    "RefurbTrack terms of use: nature of the service, relationship with third-party sellers, responsibilities and limitations.",
+  meta_cookies_title: "Cookie Policy | RefurbTrack",
+  meta_cookies_description:
+    "Which cookies RefurbTrack uses, what they do, how to manage them and why they are essential to our business model.",
+  meta_about_title: "About Us | RefurbTrack",
+  meta_about_description:
+    "RefurbTrack: refurbished tech with purpose. Learn about our mission, values and environmental impact.",
+  meta_how_it_works_title: "How RefurbTrack Works | RefurbTrack",
+  meta_how_it_works_description:
+    "Discover in 5 steps how we track prices, analyse price history and alert you so you buy at the right moment.",
+  meta_contact_title: "Contact | RefurbTrack",
+  meta_contact_description:
+    "Get in touch with the RefurbTrack team: questions about the platform, data errors or suggestions for improvement.",
+  meta_blog_title: "RefurbTrack Blog | RefurbTrack",
+  meta_blog_description:
+    "Guides, analysis and tips to buy refurbished tech smartly and save money.",
+
+  // --- BLOG POSTS (SHORT SEO) ---
+  meta_blog_guia_title: "The Complete Guide to Buying Refurbished Devices | RefurbTrack",
+  meta_blog_guia_description:
+    "Everything you need to know before buying a refurbished phone, tablet or laptop: conditions, warranty, battery and how to tell if it's worth it.",
+  meta_blog_impacto_title: "The Environmental Impact of Buying Refurbished: How Much You Save | RefurbTrack",
+  meta_blog_impacto_description:
+    "Analysis of the CO2 avoided, water saved and waste prevented by each refurbished device, with verifiable data compared with new devices.",
+  meta_blog_marketplaces_title: "Back Market vs Amazon Renewed vs eBay: Full Comparison | RefurbTrack",
+  meta_blog_marketplaces_description:
+    "A comparison of the main refurbished marketplaces: prices, warranties, returns and which to choose based on your needs.",
+  meta_blog_ahorro_title: "5 Strategies to Save: Timing and Price Patterns | RefurbTrack",
+  meta_blog_ahorro_description:
+    "Find out when refurbished devices are cheapest: seasonal patterns, Black Friday and Apple launches, so you can buy at the ideal moment.",
+  meta_blog_mitos_title: "7 Refurbished Device Myths, Debunked | RefurbTrack",
+  meta_blog_mitos_description:
+    "Do they last less? Are the batteries degraded? We debunk the most common refurbished myths with real data.",
+  meta_blog_tendencias_title: "2026 Refurbished Market Trends: Growth and Opportunities | RefurbTrack",
+  meta_blog_tendencias_description:
+    "Analysis of refurbished market growth, the most in-demand models and predictions for 2026 based on RefurbTrack data.",
+
+  // --- BLOG UI (short) ---
+  back_to_blog: "Back to blog",
+  read_more: "Read more",
+  read: "Read",
+  featured: "FEATURED",
+  no_posts_in_category: "No articles in this category",
+  all_categories: "All",
+
+  // --- CONTACT FORM (short) ---
+  contact_full_name: "Full name *",
+  contact_full_name_placeholder: "Your name",
+  contact_subject: "Subject *",
+  contact_subject_placeholder: "Select a subject",
+  contact_subject_suggestion: "💡 Suggestion for improvement",
+  contact_subject_collab: "🤝 Collaboration proposal",
+  contact_subject_technical: "🔧 Technical issue",
+  contact_subject_other: "📩 Other",
+  contact_message: "Message *",
+  contact_message_placeholder:
+    "Describe your query in as much detail as possible. If you are reporting an error, include the URL of the affected product.",
+  contact_consent: "By submitting this form you accept our ",
+  contact_privacy_link: "Privacy Policy",
+  contact_consent_after: ". We will only use your email to reply to your query.",
+  contact_send: "Send Message",
+  contact_sending: "Sending...",
+  contact_sent_title: "✓ Message sent successfully",
+  contact_sent_desc:
+    "Thank you for writing to us. We will get back to you within 24-48 working hours.",
+  contact_send_error: "Could not send the message",
 };
 
 // Mapa inverso ES → EN, útil para generar slugs o etiquetas en inglés.

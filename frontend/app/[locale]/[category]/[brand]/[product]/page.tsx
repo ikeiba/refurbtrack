@@ -8,6 +8,7 @@ import { absoluteUrl, hubPath } from "@/lib/urls";
 import { formatCurrency } from "@/lib/format";
 import { parseLocale, getCurrency, getLanguage, getSpecSlug } from "@/lib/i18n";
 import { t } from "@/lib/translations";
+import { getHubFaqs } from "@/lib/faq-data";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -80,6 +81,7 @@ export default async function ProductHubPage({ params }: Props) {
   const { locale: rawLocale, category, brand, product } = await params;
   const locale = parseLocale(rawLocale);
   const language = getLanguage(locale);
+  const currency = getCurrency(locale);
 
   const [hub, allProducts] = await Promise.all([
     getModelHub(category, brand, product, locale),
@@ -127,12 +129,34 @@ export default async function ProductHubPage({ params }: Props) {
     })),
   };
 
+  // FAQ dinámica del hub (acordeón visual + JSON-LD FAQPage).
+  const cheapestSpec = hub.insights.cheapest_spec
+    ? hub.storage_groups.flatMap((g) => g.specs).find((s) => s.slug === hub.insights.cheapest_spec)
+    : undefined;
+
+  const hubFaqs = getHubFaqs(language, hub.name, {
+    lowest: hub.summary.lowest_current_price,
+    histMin: hub.summary.historical_min ?? hub.lowest_ever_price,
+    cheapestStorage: cheapestSpec?.storage ?? null,
+  }, currency);
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: hubFaqs.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <HeaderWrapper />
-      <ModelHubView hub={hub} locale={locale} siblings={siblings} />
+      <ModelHubView hub={hub} locale={locale} siblings={siblings} faqItems={hubFaqs} />
     </div>
   );
 }

@@ -4,11 +4,18 @@ import { Breadcrumbs } from "@/components/breadcrumbs"
 import { Faq, type FaqItem } from "@/components/faq"
 import { HubConfigTable } from "@/components/hub/hub-config-table"
 import { t } from "@/lib/translations"
-import { formatCurrency, formatSignedPercent, formatDate } from "@/lib/format"
+import { formatCurrency, formatDate } from "@/lib/format"
+import {
+  getHubCheapestInsight,
+  getHubClosestMinInsight,
+  getHubBiggestDropInsight,
+  getHubNoDataInsight,
+  getHubEvolutionIntro,
+  getHubSeoParagraphs,
+} from "@/lib/seo-content"
 import { historyLandingPath, hubPath, specPath } from "@/lib/urls"
 import type { ModelHub } from "@/lib/types"
 import { parseLocale, getCurrency, getLanguage, getSpecSlug } from "@/lib/i18n"
-import type { Currency, Language } from "@/lib/i18n"
 
 interface SiblingModel {
   name: string
@@ -21,87 +28,10 @@ interface ModelHubViewProps {
   hub: ModelHub
   locale: string
   siblings: SiblingModel[]
+  faqItems: FaqItem[]
 }
 
-function buildFaq(hub: ModelHub, language: Language, currency: Currency): FaqItem[] {
-  const name = hub.name
-  const lowest = hub.summary.lowest_current_price
-  const histMin = hub.summary.historical_min ?? hub.lowest_ever_price
-  const cheapestGroup = hub.insights.cheapest_spec
-    ? hub.storage_groups.flatMap((g) => g.specs).find((s) => s.slug === hub.insights.cheapest_spec)
-    : undefined
-  const cheapestStorage = cheapestGroup?.storage
-
-  const items: FaqItem[] = []
-
-  if (lowest !== null) {
-    items.push({
-      question: `¿Cuánto cuesta el ${name} reacondicionado?`,
-      answer: `El precio más bajo disponible ahora mismo para el ${name} reacondicionado en Back Market es de ${formatCurrency(lowest, currency, language)}. Los precios varían según la capacidad, el color y el estado del dispositivo, por eso te recomendamos revisar todas las configuraciones antes de decidir.`,
-    })
-  } else {
-    items.push({
-      question: `¿Cuánto cuesta el ${name} reacondicionado?`,
-      answer: `Todavía no tenemos registros de precios suficientes para el ${name} reacondicionado. En cuanto nuestro rastreador registre su evolución, mostraremos aquí el precio más bajo y su historial.`,
-    })
-  }
-
-  if (histMin !== null) {
-    items.push({
-      question: `¿Cuál es el precio mínimo del ${name}?`,
-      answer: `El mínimo histórico registrado para el ${name} es de ${formatCurrency(histMin, currency, language)}. Recuerda que es un precio que se alcanzó en un momento concreto; el precio actual puede ser distinto.`,
-    })
-  }
-
-  if (cheapestStorage) {
-    items.push({
-      question: `¿Qué capacidad del ${name} sale más barata?`,
-      answer: `Actualmente, la configuración de ${cheapestStorage} GB es la más económica que tenemos registrada para el ${name}. Consulta sus colores y estados para encontrar la oferta exacta.`,
-    })
-  }
-
-  items.push({
-    question: `¿Cómo ha evolucionado el precio del ${name}?`,
-    answer: `RefurbTrack registra periódicamente los precios del ${name} en Back Market y calcula el mínimo, la media y el máximo de cada configuración. Puedes consultar el historial individual de cada capacidad y color desde esta página.`,
-  })
-
-  return items
-}
-
-function buildSeoContent(hub: ModelHub, language: Language, currency: Currency): string[] {
-  const name = hub.name
-  const lowest = hub.summary.lowest_current_price
-  const avg = hub.summary.avg_current_price
-  const histMin = hub.summary.historical_min ?? hub.lowest_ever_price
-  const paragraphs: string[] = []
-
-  if (lowest !== null) {
-    paragraphs.push(
-      `El precio más bajo disponible ahora mismo para un ${name} reacondicionado es de ${formatCurrency(lowest, currency, language)}. Hemos analizado sus ${hub.summary.config_count} configuraciones entre capacidades, colores y estados.`
-    )
-  } else {
-    paragraphs.push(
-      `Estamos rastreando las ${hub.summary.config_count} configuraciones del ${name} reacondicionado en Back Market. En cuanto haya registros de precios, podrás ver aquí su evolución completa.`
-    )
-  }
-
-  if (avg !== null && lowest !== null && lowest !== avg) {
-    const pct = lowest < avg ? "por debajo" : "por encima"
-    paragraphs.push(
-      `El precio medio actual del ${name} es de ${formatCurrency(avg, currency, language)}, y la opción más barata se sitúa ${pct} de esa media.`
-    )
-  }
-
-  if (histMin !== null) {
-    paragraphs.push(
-      `El mínimo histórico registrado para el ${name} ha sido de ${formatCurrency(histMin, currency, language)}, aunque no siempre coincide con el precio más bajo disponible en este momento.`
-    )
-  }
-
-  return paragraphs
-}
-
-export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
+export function ModelHubView({ hub, locale, siblings, faqItems }: ModelHubViewProps) {
   const resolvedLocale = parseLocale(locale)
   const language = getLanguage(resolvedLocale)
   const currency = getCurrency(resolvedLocale)
@@ -126,8 +56,13 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
     ? hub.image.startsWith("/") ? hub.image : `/${hub.image}`
     : "/placeholder.jpg"
 
-  const faq = buildFaq(hub, language, currency)
-  const seoParagraphs = buildSeoContent(hub, language, currency)
+  const seoParagraphs = getHubSeoParagraphs(language, currency, {
+    productName: hub.name,
+    configCount: hub.summary.config_count,
+    lowest,
+    avg,
+    histMin,
+  })
 
   const otherModels = siblings.filter((s) => s.slug !== product)
 
@@ -181,9 +116,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
         <section className="mb-12">
           <h2 className="text-2xl font-bold tracking-tight mb-6">{t("price_evolution", language)}</h2>
           <p className="text-muted-foreground leading-relaxed mb-4">
-            Cada configuración del {hub.name} (capacidad, color y estado) tiene su propia evolución
-            de precios. Para evitar mezclar series incompatibles, el historial se consulta por
-            configuración:
+            {getHubEvolutionIntro(language, hub.name)}
           </p>
           <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {hub.storage_groups.flatMap((g) => g.specs).slice(0, 6).map((spec) => (
@@ -208,7 +141,12 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
               if (!spec) return null
               return (
                 <InsightCard>
-                  La configuración más barata ahora mismo es el {hub.name} {spec.storage} GB {t(spec.color, language)} a {formatCurrency(spec.current_price, currency, language)}.{" "}
+                  {getHubCheapestInsight(language, currency, {
+                    productName: hub.name,
+                    storage: spec.storage,
+                    color: t(spec.color, language),
+                    price: spec.current_price,
+                  })}{" "}
                   <Link href={specPath(resolvedLocale, category, brand, product, getSpecSlug(spec, resolvedLocale))} className="text-emerald-600 hover:underline">{t("view_history", language)}</Link>
                 </InsightCard>
               )
@@ -218,8 +156,12 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
               if (!spec) return null
               return (
                 <InsightCard>
-                  El {hub.name} {spec.storage} GB {t(spec.color, language)} es la configuración más cercana a su mínimo reciente
-                  (está un {formatSignedPercent(hub.insights.closest_to_min_gap)} por encima de él).
+                  {getHubClosestMinInsight(language, {
+                    productName: hub.name,
+                    storage: spec.storage,
+                    color: t(spec.color, language),
+                    pct: hub.insights.closest_to_min_gap,
+                  })}
                 </InsightCard>
               )
             })()}
@@ -228,14 +170,18 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
               if (!spec) return null
               return (
                 <InsightCard>
-                  El {hub.name} {spec.storage} GB {t(spec.color, language)} es la configuración con mayor caída reciente,
-                  un {formatSignedPercent(hub.insights.biggest_drop_value)} respecto a su máximo de los últimos 30 días.
+                  {getHubBiggestDropInsight(language, {
+                    productName: hub.name,
+                    storage: spec.storage,
+                    color: t(spec.color, language),
+                    pct: hub.insights.biggest_drop_value,
+                  })}
                 </InsightCard>
               )
             })()}
             {!hub.insights.cheapest_spec && (
               <InsightCard>
-                Aún no hay suficientes datos de precios para calcular qué configuración del {hub.name} es la más barata.
+                {getHubNoDataInsight(language, hub.name)}
               </InsightCard>
             )}
           </div>
@@ -252,7 +198,7 @@ export function ModelHubView({ hub, locale, siblings }: ModelHubViewProps) {
         )}
 
         {/* FAQ */}
-        <Faq items={faq} title={t("faq_title", language)} />
+        <Faq items={faqItems} title={t("faq_title", language)} />
 
         {/* ENLACES INTERNOS */}
         <section className="mt-16 border-t border-border pt-8">

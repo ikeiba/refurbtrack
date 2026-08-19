@@ -9,6 +9,7 @@ import { format, roundToNearestMinutes } from "date-fns"
 import { es, enGB } from "date-fns/locale"
 import { parseLocale, getLanguage, getCurrency, getSpecSlug } from "@/lib/i18n"
 import { formatCurrency } from "@/lib/format"
+import { getProductSeoParagraphs } from "@/lib/seo-content"
 
 import { Header } from "@/components/header"
 import { ProductGallery } from "@/components/product-gallery"
@@ -647,20 +648,23 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
             {/* Usamos el mismo diseño de "Card" que usaste en la gráfica para integrarlo */}
             <Card className="p-6 md:p-8 bg-card border shadow-sm">
               <div className="prose prose-sm sm:prose-base dark:prose-invert text-muted-foreground max-w-none">
-                <p>
-                  Comprar un <strong>{initialProduct.name} {activeSpec.storage}GB {t(activeSpec.color, language)}</strong> reacondicionado 
-                  es una de las decisiones más inteligentes para ahorrar dinero y reducir la basura electrónica. 
-                  Este modelo ha demostrado mantener un excelente valor en el mercado de segunda mano.
-                </p>
-                
-                {priceStats && priceStats.min > 0 && (
-                  <p className="mt-4">
-                    Según nuestro historial de precios, el <strong>precio más bajo registrado</strong> para esta configuración específica 
-                    ha sido de <strong>{formatCurrency(priceStats.min, currency, language)}</strong>. Analizamos diariamente múltiples tiendas como Back Market 
-                    para asegurarnos de que no pagues de más. Si su precio actual ronda la media de <strong>{formatCurrency(priceStats.avg, currency, language)}</strong>, 
-                    sigue siendo una excelente oportunidad frente al precio de un dispositivo nuevo.
+                {getProductSeoParagraphs(language, currency, {
+                  productName: initialProduct.name,
+                  storage: activeSpec.storage,
+                  color: t(activeSpec.color, language),
+                  min: priceStats ? priceStats.min : null,
+                  avg: priceStats ? priceStats.avg : null,
+                }).map((paragraph, i) => (
+                  <p key={i} className={i > 0 ? "mt-4" : undefined}>
+                    {paragraph.map((segment, j) =>
+                      segment.strong ? (
+                        <strong key={j}>{segment.text}</strong>
+                      ) : (
+                        segment.text
+                      )
+                    )}
                   </p>
-                )}
+                ))}
               </div>
             </Card>
           </div>
