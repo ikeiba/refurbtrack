@@ -8,6 +8,7 @@ import { absoluteUrl, hubPath, specPath, brandPath, categoryPath } from "@/lib/u
 import { t } from "@/lib/translations";
 import { formatCurrency } from "@/lib/format";
 import { parseLocale, getCurrency, getLanguage, locales, getMarket } from "@/lib/i18n";
+import { hreflangLanguages } from "@/lib/i18n-seo";
 
 // --- IMPORTANTE: Aquí extraemos los componentes interactivos a "Islas" ---
 import ProductViewClient from "@/components/product/ProductViewClient"; 
@@ -109,7 +110,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const priceSuffix = pricePart ? ` — ${pricePart}${minPart}` : "";
 
   // Construimos la URL canónica que nos dio el Backend
-  const canonicalUrl = absoluteUrl(specPath(locale, data.category_slug, data.brand_slug, data.slug, specSlug));
+  const canonicalPath = specPath(locale, data.category_slug, data.brand_slug, data.slug, specSlug);
+  const canonicalUrl = absoluteUrl(canonicalPath);
+  // Hreflang bidireccional: disecciona el specSlug (reacondicionado-64gb-oro)
+  // y lo reconstruye en el idioma alternativo (refurbished-64gb-gold).
+  const languages = hreflangLanguages(canonicalPath, absoluteUrl(""));
 
   return {
     title: `${data.name}${variant ? ` ${variant}` : ""} ${t("refurbished", language)}${priceSuffix} | RefurbTrack`,
@@ -118,7 +123,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       priceNow: price !== "—" ? ` — ${t("hub_price_suffix", language, { price })}` : "",
       minPart: min30 !== "—" ? t("hub_meta_min_part", language, { price: min30 }) : "",
     }),
-    alternates: { canonical: canonicalUrl },
+    alternates: { canonical: canonicalUrl, languages },
     openGraph: {
       images: [data.image],
     },

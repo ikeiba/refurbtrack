@@ -8,6 +8,7 @@ import { parseLocale, getLanguage } from "@/lib/i18n"
 import { t } from "@/lib/translations"
 import { absoluteUrl, blogPostPath } from "@/lib/urls"
 import { blogPostBySlug, blogPostSlug, blogPostSlugsForLocale } from "@/lib/blog"
+import { hreflangLanguages } from "@/lib/i18n-seo"
 
 import { GuiaCompradoresES } from "@/components/content/blog/GuiaCompradoresES"
 import { GuiaCompradoresEN } from "@/components/content/blog/GuiaCompradoresEN"
@@ -85,14 +86,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const content = CONTENT[pair.slugES]
   if (!content) return {}
 
-  const canonical = absoluteUrl(blogPostPath(locale, canonicalSlug))
+  const postPath = blogPostPath(locale, canonicalSlug)
+  const canonical = absoluteUrl(postPath)
+  const languages = hreflangLanguages(postPath, absoluteUrl(""))
   const title = t(content.title, language)
   const description = t(content.description, language)
 
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     openGraph: { title, description },
   }
 }

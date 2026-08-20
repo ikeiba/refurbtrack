@@ -10,6 +10,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper"; 
 import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n";
 import { t } from "@/lib/translations";
+import { hreflangLanguages } from "@/lib/i18n-seo";
 
 // export const revalidate = 600; // Cacheamos en servidor por 1 hora
 export const dynamic = 'force-dynamic'
@@ -33,7 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Ej: Apple Smartphone Reacondicionados al Mejor Precio
     title: t("meta_brand_title", language, { brand: seoBrandName }),
     description: t("meta_brand_description", language, { category: prettyCat, brand: seoBrandName }),
-    alternates: { canonical: `/${locale}/${category}/${brand}` }
+    alternates: {
+      canonical: `/${locale}/${category}/${brand}`,
+      languages: hreflangLanguages(`/${locale}/${category}/${brand}`),
+    }
   };
 }
 

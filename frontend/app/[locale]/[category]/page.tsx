@@ -8,6 +8,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { HeaderWrapper } from "@/components/header-wrapper";
 import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n";
 import { t } from "@/lib/translations";
+import { hreflangLanguages } from "@/lib/i18n-seo";
 
 // export const revalidate = 600; // Cachear 1 hora (ISR)
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t("meta_category_title", language, { category: prettyCategory }),
     description: t("meta_category_description", language, { category: prettyCategory }),
     alternates: {
-      canonical: `/${locale}/${category}`
+      canonical: `/${locale}/${category}`,
+      languages: hreflangLanguages(`/${locale}/${category}`),
     }
   };
 }

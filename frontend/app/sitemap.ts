@@ -1,8 +1,9 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next'
 import { API_URL } from "@/services/api"
-import { locales, getMarket } from "@/lib/i18n"
+import { locales, getMarket, type Locale } from "@/lib/i18n"
 import { blogPostSlugsForLocale } from "@/lib/blog"
+import { translatePathname } from "@/lib/format"
 
 // Añadimos ISR al sitemap: Que se regenere cada 1 hora (3600) o cada 24h (86400)
 // export const revalidate = 3600;
@@ -22,36 +23,43 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://refurbtrack.com'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = []
 
+  // Hreflang bidireccional completo: para cualquier ruta que empiece por un
+  // locale, calculamos la URL traducida exacta en AMBOS mercados y la emitimos
+  // en `alternates.languages` (slugs de blog y de spec se traducen via
+  // translatePathname; si una traducción falla, se mantiene el slug original).
+  function push(path: string, extra?: Omit<MetadataRoute.Sitemap[number], "url" | "alternates">): void {
+    const languages: Record<Locale, string> = {} as Record<Locale, string>
+    for (const locale of locales) {
+      languages[locale] = `${baseUrl}${translatePathname(path, locale)}`
+    }
+    entries.push({
+      url: `${baseUrl}${path}`,
+      alternates: { languages },
+      ...extra,
+    })
+  }
+
   // Recorremos cada locale (mercado) y emitimos sus URLs.
   for (const locale of locales) {
     const market = getMarket(locale)
 
     // --- ZONA 1: RUTAS ESTÁTICAS Y DE EMPRESA ---
-    entries.push(
-      { url: `${baseUrl}/${locale}`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-      { url: `${baseUrl}/${locale}/historial-precios-back-market`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 }
-    )
+    push(`/${locale}`, { lastModified: new Date(), changeFrequency: 'daily', priority: 1 })
+    push(`/${locale}/historial-precios-back-market`, { lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 })
 
     // --- ZONA 2: RUTAS DEL BLOG (slugs localizados por mercado) ---
-    entries.push(
-      { url: `${baseUrl}/${locale}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-      ...blogPostSlugsForLocale(locale).map(slug => ({
-        url: `${baseUrl}/${locale}/blog/${slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      }))
-    )
+    push(`/${locale}/blog`, { lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 })
+    for (const slug of blogPostSlugsForLocale(locale)) {
+      push(`/${locale}/blog/${slug}`, { lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 })
+    }
 
     // --- ZONA 3: RUTAS LEGALES ---
-    entries.push(
-      { url: `${baseUrl}/${locale}/cookies`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-      { url: `${baseUrl}/${locale}/how-it-works`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
-      { url: `${baseUrl}/${locale}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
-      { url: `${baseUrl}/${locale}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-      { url: `${baseUrl}/${locale}/privacy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-      { url: `${baseUrl}/${locale}/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 },
-    )
+    push(`/${locale}/cookies`, { lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 })
+    push(`/${locale}/how-it-works`, { lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 })
+    push(`/${locale}/about`, { lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 })
+    push(`/${locale}/contact`, { lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 })
+    push(`/${locale}/privacy`, { lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 })
+    push(`/${locale}/terms`, { lastModified: new Date(), changeFrequency: 'monthly', priority: 0.1 })
 
     // --- ZONA 4: RUTAS DINÁMICAS (Categorías, Marcas, Hubs y Productos) ---
     const uniqueCategories = new Set<string>()
@@ -72,8 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             uniqueBrands.add(`${item.product__category__slug}/${item.product__brand__slug}`)
             uniqueHubs.add(`${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}`)
 
-            entries.push({
-              url: `${baseUrl}/${locale}/${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}/${item.slug}`,
+            push(`/${locale}/${item.product__category__slug}/${item.product__brand__slug}/${item.product__slug}/${item.slug}`, {
               lastModified: new Date(item.last_updated),
               changeFrequency: 'daily',
               priority: 0.8,
@@ -86,30 +93,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     for (const category of uniqueCategories) {
-      entries.push({
-        url: `${baseUrl}/${locale}/${category}`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.9,
-      })
+      push(`/${locale}/${category}`, { lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 })
     }
 
     for (const catBrand of uniqueBrands) {
-      entries.push({
-        url: `${baseUrl}/${locale}/${catBrand}`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.85,
-      })
+      push(`/${locale}/${catBrand}`, { lastModified: new Date(), changeFrequency: 'daily', priority: 0.85 })
     }
 
     for (const catBrandProduct of uniqueHubs) {
-      entries.push({
-        url: `${baseUrl}/${locale}/${catBrandProduct}`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.85,
-      })
+      push(`/${locale}/${catBrandProduct}`, { lastModified: new Date(), changeFrequency: 'daily', priority: 0.85 })
     }
   }
 

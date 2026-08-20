@@ -7,6 +7,7 @@ import { absoluteUrl, historyLandingPath } from "@/lib/urls";
 import { parseLocale, getLanguage } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { getFaqData } from "@/lib/faq-data";
+import { hreflangLanguages } from "@/lib/i18n-seo";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,9 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const language = getLanguage(locale);
-  const canonical = absoluteUrl(historyLandingPath(locale));
+  const historyPath = historyLandingPath(locale);
+  const canonical = absoluteUrl(historyPath);
+  const languages = hreflangLanguages(historyPath, absoluteUrl(""));
 
   const title = t("meta_history_title", language);
   const description = t("meta_history_description", language);
@@ -25,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     openGraph: { title, description },
   };
 }

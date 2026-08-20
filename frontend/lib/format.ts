@@ -5,6 +5,7 @@
 import { getIntlLocale, parseLocale, getLanguage } from "./i18n";
 import type { Currency, Language } from "./i18n";
 import { dictionaries, toEnglish } from "./translations";
+import { blogPostBySlug, blogPostSlug } from "./blog";
 
 /**
  * Formatea un valor como moneda según el mercado.
@@ -149,9 +150,16 @@ function translateSpecSlug(segment: string, targetLang: Language): string {
   return `${targetPrefix}-${storage}-${translateColor(colorSlug, targetLang)}`;
 }
 
+/** Traduce el slug de un artículo de blog al locale de destino (fallback al original). */
+function translateBlogSlug(segment: string, targetLocale: string): string {
+  const pair = blogPostBySlug(segment);
+  if (!pair) return segment;
+  return blogPostSlug(pair.slugES, targetLocale);
+}
+
 /**
  * Sustituye el prefijo de locale de una URL y traduce los slugs dinámicos
- * (especificaciones de producto) al idioma del locale de destino.
+ * (especificaciones de producto y artículos de blog) al idioma del locale de destino.
  *
  * Ejemplos:
  *   translatePathname("/es-es/smartphone/apple/iphone-11-pro/reacondicionado-64gb-oro", "en-gb")
@@ -159,7 +167,9 @@ function translateSpecSlug(segment: string, targetLang: Language): string {
  *   translatePathname("/en-gb/smartphone/apple/iphone-11-pro/refurbished-64gb-gold", "es-es")
  *     -> "/es-es/smartphone/apple/iphone-11-pro/reacondicionado-64gb-oro"
  *   translatePathname("/es-es/blog/guia-compradores-refurbished", "en-gb")
- *     -> "/en-gb/blog/guia-compradores-refurbished" (sin slugs de spec, solo locale)
+ *     -> "/en-gb/blog/refurbished-buying-guide"
+ *   translatePathname("/es-es/smartphone/apple", "en-gb")
+ *     -> "/en-gb/smartphone/apple" (slugs idénticos, solo cambia el locale)
  */
 export function translatePathname(pathname: string, targetLocale: string): string {
   const match = pathname.match(LOCALE_RE);
@@ -174,6 +184,9 @@ export function translatePathname(pathname: string, targetLocale: string): strin
 
   const translated = segments.map((seg, i) => {
     if (i === 0) return resolvedTarget;
+    if (i >= 2 && segments[i - 1] === "blog") {
+      return translateBlogSlug(seg, resolvedTarget);
+    }
     if (seg.startsWith(SPEC_ES_PREFIX) || seg.startsWith(SPEC_EN_PREFIX)) {
       return translateSpecSlug(seg, targetLang);
     }

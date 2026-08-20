@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/format";
 import { parseLocale, getCurrency, getLanguage, getSpecSlug } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { getHubFaqs } from "@/lib/faq-data";
+import { hreflangLanguages } from "@/lib/i18n-seo";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -41,7 +42,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!hub) return { title: t("model_not_found", language) };
 
-  const canonical = absoluteUrl(hubPath(locale, category, brand, product));
+  const canonicalPath = hubPath(locale, category, brand, product);
+  const canonical = absoluteUrl(canonicalPath);
+  const languages = hreflangLanguages(canonicalPath, absoluteUrl(""));
 
   // Patrón comparador: precio actual y mínimo 30d en el snippet.
   const current = hub.summary.lowest_current_price;
@@ -68,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     openGraph: {
       title,
       description,
