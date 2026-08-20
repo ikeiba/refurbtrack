@@ -10,12 +10,18 @@ import { Plus, Loader2 } from "lucide-react"
 import { getProducts, getProductDetail } from "@/services/api"
 import type { ProductSummary, ProductDetail, Offer } from "@/lib/types"
 import { t } from "@/lib/translations" // <--- 1. IMPORTAR TRADUCTOR
+import { useParams } from "next/navigation"
+import { parseLocale, getLanguage } from "@/lib/i18n"
 
 interface ComparisonPopoverProps {
   onCompare: (offer: Offer, label: string) => void
 }
 
 export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
+
   const [open, setOpen] = useState(false)
   const [loadingList, setLoadingList] = useState(false)
   const [loadingDetails, setLoadingDetails] = useState(false)
@@ -35,7 +41,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
   useEffect(() => {
     if (open && productList.length === 0) {
       setLoadingList(true)
-      getProducts().then(setProductList).finally(() => setLoadingList(false))
+      getProducts(locale).then(setProductList).finally(() => setLoadingList(false))
     }
   }, [open, productList.length])
 
@@ -48,7 +54,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
     setStorage("")
 
     try {
-      const details = await getProductDetail(productId)
+      const details = await getProductDetail(productId, locale)
       setTargetProduct(details as unknown as ProductDetail)
       
       if (details.specs.length > 0) {
@@ -68,7 +74,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
     const targetSpec = targetProduct.specs.find(s => s.color === color && s.storage === storage)
     
     if (!targetSpec) {
-        alert("Esa combinación de Color/GB no existe.")
+        alert(t("combination_not_found", language))
         return
     }
 
@@ -78,15 +84,14 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
     )
 
     if (targetOffer) {
-      // 2. CREACIÓN DE ETIQUETA TRADUCIDA
       // Usamos t() para que la leyenda del gráfico diga "Azul" y "Correcto"
-      const battLabel = isNewBatt ? `(${t("new")})` : ""
-      const label = `${targetProduct.name} ${t(color)} ${storage}GB - ${t(condition)} ${battLabel}`.trim()
+      const battLabel = isNewBatt ? `(${t("new", language)})` : ""
+      const label = `${targetProduct.name} ${t(color, language)} ${storage}GB - ${t(condition, language)} ${battLabel}`.trim()
       
       onCompare(targetOffer, label)
       setOpen(false)
     } else {
-      alert("No hay datos para esta combinación.")
+      alert(t("no_data_combination", language))
     }
   }
 
@@ -110,41 +115,41 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
       <PopoverTrigger asChild>
         <Button variant="outline" className="gap-2 border-dashed">
           <Plus className="w-4 h-4" />
-          Añadir Comparación
+          {t("add_comparison", language)}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 max-h-[90vh] overflow-y-auto" align="end">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Comparar precios</h4>
-            <p className="text-sm text-muted-foreground">Añade otra línea al gráfico.</p>
+            <h4 className="font-medium leading-none">{t("compare_prices", language)}</h4>
+            <p className="text-sm text-muted-foreground">{t("add_line_hint", language)}</p>
           </div>
           
           <div className="grid gap-3">
             {/* 1. Producto */}
             <div className="grid gap-1.5">
-              <Label>Modelo</Label>
+              <Label>{t("model_label", language)}</Label>
               <Select value={selectedProductId} onValueChange={handleProductChange}>
-                <SelectTrigger><SelectValue placeholder={loadingList ? "Cargando..." : "Seleccionar"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={loadingList ? t("loading", language) : t("select", language)} /></SelectTrigger>
                 <SelectContent>
                   {productList.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
-            {loadingDetails && <div className="flex gap-2 items-center text-sm text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin"/> Cargando opciones...</div>}
+            {loadingDetails && <div className="flex gap-2 items-center text-sm text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin"/> {t("loading_options", language)}</div>}
 
             {targetProduct && !loadingDetails && (
                 <>
                     {/* 2. Color */}
                     <div className="grid gap-1.5">
-                        <Label>Color</Label>
+                        <Label>{t("color", language)}</Label>
                         <Select value={color} onValueChange={setColor}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {availableColors.map(c => (
                                   // 3. TRADUCCIÓN VISUAL: Value=Inglés ("Blue"), Texto=Español ("Azul")
-                                  <SelectItem key={c} value={c}>{t(c)}</SelectItem> 
+                                  <SelectItem key={c} value={c}>{t(c, language)}</SelectItem> 
                                 ))}
                             </SelectContent>
                         </Select>
@@ -152,7 +157,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
                     {/* 3. Capacidad */}
                     <div className="grid gap-1.5">
-                        <Label>Capacidad</Label>
+                        <Label>{t("capacity", language)}</Label>
                         <Select value={storage} onValueChange={setStorage}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -163,13 +168,13 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
                     {/* 4. Estado */}
                     <div className="grid gap-1.5">
-                        <Label>Estado</Label>
+                        <Label>{t("condition", language)}</Label>
                         <Select value={condition} onValueChange={setCondition}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {["Fair", "Good", "Excellent", "Premium"].map(c => (
                                   // 3. TRADUCCIÓN VISUAL
-                                  <SelectItem key={c} value={c}>{t(c)}</SelectItem>
+                                  <SelectItem key={c} value={c}>{t(c, language)}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -177,18 +182,18 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
 
                     {/* 5. Batería */}
                     <div className="grid gap-1.5">
-                        <Label>Batería</Label>
+                        <Label>{t("battery", language)}</Label>
                         <Select value={batteryNew} onValueChange={setBatteryNew}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {/* 3. TRADUCCIÓN VISUAL usando claves del diccionario */}
-                                <SelectItem value="false">{t("standard")}</SelectItem>
-                                <SelectItem value="true">{t("new")}</SelectItem>
+                                <SelectItem value="false">{t("standard", language)}</SelectItem>
+                                <SelectItem value="true">{t("new", language)}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <Button onClick={handleConfirm} className="w-full mt-2">Ver en gráfico</Button>
+                    <Button onClick={handleConfirm} className="w-full mt-2">{t("view_on_chart", language)}</Button>
                 </>
             )}
           </div>

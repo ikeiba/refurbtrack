@@ -3,8 +3,15 @@
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import { Leaf } from "lucide-react" // <--- 1. Importar el icono de la hoja
+import { useParams } from "next/navigation"
+import { parseLocale, getLanguage } from "@/lib/i18n"
+import { t } from "@/lib/translations"
 
 export function HomeHero() {
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
+
   return (
     <section className="relative pt-16 pb-20 lg:pt-24 lg:pb-28 overflow-hidden border-b border-border bg-muted/30">
       
@@ -20,15 +27,15 @@ export function HomeHero() {
         {/* 2. NUEVA ETIQUETA "CONSUMO CONSCIENTE" */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-600/20 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 text-sm font-medium mb-8 shadow-sm ring-1 ring-emerald-500/20">
             <Leaf className="w-4 h-4 fill-emerald-800 dark:fill-emerald-200" />
-            Consumo Consciente: Ahorra CO2 y Dinero
+            {t("conscious_consumption", language)}
         </div>
         
         {/* TÍTULO PRINCIPAL */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground mb-6">
-          iPhones reacondicionados:{" "}
+          {t("hero_title_1", language)}{" "}
           <br className="hidden sm:block" />
           <span className="text-emerald-600 relative inline-block">
-            compara precios y ahorra
+            {t("hero_title_2", language)}
             {/* Subrayado SVG movido aquí */}
             <svg
               className="absolute w-full h-3 -bottom-1 left-0 text-emerald-600 opacity-20"
@@ -46,8 +53,7 @@ export function HomeHero() {
         </h1>
 
         <p className="mt-4 max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground">
-          Consulta el historial de precios de iPhones reacondicionados en Back Market 
-          con gráficos interactivos. Crea alertas de precio y compra en el momento justo.
+          {t("hero_subtitle", language)}
         </p>
       </div>
     </section>

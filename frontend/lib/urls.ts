@@ -1,41 +1,42 @@
 // lib/urls.ts
 // Helpers centrales para construir URLs internas de forma consistente.
 // Evitan dispersar la construcción de rutas por los componentes.
+// Fase 4: el primer parámetro es el `locale` ('es-es' | 'en-gb').
 
 export const HISTORY_LANDING_SLUG = "historial-precios-back-market";
 
-export function historyLandingPath(lang: string): string {
-  return `/${lang}/${HISTORY_LANDING_SLUG}`;
+export function historyLandingPath(locale: string): string {
+  return `/${locale}/${HISTORY_LANDING_SLUG}`;
 }
 
-export function hubPath(lang: string, category: string, brand: string, product: string): string {
-  return `/${lang}/${category}/${brand}/${product}`;
+export function hubPath(locale: string, category: string, brand: string, product: string): string {
+  return `/${locale}/${category}/${brand}/${product}`;
 }
 
 export function specPath(
-  lang: string,
+  locale: string,
   category: string,
   brand: string,
   product: string,
   spec: string
 ): string {
-  return `/${lang}/${category}/${brand}/${product}/${spec}`;
+  return `/${locale}/${category}/${brand}/${product}/${spec}`;
 }
 
-export function brandPath(lang: string, category: string, brand: string): string {
-  return `/${lang}/${category}/${brand}`;
+export function brandPath(locale: string, category: string, brand: string): string {
+  return `/${locale}/${category}/${brand}`;
 }
 
-export function categoryPath(lang: string, category: string): string {
-  return `/${lang}/${category}`;
+export function categoryPath(locale: string, category: string): string {
+  return `/${locale}/${category}`;
 }
 
-export function blogIndexPath(lang: string): string {
-  return `/${lang}/blog`;
+export function blogIndexPath(locale: string): string {
+  return `/${locale}/blog`;
 }
 
-export function blogPostPath(lang: string, slug: string): string {
-  return `/${lang}/blog/${slug}`;
+export function blogPostPath(locale: string, slug: string): string {
+  return `/${locale}/blog/${slug}`;
 }
 
 export function absoluteUrl(path: string, baseUrl?: string): string {

@@ -14,8 +14,10 @@ import { cn, getColorHex } from "@/lib/utils" // <--- Importamos getColorHex
 import { createAlert } from "@/services/api"
 import { t } from "@/lib/translations"
 import { useAuth } from "@/context/auth-context" // <--- 1. Importar el cerebro
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { track } from "@/lib/analytics"
+import { parseLocale, getLanguage, getCurrency, getMarket } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
 
 
 interface AlertModalProps {
@@ -39,6 +41,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
   const { user, isAuthenticated } = useAuth() // <--- 2. Sacar el usuario
   const { toast } = useToast()
   const router = useRouter()
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
+  const currency = getCurrency(locale)
+  const currencySymbol = currency === "GBP" ? "£" : "€"
   const [loading, setLoading] = useState(false)
 
   // --- ESTADOS ---
@@ -128,7 +135,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
   // Submit
   const handleSubmit = async () => {
     if (!isFormValid()) {
-      toast({ title: "Faltan datos", description: "Asegúrate de que todos los campos tengan algo seleccionado.", variant: "destructive" })
+      toast({ title: t("missing_data", language), description: t("missing_data_desc", language), variant: "destructive" })
       return
     }
 
@@ -149,6 +156,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
         price_threshold: Number(targetPrice),
         product_id: product.id,
         country: 'ES',
+        market_code: getMarket(locale),
         target_colors: anyColor ? [] : selectedColors,
         target_storages: anyStorage ? [] : selectedStorages,
         target_conditions: anyCondition ? [] : selectedConditions,
@@ -164,12 +172,12 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
       })
 
       toast({
-        title: "¡Alerta Creada!",
-        description: `Te avisaremos en ${email} cuando baje de precio.`,
+        title: t("alert_created", language),
+        description: t("alert_created_desc", language, { email }),
         className: "bg-emerald-50 border-emerald-200 text-emerald-800",
         action: (
-          <ToastAction altText="Ir a mi panel" onClick={() => router.push("/es/dashboard")}>
-            Ir a mi panel
+          <ToastAction altText="Ir a mi panel" onClick={() => router.push(`/${locale}/dashboard`)}>
+            {t("go_to_dashboard", language)}
           </ToastAction>
         )
       })
@@ -177,7 +185,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
       setEmail("")
     } catch (error) {
       console.error(error)
-      toast({ title: "Error", description: "No se pudo guardar la alerta.", variant: "destructive" })
+      toast({ title: t("error", language), description: t("could_not_save_alert", language), variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -188,21 +196,21 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
     const parts = []
 
     // Almacenamiento (Suele ser igual en ambos idiomas, ej: 128GB)
-    parts.push(anyStorage ? "Cualquier almacenamiento" : selectedStorages.join("/"))
+    parts.push(anyStorage ? t("any_storage", language) : selectedStorages.join("/"))
 
-    // Color: Usamos .map(c => t(c)) para convertir ["Blue", "Red"] en "Azul/Rojo"
-    parts.push(anyColor ? "Cualquier color" : selectedColors.map(c => t(c)).join("/"))
+    // Color: Usamos .map(c => t(c, language)) para convertir ["Blue", "Red"] en "Azul/Rojo"
+    parts.push(anyColor ? t("any_color", language) : selectedColors.map(c => t(c, language)).join("/"))
 
     // Estado: Convertimos ["Fair"] en "Correcto"
-    parts.push(anyCondition ? "Cualquier estado" : selectedConditions.map(c => t(c)).join("/"))
+    parts.push(anyCondition ? t("any_condition", language) : selectedConditions.map(c => t(c, language)).join("/"))
     
     // Batería
     if (anyBattery) {
-      parts.push("Cualquier batería")
+      parts.push(t("any_battery", language))
     } else {
       // Simplificamos la lógica usando map y el traductor
       // Si selectedBattery es ['new', 'standard'] -> mostrará "Nueva/Estándar"
-      const batteryLabels = selectedBattery.map(b => t(b))
+      const batteryLabels = selectedBattery.map(b => t(b, language))
       parts.push(batteryLabels.join("/"))
     }
 
@@ -225,7 +233,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-emerald-700">
             <Bell className="h-5 w-5" />
-            Crear Alerta de Precio
+            {t("create_price_alert", language)}
           </DialogTitle>
         </DialogHeader>
 
@@ -235,11 +243,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
           <div className="flex items-center justify-between rounded-lg bg-muted/30 p-4 border border-border">
             <div>
               <p className="font-semibold text-lg">{product.name}</p>
-              <p className="text-sm text-muted-foreground">Configura tus preferencias abajo</p>
+              <p className="text-sm text-muted-foreground">{t("configure_prefs_hint", language)}</p>
             </div>
             <div className="text-right">
-                <p className="text-xs text-muted-foreground">Precio actual</p>
-                <p className="font-bold text-lg">{currentConfig.price}€</p>
+                <p className="text-xs text-muted-foreground">{t("current_price", language)}</p>
+                <p className="font-bold text-lg">{formatCurrency(currentConfig.price, currency, language)}</p>
             </div>
           </div>
 
@@ -247,7 +255,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Email */}
             <div className="space-y-2">
-                <Label htmlFor="email">Tu Email</Label>
+                <Label htmlFor="email">{t("your_email", language)}</Label>
                 <Input 
                     id="email" 
                     type="email" 
@@ -265,11 +273,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                 )}
                 */}
             </div>
-            {/* Precio con símbolo € absoluto */}
+            {/* Precio con símbolo de moneda dinámico */}
             <div className="space-y-2">
-                <Label htmlFor="price">Avísame si baja de</Label>
+                <Label htmlFor="price">{t("notify_if_below", language)}</Label>
                 <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
                     <Input 
                         id="price" 
                         type="number" 
@@ -284,10 +292,10 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
           {/* 3. ALMACENAMIENTO (Estilo Pill) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Almacenamiento</p>
+              <p className="text-sm font-medium">{t("storage", language)}</p>
               <div className="flex items-center gap-2">
                 <Checkbox id="any-storage" checked={anyStorage} onCheckedChange={(c) => setAnyStorage(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
-                <Label htmlFor="any-storage" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
+                <Label htmlFor="any-storage" className="text-sm text-muted-foreground cursor-pointer">{t("any", language)}</Label>
               </div>
             </div>
             {!anyStorage && (
@@ -309,17 +317,17 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
               </div>
             )}
             {anyStorage && (
-              <p className="text-sm text-muted-foreground italic">Cualquier almacenamiento</p>
+              <p className="text-sm text-muted-foreground italic">{t("any_storage", language)}</p>
             )}
           </div>
 
           {/* 4. COLOR (Estilo Círculos) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Color</p>
+              <p className="text-sm font-medium">{t("color", language)}</p>
               <div className="flex items-center gap-2">
                 <Checkbox id="any-color" checked={anyColor} onCheckedChange={(c) => setAnyColor(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
-                <Label htmlFor="any-color" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
+                <Label htmlFor="any-color" className="text-sm text-muted-foreground cursor-pointer">{t("any", language)}</Label>
               </div>
             </div>
             {!anyColor && (
@@ -335,26 +343,26 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border opacity-60 hover:opacity-100"
                     )}
                     style={{ backgroundColor: getColorHex(color) }}
-                    title={t(color)}
+                    title={t(color, language)}
                   />
                 ))}
               </div>
             )}
             {anyColor && (
-              <p className="text-sm text-muted-foreground italic">Cualquier color</p>
+              <p className="text-sm text-muted-foreground italic">{t("any_color", language)}</p>
             )}
             {!anyColor && selectedColors.length > 0 && (
-                <p className="text-xs text-muted-foreground">Seleccionado: {selectedColors.map(c => t(c)).join(", ")}</p>
+                <p className="text-xs text-muted-foreground">{t("selected_suffix", language, { values: selectedColors.map(c => t(c, language)).join(", ") })}</p>
             )}
           </div>
 
           {/* 5. ESTADO (Estilo Pill) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Estado</p>
+              <p className="text-sm font-medium">{t("condition", language)}</p>
               <div className="flex items-center gap-2">
                 <Checkbox id="any-cond" checked={anyCondition} onCheckedChange={(c) => setAnyCondition(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
-                <Label htmlFor="any-cond" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
+                <Label htmlFor="any-cond" className="text-sm text-muted-foreground cursor-pointer">{t("any", language)}</Label>
               </div>
             </div>
             {!anyCondition && (
@@ -370,23 +378,23 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border bg-transparent hover:border-emerald-600/50"
                     )}
                   >
-                    {t(cond)}
+                    {t(cond, language)}
                   </button>
                 ))}
               </div>
             )}
             {anyCondition && (
-              <p className="text-sm text-muted-foreground italic">Cualquier estado</p>
+              <p className="text-sm text-muted-foreground italic">{t("any_condition", language)}</p>
             )}
           </div>
 
           {/* 6. BATERÍA */}
           <div className="space-y-3">
              <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Batería</p>
+              <p className="text-sm font-medium">{t("battery", language)}</p>
               <div className="flex items-center gap-2">
                 <Checkbox id="any-batt" checked={anyBattery} onCheckedChange={(c) => setAnyBattery(!!c)} className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"/>
-                <Label htmlFor="any-batt" className="text-sm text-muted-foreground cursor-pointer">Cualquiera</Label>
+                <Label htmlFor="any-batt" className="text-sm text-muted-foreground cursor-pointer">{t("any", language)}</Label>
               </div>
             </div>
             {!anyBattery && (
@@ -400,7 +408,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border hover:bg-muted"
                     )}
                   >
-                    <Battery className="h-4 w-4" /> {t("standard")}
+                    <Battery className="h-4 w-4" /> {t("standard", language)}
                   </button>
                   <button
                     onClick={() => toggleSelection(selectedBattery, 'new', setSelectedBattery)}
@@ -411,25 +419,29 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                         : "border-border hover:bg-muted"
                     )}
                   >
-                    <BatteryFull className="h-4 w-4" /> {t("new")} (100%)
+                    <BatteryFull className="h-4 w-4" /> {t("new", language)} (100%)
                   </button>
               </div>
             )}
             {anyBattery && (
-              <p className="text-sm text-muted-foreground italic">Cualquier batería</p>
+              <p className="text-sm text-muted-foreground italic">{t("any_battery", language)}</p>
             )}
           </div>
 
           {/* 7. RESUMEN VERDE (Estilo v0) */}
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
-             <p className="text-emerald-800 dark:text-emerald-200">
-               <span className="font-medium">Resumen:</span> Avisar a <b>{email || "..."}</b> cuando <br/>
-               <span className="font-semibold">{getAlertDescription()}</span> baje de <span className="font-bold text-base">{targetPrice}€</span>
-             </p>
+<p className="text-emerald-800 dark:text-emerald-200">
+               <span className="font-medium">{t("summary_label", language)}</span>{" "}
+               {t("notify_to", language, {
+                 email: email || "...",
+                 description: getAlertDescription(),
+                 price: formatCurrency(Number(targetPrice), currency, language),
+               })}
+            </p>
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 bg-transparent" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" className="flex-1 bg-transparent" onClick={onClose}>{t("cancel", language)}</Button>
             <Button 
               onClick={handleSubmit} 
               disabled={loading || !isFormValid()}
@@ -437,7 +449,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Bell className="mr-2 h-4 w-4" />
-              Crear Alerta
+              {t("create_alert", language)}
             </Button>
           </div>
         </div>

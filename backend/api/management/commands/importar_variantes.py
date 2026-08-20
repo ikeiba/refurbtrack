@@ -1,5 +1,5 @@
-from django.core.management.base import BaseCommand
-from api.models import Product, Spec, Offer, Category, Brand
+from django.core.management.base import BaseCommand, CommandError
+from api.models import Product, Spec, Offer, Category, Brand, Market, ProductMarketStats
 from django.utils.text import slugify
 
 class Command(BaseCommand):
@@ -28,6 +28,24 @@ class Command(BaseCommand):
         "iPhone 15 Pro": 1219.00,
         "iPhone 16": 859.00,
         "iPhone 16 Pro": 1219.00,
+        # Añade más según necesites
+    }
+
+    # DICCIONARIO DE PRECIOS OFICIALES DE SALIDA PARA UK (GBP).
+    # Valores aproximados pendientes de verificar antes de activar el mercado UK.
+    OFFICIAL_MSRP_UK = {
+        "iPhone 11": 489.00,
+        "iPhone 11 Pro": 639.00,
+        "iPhone 12": 649.00,
+        "iPhone 12 Pro": 879.00,
+        "iPhone 13": 599.00,
+        "iPhone 13 Pro": 949.00,
+        "iPhone 14": 599.00,
+        "iPhone 14 Pro": 1099.00,
+        "iPhone 15": 699.00,
+        "iPhone 15 Pro": 999.00,
+        "iPhone 16": 699.00,
+        "iPhone 16 Pro": 999.00,
         # Añade más según necesites
     }
 
@@ -61,8 +79,23 @@ class Command(BaseCommand):
     "Ultramarine": "Azul Ultramar"
     }
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--market', type=str, default='ES',
+            help="Código del mercado a importar (default 'ES'). Define dominio, locale y moneda de las URLs."
+        )
+
     def handle(self, *args, **kwargs):
-        self.stdout.write("Iniciando importación masiva y generación de ofertas...")
+        market_code = kwargs.get('market', 'ES').upper()
+        markets = Market.seed()
+        self.market = markets.get(market_code)
+        if self.market is None:
+            raise CommandError(f"Market '{market_code}' no es canónico. Usa 'ES' o 'UK'.")
+
+        self.stdout.write(
+            f"Iniciando importación para mercado {self.market.code} "
+            f"({self.market.currency}, {self.market.domain}/{self.market.locale})..."
+        )
         
         # --- BLOQUE DE DATOS ---
         
@@ -298,7 +331,9 @@ class Command(BaseCommand):
         
         # --- FIN DEL BLOQUE ---
 
-        self.stdout.write(self.style.SUCCESS('¡Importación y generación de matriz completada!'))
+        self.stdout.write(self.style.SUCCESS(
+            f'¡Importación y generación de matriz completada para mercado {self.market.code}!'
+        ))
 
     # --- FUNCIONES ADAPTADORAS ---
     
@@ -319,6 +354,7 @@ class Command(BaseCommand):
         # 2. Generar el slug del producto (ej: "iphone-11")
         product_slug = slugify(name)
 
+        # MSRP del mercado ES (campo legacy de Product, se mantiene por back-compat)
         official_price = self.OFFICIAL_MSRP.get(name, None)
 
         # 3. Insertar producto con los nuevos campos obligatorios
@@ -335,9 +371,31 @@ class Command(BaseCommand):
 
         if not created and product.market_price != official_price:
             product.market_price = official_price
-            product.save()
+            product.save(update_fields=['market_price'])
+
+        # 4. MSRP por mercado en ProductMarketStats (fuente de verdad por mercado)
+        self.sync_market_msrp(product, name)
             
         self.stdout.write(f"Producto procesado: {name}")
+
+    def sync_market_msrp(self, product, name):
+        """Upsert del market_price por mercado en ProductMarketStats (ES y UK)."""
+        msrp_by_code = {'ES': self.OFFICIAL_MSRP, 'UK': self.OFFICIAL_MSRP_UK}
+        for code, msrp_dict in msrp_by_code.items():
+            market = Market.objects.filter(code=code).first()
+            if market is None:
+                continue
+            price = msrp_dict.get(name)
+            if price is None:
+                continue
+            stats, _ = ProductMarketStats.objects.get_or_create(
+                product=product,
+                market=market,
+                defaults={'market_price': price},
+            )
+            if stats.market_price != price:
+                stats.market_price = price
+                stats.save(update_fields=['market_price'])
 
     def get_product_by_name(self, name):
         try:
@@ -357,11 +415,14 @@ class Command(BaseCommand):
             color_slug = slugify(color)
             image_path = f"products/{product_slug_str}-{color_slug}.avif"
             
-            # --- NUEVO: Generar el slug del Spec ---
+            # --- Generar el slug del Spec (ES) ---
             # Ejemplo: "reacondicionado-64gb-black"
-            # En insert_spec:
             color_es = self.COLOR_TO_ES.get(color, color.lower())
             spec_slug = slugify(f"reacondicionado-{storage}gb-{color_es}")
+
+            # --- Generar el slug EN (el color ya está en inglés en BD) ---
+            # Ejemplo: "refurbished-64gb-black"
+            spec_slug_en = slugify(f"refurbished-{storage}gb-{color}") or f"refurbished-{slugify(str(storage))}-unknown-{uuid}"
             
             spec, created = Spec.objects.get_or_create(
                 back_market_uuid=uuid, 
@@ -369,7 +430,8 @@ class Command(BaseCommand):
                     'product': product,
                     'storage': storage,
                     'color': color,
-                    'slug': spec_slug, # <--- Insertamos el slug aquí
+                    'slug': spec_slug,       # <--- Slug ES
+                    'slug_en': spec_slug_en, # <--- Slug EN
                     'image': image_path  
                 }
             )
@@ -378,6 +440,11 @@ class Command(BaseCommand):
             if not created and spec.image != image_path:
                 spec.image = image_path
                 spec.save()
+
+            # Si la spec YA existía (created=False), completamos slug_en si faltaba
+            if not created and spec.slug_en != spec_slug_en:
+                spec.slug_en = spec_slug_en
+                spec.save(update_fields=['slug_en'])
             
             # Si la spec YA existía (created=False), actualizamos el color por si acaso cambió
             if not created and spec.color != color:
@@ -402,8 +469,8 @@ class Command(BaseCommand):
 
                 for battery_new in battery_options:
 
-                    # --- A. CONSTRUCCIÓN DE URL (Igual que el Scraper) ---
-                    base_url = f"https://www.backmarket.es/es-es/p/-/{uuid}"
+                    # --- A. CONSTRUCCIÓN DE URL (dominio y locale del mercado) ---
+                    base_url = f"https://www.{self.market.domain}/{self.market.locale}/p/-/{uuid}"
                     cond_code = self.CONDITION_CODES.get(condition, '12') # Default 12 (Fair) por seguridad
                     
                     final_url = f"{base_url}?l={cond_code}"
@@ -416,19 +483,21 @@ class Command(BaseCommand):
                         spec=spec,
                         condition=condition,
                         battery_new=battery_new,
-                        country='ES',
+                        country=self.market.code,
                         defaults={
                             'current_price': None,
                             'deal_score': 50,
-                            'url': final_url  # <--- GUARDAMOS LA URL AQUÍ
+                            'url': final_url,   # <--- GUARDAMOS LA URL AQUÍ
+                            'market': self.market,
                         }
                     )
                     
                     # IMPORTANTE: Si la oferta ya existía (created=False) pero no tenía URL
-                    # (porque acabamos de añadir el campo), se la actualizamos ahora.
-                    if not created and offer.url != final_url:
+                    # o mercado (porque acabamos de añadir los campos), se los actualizamos ahora.
+                    if not created and (offer.url != final_url or offer.market_id != self.market.id):
                         offer.url = final_url
-                        offer.save()
+                        offer.market = self.market
+                        offer.save(update_fields=['url', 'market'])
 
 
 

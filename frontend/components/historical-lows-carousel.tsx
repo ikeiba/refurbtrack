@@ -8,6 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { OfferSummary, HistoricalLowsCarouselProps } from "@/lib/types"
 import { t } from "@/lib/translations"
+import { useParams } from "next/navigation"
+import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
+import type { Currency, Language } from "@/lib/i18n"
 
 export const getConditionStyles = (condition: string) => {
   switch (condition) {
@@ -26,6 +30,10 @@ export const getConditionStyles = (condition: string) => {
 
 export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const params = useParams()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const currency = getCurrency(locale)
+  const language = getLanguage(locale)
 
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
@@ -49,8 +57,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
                 <Flame className="h-5 w-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600 dark:fill-emerald-400" />
             </div>
             <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground">Mínimos sostenibles</h2>
-                <p className="text-sm text-muted-foreground hidden sm:block">Precios mensuales más bajos en productos que dan una segunda vida a la tecnología.</p>
+                <h2 className="text-xl font-bold tracking-tight text-foreground">{t("sustainable_lows", language)}</h2>
+                <p className="text-sm text-muted-foreground hidden sm:block">{t("sustainable_lows_desc", language)}</p>
             </div>
           </div>
           
@@ -75,6 +83,8 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
                 key={offer.id} 
                 offer={offer} 
                 onClick={() => onOfferClick(offer)} 
+                language={language}
+                currency={currency}
             />
           ))}
         </div>
@@ -90,9 +100,11 @@ export function HistoricalLowsCarousel({ offers, onOfferClick }: HistoricalLowsC
 interface CompactOfferCardProps {
   offer: OfferSummary
   onClick: () => void
+  language?: Language
+  currency?: Currency
 }
 
-function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
+function CompactOfferCardOption1({ offer, onClick, language = "es", currency = "EUR" }: CompactOfferCardProps) {
   const current = Number(offer.current_price)
   const previous = Number(offer.old_price) 
   const savings = Math.round(((previous - current) / previous) * 100)
@@ -111,13 +123,13 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
             "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm",
             getConditionStyles(offer.condition)
         )}>
-            {t(offer.condition)}
+            {t(offer.condition, language)}
         </Badge>
 
         {/* Badge Batería */}
         {offer.battery_new && (
              <Badge className="absolute right-2 top-2 z-10 bg-emerald-600 px-1.5 py-0.5 text-[10px] border-0 gap-1">
-                <BatteryFull className="w-3 h-3" /> {t("new")}
+                <BatteryFull className="w-3 h-3" /> {t("new", language)}
              </Badge>
         )}
 
@@ -161,18 +173,18 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <span>{offer.storage}</span>
                         <span className="text-[8px] opacity-40">●</span>
-                        <span>{t(offer.color)}</span>
+                        <span>{t(offer.color, language)}</span>
                     </p>
 
                     {/* Precios (Vertical) */}
                     <div className="mt-1">
                         {previous > current && (
                             <p className="text-[11px] text-muted-foreground line-through decoration-muted-foreground/60">
-                                {previous}€
+                                {formatCurrency(previous, currency, language)}
                             </p>
                         )}
                         <p className="text-xl font-bold text-orange-600 dark:text-orange-500 leading-none">
-                            {current}€
+                            {formatCurrency(current, currency, language)}
                         </p>
                     </div>
                 </div>
@@ -186,7 +198,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                     onClick={(e) => e.stopPropagation()} // Evita que se dispare el onClick de la tarjeta
                     className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm shrink-0 group transition-colors"
                   >
-                    Ver en Back Market <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    {t("view_on_backmarket", language)} <ExternalLink className="ml-2 w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity" />
                   </a>
                 ) : (
                   <button 
@@ -194,7 +206,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
                     onClick={(e) => e.stopPropagation()}
                     className="h-9 px-4 inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-200 text-gray-500 shadow-sm shrink-0 cursor-not-allowed"
                   >
-                    No disponible
+                    {t("not_available", language)}
                   </button>
                 )}
             </div>
@@ -207,7 +219,7 @@ function CompactOfferCardOption1({ offer, onClick }: CompactOfferCardProps) {
 // OPCIÓN 2: Precios arriba derecha y Botón ancho abajo
 // =====================================================================
 
-function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
+function CompactOfferCardOption2({ offer, onClick, language = "es", currency = "EUR" }: CompactOfferCardProps) {
     const current = Number(offer.current_price)
     const previous = Number(offer.old_price)
     const savings = Math.round(((previous - current) / previous) * 100)
@@ -226,12 +238,12 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
               "absolute left-2 top-2 z-10 px-2 py-0.5 text-[10px] border-transparent font-medium shadow-sm",
               getConditionStyles(offer.condition)
           )}>
-              {t(offer.condition)}
+              {t(offer.condition, language)}
           </Badge>
   
           {offer.battery_new && (
                <Badge className="absolute right-2 top-2 z-10 bg-emerald-600 px-1.5 py-0.5 text-[10px] border-0 gap-1">
-                  <BatteryFull className="w-3 h-3" /> {t("new")}
+                  <BatteryFull className="w-3 h-3" /> {t("new", language)}
                </Badge>
           )}
   
@@ -272,7 +284,7 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                           <span>{offer.storage}</span>
                           <span className="text-[8px] opacity-40">●</span>
-                          <span>{t(offer.color)}</span>
+                          <span>{t(offer.color, language)}</span>
                       </p>
                   </div>
 
@@ -280,11 +292,11 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                   <div className="flex flex-col items-end shrink-0">
                         {previous > current && (
                             <p className="text-[10px] text-muted-foreground line-through">
-                                {previous}€
+                                {formatCurrency(previous, currency, language)}
                             </p>
                         )}
                         <p className="text-xl font-bold text-emerald-600 dark:text-emerald-500 leading-none">
-                            {current}€
+                            {formatCurrency(current, currency, language)}
                         </p>
                   </div>
               </div>
@@ -297,14 +309,14 @@ function CompactOfferCardOption2({ offer, onClick }: CompactOfferCardProps) {
                   rel="sponsored noopener" // 'sponsored' es obligatorio para SEO de afiliación
                   onClick={(e) => e.stopPropagation()} // Evita que se disparen eventos del contenedor padre
                   className="w-full flex justify-center items-center px-4 py-2 text-sm bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow-sm transition-colors rounded-md group/btn font-medium"                >
-                  Ver en Back Market <ExternalLink className="ml-4 w-4 h-4 opacity-70 group-hover/btn:opacity-100" />
+                  {t("view_on_backmarket", language)} <ExternalLink className="ml-4 w-4 h-4 opacity-70 group-hover/btn:opacity-100" />
                 </a>
               ) : (
                 <button 
                   disabled
                   className="w-full px-4 py-2 bg-gray-200 text-gray-500 cursor-not-allowed rounded-md"
                 >
-                  Sin enlace disponible
+                  {t("no_link_available", language)}
                 </button>
               )}
           </div>

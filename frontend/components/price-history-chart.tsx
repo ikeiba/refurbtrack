@@ -12,9 +12,12 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { format } from "date-fns"
-import { es } from "date-fns/locale"
+import { es, enGB } from "date-fns/locale"
 import { X } from "lucide-react" // Necesitamos este icono
 import { cn } from "@/lib/utils"
+import { parseLocale, getLanguage, getCurrency } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
+import { t } from "@/lib/translations"
 
 interface PricePoint {
   timestamp: string
@@ -30,9 +33,13 @@ interface Series {
 interface PriceHistoryChartProps {
   series: Series[]
   onRemoveSeries?: (seriesName: string) => void // Nueva prop para borrar
+  locale?: string
 }
 
-export default function PriceHistoryChart({ series, onRemoveSeries }: PriceHistoryChartProps) {
+export default function PriceHistoryChart({ series, onRemoveSeries, locale }: PriceHistoryChartProps) {
+  const language = getLanguage(locale)
+  const currency = getCurrency(locale)
+  const dateLocale = language === "en" ? enGB : es
   
   // 1. PROCESADO DE DATOS (Igual que antes, con agrupación por hora)
   const processedData = useMemo(() => {
@@ -130,7 +137,7 @@ export default function PriceHistoryChart({ series, onRemoveSeries }: PriceHisto
               <button 
                 onClick={() => onRemoveSeries(s.name)}
                 className="ml-1 hover:bg-black/10 rounded-full p-0.5 transition-colors"
-                title="Eliminar de la comparativa"
+                title={t("remove_from_comparison", language)}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -152,7 +159,7 @@ export default function PriceHistoryChart({ series, onRemoveSeries }: PriceHisto
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => {
-                 try { return format(new Date(value), "d MMM", { locale: es }) } catch (e) { return "" }
+                 try { return format(new Date(value), "d MMM", { locale: dateLocale }) } catch (e) { return "" }
               }}
               padding={{ left: 20, right: 20 }} // <--- AÑADIR ESTO
               minTickGap={30}
@@ -163,7 +170,7 @@ export default function PriceHistoryChart({ series, onRemoveSeries }: PriceHisto
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `${value}€`}
+              tickFormatter={(value) => formatCurrency(value, currency, language)}
               domain={['auto', 'auto']}
             />
             
@@ -174,9 +181,9 @@ export default function PriceHistoryChart({ series, onRemoveSeries }: PriceHisto
                 borderRadius: "8px" 
               }}
               labelFormatter={(label) => {
-                try { return format(new Date(label), "d MMMM, HH:mm", { locale: es }) } catch { return label }
+                try { return format(new Date(label), "d MMMM, HH:mm", { locale: dateLocale }) } catch { return label }
               }}
-              formatter={(value: number) => [`${value}€`, ""]}
+              formatter={(value: number) => [formatCurrency(value, currency, language), ""]}
               // 4. AQUÍ ESTÁ EL ORDENAMIENTO DE MAYOR A MENOR EN EL TOOLTIP
               itemSorter={(item) => (item.value as number) * -1}
               separator="" // <--- AÑADIR ESTO (Quita los dos puntos)

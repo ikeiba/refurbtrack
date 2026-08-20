@@ -21,8 +21,21 @@ import {
 import { countries } from "@/lib/mock-data"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/context/auth-context"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams, usePathname } from "next/navigation"
 import { track } from "@/lib/analytics"
+import { parseLocale, getLanguage, getMarket } from "@/lib/i18n"
+import { t } from "@/lib/translations"
+import { translatePathname } from "@/lib/format"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface HeaderProps {
   selectedCountry: string
@@ -47,9 +60,33 @@ export function Header({
   const [isDark, setIsDark] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
   const router = useRouter()
+  const params = useParams()
+  const pathname = usePathname()
+  const locale = parseLocale(params?.locale as string | undefined)
+  const language = getLanguage(locale)
+  // El mercado mostrado se deriva del locale de la URL (fuente única de verdad).
+  // Evita que el botón "parpadee" de vuelta a ES al re-renderizarse tras un
+  // cambio de idioma, aunque el padre tenga selectedCountry en un estado local.
+  const currentCountry =
+    countries.find((c) => c.code === getMarket(locale)) ??
+    countries.find((c) => c.code === selectedCountry) ??
+    countries[0]
   const [inputValue, setInputValue] = useState(searchQuery || "")
-  
-  const currentCountry = countries.find((c) => c.code === selectedCountry)
+  const [pendingCountry, setPendingCountry] = useState<string | null>(null)
+
+  const handleCountrySelect = (code: string) => {
+    if (code === getMarket(locale)) return
+    setPendingCountry(code)
+  }
+
+  const confirmCountryChange = () => {
+    if (!pendingCountry) return
+    const targetLocale = parseLocale(pendingCountry)
+    const targetUrl = translatePathname(pathname, targetLocale)
+    setPendingCountry(null)
+    router.push(targetUrl)
+    onCountryChange?.(pendingCountry)
+  }
 
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains("dark")
@@ -88,13 +125,13 @@ export function Header({
 
         {/* LOGO - Botón para volver a home sin filtros */}
         <Link 
-          href="/es" 
+          href={`/${locale}`} 
           className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
           {/* 1. Inyectamos el SVG directamente desde la carpeta public */}
           <img 
             src="/favicon.svg" 
-            alt="Logo de RefurbTrack" 
+            alt={t("logo_alt", language)} 
             className="h-8 w-8" 
           />
           
@@ -112,7 +149,7 @@ export function Header({
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Buscar productos..."
+                  placeholder={t("search_placeholder", language)}
                   className="w-full pl-9 focus-visible:ring-emerald-500"
                   value={inputValue}
                   onChange={(e) => handleInputChange(e.target.value)}
@@ -138,7 +175,7 @@ export function Header({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {countries.map((country) => (
-                <DropdownMenuItem key={country.code} onClick={() => onCountryChange?.(country.code)} className="gap-2">
+                <DropdownMenuItem key={country.code} onClick={() => handleCountrySelect(country.code)} className="gap-2">
                   <span>{country.flag}</span>
                   <span>{country.name}</span>
                 </DropdownMenuItem>
@@ -149,7 +186,7 @@ export function Header({
           {/* Tema Oscuro/Claro */}
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            <span className="sr-only">Toggle theme</span>
+            <span className="sr-only">{t("toggle_theme", language)}</span>
           </Button>
           
           {/* CAMPANA DE NOTIFICACIONES (COMENTADA)
@@ -194,7 +231,7 @@ export function Header({
             <DropdownMenuTrigger asChild id="user-menu-trigger">
               <Button variant="ghost" size="icon" className={isAuthenticated ? "text-emerald-600" : ""}>
                 <User className="h-5 w-5" />
-                <span className="sr-only">User menu</span>
+                <span className="sr-only">{t("user_menu", language)}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -203,7 +240,7 @@ export function Header({
                     {/* MENÚ PARA USUARIO REGISTRADO */}
                     <DropdownMenuLabel>
                         <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">Mi Cuenta</p>
+                            <p className="text-sm font-medium leading-none">{t("my_account", language)}</p>
                             <p className="text-xs leading-none text-muted-foreground truncate">
                                 {user}
                             </p>
@@ -211,33 +248,33 @@ export function Header({
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/es/dashboard" className="flex w-full items-center cursor-pointer">
+                      <Link href={`/${locale}/dashboard`} className="flex w-full items-center cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Mi Panel</span>
+                        <span>{t("my_panel", language)}</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
                         <LogOut className="mr-2 h-4 w-4" />
-                        <span>Cerrar Sesión</span>
+                        <span>{t("logout", language)}</span>
                     </DropdownMenuItem>
                 </>
               ) : (
                 <>
                     {/* MENÚ PARA INVITADO */}
-                    <DropdownMenuLabel>Acceso Usuarios</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("user_access", language)}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href={`/es/login`} className="flex w-full items-center cursor-pointer">
+                      <Link href={`/${locale}/login`} className="flex w-full items-center cursor-pointer">
                         <LogIn className="mr-2 h-4 w-4" />
-                        <span>Iniciar Sesión</span>
+                        <span>{t("login", language)}</span>
                       </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem asChild>
-                      <Link href={`/es/register`} className="flex w-full items-center cursor-pointer">
+                      <Link href={`/${locale}/register`} className="flex w-full items-center cursor-pointer">
                         <UserPlus className="mr-2 h-4 w-4" />
-                        <span>Registrarse</span>
+                        <span>{t("register", language)}</span>
                       </Link>
                     </DropdownMenuItem>
                 </>
@@ -247,6 +284,23 @@ export function Header({
 
         </div>
       </div>
+
+      <AlertDialog open={pendingCountry !== null} onOpenChange={(open) => !open && setPendingCountry(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("market_switch_title", language)}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("market_switch_message", language)}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel", language)}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCountryChange}>
+              {t("confirm", language)}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   )
 }

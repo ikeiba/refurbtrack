@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber
+from .models import Alert, Product, Spec, Offer, PriceHistory, Subscriber, Market
+from .services import market_offer_q, offer_market, market_symbol, market_stat_value, market_locale, market_language, email_template
 from django.contrib.auth.models import User
 from django.core.mail import send_mail # <--- 1. IMPORTAR ESTO
 from django.conf import settings # Para acceder al remitente por defecto
@@ -11,6 +12,16 @@ from django.contrib.auth.password_validation import (
     MinimumLengthValidator,
 )
 from django.db import IntegrityError
+
+
+def _format_decimal(value):
+    """Formatea un Decimal a string con 2 decimales (como DecimalField de DRF)."""
+    if value is None:
+        return None
+    try:
+        return f"{float(value):.2f}"
+    except (TypeError, ValueError):
+        return None
 
 # --- 1. HISTÓRICO (Para la Gráfica) ---
 class PriceHistorySerializer(serializers.ModelSerializer):
@@ -31,6 +42,8 @@ class OfferSerializer(serializers.ModelSerializer):
 
     # Declaramos el campo como MethodField para calcularlo nosotros
     url = serializers.SerializerMethodField()
+    market = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Offer
@@ -46,7 +59,9 @@ class OfferSerializer(serializers.ModelSerializer):
             'min_price_30d',
             'min_price_30d_date',
             'max_price_30d',
-            'max_price_30d_date'
+            'max_price_30d_date',
+            'market',
+            'currency'
         ]
 
     def get_url(self, obj):
@@ -55,6 +70,17 @@ class OfferSerializer(serializers.ModelSerializer):
         """
         # Esto devolverá: /api/out/550e8400-e29b-41d4-a716-446655440000/
         return f"/api/out/{obj.uuid}/"
+
+    def _market(self, obj):
+        return self.context.get('market') or offer_market(obj)
+
+    def get_market(self, obj):
+        m = self._market(obj)
+        return m.code if m else (obj.country or None)
+
+    def get_currency(self, obj):
+        m = self._market(obj)
+        return m.currency if m else 'EUR'
 
 # --- 3. NIVEL 2: LA SPEC (El Configurador) ---
 class SpecSerializer(serializers.ModelSerializer):
@@ -65,6 +91,10 @@ class SpecSerializer(serializers.ModelSerializer):
     offers = OfferSerializer(many=True, read_only=True)
     # TRUCO: Forzamos que la imagen sea texto plano para que no añada el dominio del backend
     image = serializers.CharField(read_only=True)
+    # Caché de precio leído desde SpecMarketStats del mercado solicitado.
+    min_price_cached = serializers.SerializerMethodField()
+    market = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
     class Meta:
         model = Spec
         fields = [
@@ -75,8 +105,23 @@ class SpecSerializer(serializers.ModelSerializer):
             'image', # <--- AÑADIR ESTO
             'min_price_cached', 
             'offers', # Anidamos las ofertas disponibles
-            'slug'
+            'slug',
+            'slug_en',
+            'market',
+            'currency'
         ]
+
+    def get_min_price_cached(self, obj):
+        value = market_stat_value(obj, self.context.get('market'), 'min_price_cached', 'min_price_cached')
+        return _format_decimal(value)
+
+    def get_market(self, obj):
+        m = self.context.get('market')
+        return m.code if m else None
+
+    def get_currency(self, obj):
+        m = self.context.get('market')
+        return m.currency if m else 'EUR'
 
 # --- 4. NIVEL 1: EL PRODUCTO (La Familia) ---
 
@@ -98,21 +143,52 @@ class ProductListSerializer(serializers.ModelSerializer):
     available_colors = serializers.SerializerMethodField()
     available_storages = serializers.SerializerMethodField()
     spec_count = serializers.SerializerMethodField()
+    # Cachés de precio leídos desde ProductMarketStats del mercado solicitado.
+    min_price_cached = serializers.SerializerMethodField()
+    market_price = serializers.SerializerMethodField()
+    market = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'type', 'image', 'min_price_cached', 'market_price', 'slug',
             'category_slug', 'brand_slug', 'default_spec_slug',
-            'available_colors', 'available_storages', 'spec_count' # <-- Añadidos
+            'available_colors', 'available_storages', 'spec_count', # <-- Añadidos
+            'market', 'currency'
         ]
+
+    def get_min_price_cached(self, obj):
+        value = market_stat_value(obj, self.context.get('market'), 'min_price_cached', 'min_price_cached')
+        return _format_decimal(value)
+
+    def get_market_price(self, obj):
+        value = market_stat_value(obj, self.context.get('market'), 'market_price', 'market_price')
+        return _format_decimal(value)
+
+    def get_market(self, obj):
+        m = self.context.get('market')
+        return m.code if m else None
+
+    def get_currency(self, obj):
+        m = self.context.get('market')
+        return m.currency if m else 'EUR'
 
     def get_default_spec_slug(self, obj):
         # Iteramos en Python para aprovechar el prefetch_related('specs') y evitar N+1.
+        market = self.context.get('market')
         specs = list(obj.specs.all())
-        match = next((s for s in specs if s.min_price_cached == obj.min_price_cached), None)
+        product_min = market_stat_value(obj, market, 'min_price_cached', 'min_price_cached')
+        match = next(
+            (s for s in specs if market_stat_value(s, market, 'min_price_cached', 'min_price_cached') == product_min),
+            None
+        )
         spec = match or (specs[0] if specs else None)
-        return spec.slug if spec else None
+        if spec is None:
+            return None
+        if market is not None and market.language == 'en' and spec.slug_en:
+            return spec.slug_en
+        return spec.slug
 
     def get_available_colors(self, obj):
         return sorted({s.color for s in obj.specs.all() if s.color})
@@ -139,11 +215,21 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     brand_slug = serializers.CharField(source='brand.slug', read_only=True)
     brand_name = serializers.CharField(source='brand.name', read_only=True)
+    market = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         # Añade los nuevos campos a la lista
-        fields = ['id', 'name', 'type', 'image', 'specs', 'category_slug', 'brand_slug', 'brand_name', 'slug']
+        fields = ['id', 'name', 'type', 'image', 'specs', 'category_slug', 'brand_slug', 'brand_name', 'slug', 'market', 'currency']
+
+    def get_market(self, obj):
+        m = self.context.get('market')
+        return m.code if m else None
+
+    def get_currency(self, obj):
+        m = self.context.get('market')
+        return m.currency if m else 'EUR'
 
 
 # backend/api/serializers.py
@@ -173,16 +259,35 @@ class AlertSerializer(serializers.ModelSerializer):
     target_path = serializers.SerializerMethodField()
     target_affiliate_url = serializers.SerializerMethodField()
 
+    # Mercado (output: código 'ES'/'UK'; input: market_code write-only)
+    market = serializers.SerializerMethodField()
+    market_code = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    currency = serializers.SerializerMethodField()
+
     class Meta:
         model = Alert
         fields = [
             'id', 'product_id', 'email', 'price_threshold', 'product_name', 
             'product_image', 'category_slug', 'brand_slug', 'product_slug', 'target_path', 
             'target_affiliate_url', 'target_conditions', 'target_storages', 
-            'target_colors', 'battery_new'
+            'target_colors', 'battery_new', 'market', 'market_code', 'currency'
         ]
+
+    def _market(self, obj):
+        return obj.market or Market.objects.filter(code=obj.country).first()
+
+    def get_market(self, obj):
+        m = self._market(obj)
+        return m.code if m else obj.country
+
+    def get_currency(self, obj):
+        m = self._market(obj)
+        return m.currency if m else 'EUR'
     
     def get_target_path(self, obj):
+        market = self._market(obj)
+        lang = market.language if market else 'es'
+
         is_specific = (
             len(obj.target_storages or []) == 1 and 
             len(obj.target_colors or []) == 1
@@ -198,10 +303,14 @@ class AlertSerializer(serializers.ModelSerializer):
             ]
             spec = matching[0] if matching else None
         else:
-            spec = min(specs, key=lambda s: s.min_price_cached or float('inf')) if specs else None
+            spec = min(
+                specs,
+                key=lambda s: market_stat_value(s, market, 'min_price_cached', 'min_price_cached') or float('inf')
+            ) if specs else None
 
         if spec:
-            path = f"/{obj.product.category.slug}/{obj.product.brand.slug}/{obj.product.slug}/{spec.slug}"
+            spec_slug = spec.slug_en if (lang == 'en' and spec.slug_en) else spec.slug
+            path = f"/{obj.product.category.slug}/{obj.product.brand.slug}/{obj.product.slug}/{spec_slug}"
             params = []
             if len(obj.target_conditions or []) == 1:
                 params.append(f"condition={obj.target_conditions[0]}")
@@ -212,7 +321,10 @@ class AlertSerializer(serializers.ModelSerializer):
         return None
 
     def get_target_affiliate_url(self, obj):
+        market = self._market(obj)
         qs = Offer.objects.filter(spec__product=obj.product)
+        if market is not None:
+            qs = qs.filter(market_offer_q(market))
 
         if obj.target_storages:
             qs = qs.filter(spec__storage__in=obj.target_storages)
@@ -227,22 +339,34 @@ class AlertSerializer(serializers.ModelSerializer):
 
         if best_offer:
             return f"/api/out/{best_offer.uuid}/"
-        return "https://www.backmarket.es"
+        if market is not None:
+            return f"https://www.{market.domain}"
+        return None
 
     def create(self, validated_data):
         # Extraemos el ID del producto y el email
         product_id = validated_data.pop('product_id')
         email = validated_data.pop('email') # <--- Ahora esto funcionará perfecto
+        market_code = validated_data.pop('market_code', None)
 
         product = Product.objects.get(id=product_id)
         
         # Gestión del suscriptor
         subscriber, _ = Subscriber.objects.get_or_create(email=email)
+
+        # Resolución del mercado (fallback ES)
+        market = None
+        if market_code:
+            market = Market.objects.filter(code__iexact=market_code).first()
+        if market is None:
+            market = Market.objects.filter(code='ES').first() or Market.seed().get('ES')
         
-        # Creamos la alerta
+        # Creamos la alerta (market como fuente de verdad; country legacy sincronizado)
         alert = Alert.objects.create(
             subscriber=subscriber,
             product=product,
+            market=market,
+            country=market.code if market else 'ES',
             **validated_data
         )
         
@@ -282,12 +406,13 @@ class AlertSerializer(serializers.ModelSerializer):
 
             # C. --- CORRECCIÓN DE LA URL DEL PRODUCTO (Usando tu lógica SEO) ---
             # Llamamos a tu función para obtener la ruta exacta: /smartphones/apple/iphone-13...
+            locale = market_locale(market)
             target_path = self.get_target_path(alert)
             if target_path:
-                product_url = f"{base_url}/es{target_path}"
+                product_url = f"{base_url}/{locale}{target_path}"
             else:
                 # Fallback por si acaso falla algo en el target_path
-                product_url = f"{base_url}/es/{product.category.slug}/{product.brand.slug}/{product.slug}"
+                product_url = f"{base_url}/{locale}/{product.category.slug}/{product.brand.slug}/{product.slug}"
 
             context = {
                 'product_name': product.name,
@@ -301,28 +426,34 @@ class AlertSerializer(serializers.ModelSerializer):
                 'target_conditions': ', '.join(alert.target_conditions) if alert.target_conditions else 'Cualquiera',
                 'battery_new': alert.battery_new,
                 'country': alert.country,
+                'currency_symbol': market_symbol(market),
                 'has_criteria': bool(alert.target_storages or alert.target_colors or alert.target_conditions or alert.battery_new),
                 
-                # LINKS DE ACCIÓN (Añadido el prefijo /es/ para evitar 404 en Next.js)
+                # LINKS DE ACCIÓN (prefijo de locale dinámico, ej. /es-es/ o /en-gb/)
                 'product_url': product_url,
-                'home_url': f"{base_url}/es",
-                'dashboard_url': f"{base_url}/es/dashboard",
-                'login_url': f"{base_url}/es/login",
+                'home_url': f"{base_url}/{locale}",
+                'dashboard_url': f"{base_url}/{locale}/dashboard",
+                'login_url': f"{base_url}/{locale}/login",
                 
                 # LINKS DE BORRADO
-                'unsubscribe_url': f"{base_url}/es/unsubscribe?token={token_alert}",
-                'unsubscribe_all_url': f"{base_url}/es/unsubscribe-all?token={token_subscriber}"
+                'unsubscribe_url': f"{base_url}/{locale}/unsubscribe?token={token_alert}",
+                'unsubscribe_all_url': f"{base_url}/{locale}/unsubscribe-all?token={token_subscriber}"
             }
 
-            # B. Renderizamos el HTML
-            html_message = render_to_string('emails/alert_confirmation.html', context)
+            # B. Renderizamos el HTML (idioma según el mercado de la alerta)
+            template = email_template('emails/alert_confirmation', market)
+            if market_language(market) == 'en':
+                subject = f'🔔 Alert activated: {product.name}'
+            else:
+                subject = f'🔔 Alerta activada: {product.name}'
+            html_message = render_to_string(template, context)
             
             # C. Creamos la versión de texto plano (quitando etiquetas HTML)
             plain_message = strip_tags(html_message)
             
             # D. Enviamos el correo (Fíjate en los parámetros nuevos)
             send_mail(
-                subject=f'🔔 Alerta activada: {product.name}',
+                subject=subject,
                 message=plain_message, # Versión texto plano (obligatoria)
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
@@ -359,6 +490,10 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
     brand_slug = serializers.CharField(source='spec.product.brand.slug', read_only=True)
     product_slug = serializers.CharField(source='spec.product.slug', read_only=True)
     spec_slug = serializers.CharField(source='spec.slug', read_only=True)
+    spec_slug_en = serializers.CharField(source='spec.slug_en', read_only=True)
+
+    market = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Offer
@@ -366,8 +501,17 @@ class HistoricalLowOfferSerializer(serializers.ModelSerializer):
             'id', 'product_id', 'name', 'storage', 'color', 'url',
             'condition', 'battery_new', 'current_price', 'old_price', 'image',
             # Añadimos los campos a la lista:
-            'category_slug', 'brand_slug', 'product_slug', 'spec_slug'
+            'category_slug', 'brand_slug', 'product_slug', 'spec_slug', 'spec_slug_en',
+            'market', 'currency'
         ]
+
+    def get_market(self, obj):
+        m = self.context.get('market') or offer_market(obj)
+        return m.code if m else (obj.country or None)
+
+    def get_currency(self, obj):
+        m = self.context.get('market') or offer_market(obj)
+        return m.currency if m else 'EUR'
 
     def get_image(self, obj):
         """

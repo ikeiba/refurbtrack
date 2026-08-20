@@ -29,6 +29,37 @@ class Brand(models.Model):
     def __str__(self):
         return self.name
 
+# Mercados canónicos del proyecto (para sembrar con Market.seed()).
+MARKET_SEED = [
+    dict(code='ES', country_code='es', currency='EUR', domain='backmarket.es', language='es', locale='es-es'),
+    dict(code='UK', country_code='uk', currency='GBP', domain='backmarket.co.uk', language='en', locale='en-gb'),
+]
+
+# --- MERCADO COMERCIAL (País + Moneda + Dominio + Idioma) ---
+class Market(models.Model):
+    """
+    Un mercado de venta. Define país, moneda, dominio y locale del scraper.
+    Ej: ES (EUR, backmarket.es, es-es) o UK (GBP, backmarket.co.uk, en-gb).
+    """
+    code = models.CharField(max_length=2, unique=True)       # 'ES' | 'UK'
+    country_code = models.CharField(max_length=2)             # 'es' | 'uk'
+    currency = models.CharField(max_length=3, default='EUR')  # 'EUR' | 'GBP'
+    domain = models.CharField(max_length=100)                 # 'backmarket.es' | 'backmarket.co.uk'
+    language = models.CharField(max_length=2, default='es')   # 'es' | 'en'
+    locale = models.CharField(max_length=10)                  # 'es-es' | 'en-gb'
+
+    @classmethod
+    def seed(cls):
+        """Crea los mercados canónicos (ES/UK) si no existen. Devuelve {code: Market}."""
+        markets = {}
+        for data in MARKET_SEED:
+            market, _ = cls.objects.get_or_create(code=data['code'], defaults=data)
+            markets[data['code']] = market
+        return markets
+
+    def __str__(self):
+        return f"{self.code} ({self.currency})"
+
 # --- NIVEL 1: LA FAMILIA DE PRODUCTOS (Para la Home) ---
 class Product(models.Model):
     """
@@ -72,6 +103,29 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+# --- CACHÉ DE PRECIOS DEL PRODUCTO POR MERCADO ---
+class ProductMarketStats(models.Model):
+    """
+    Fuente de verdad de los caches de precio de un Product para un Market concreto.
+    Sustituye a los campos legacy de Product (congelados tras el backfill).
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='market_stats')
+    market = models.ForeignKey(Market, on_delete=models.PROTECT, related_name='+')
+
+    min_price_cached = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    lowest_ever_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    lowest_ever_date = models.DateTimeField(null=True, blank=True)
+    market_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    last_updated = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['product', 'market'], name='unique_product_market_stats')
+        ]
+
+    def __str__(self):
+        return f"{self.product.name} @ {self.market.code}"
+
 # --- NIVEL 2: LA ESPECIFICACIÓN TÉCNICA (Para el Configurador) ---
 class Spec(models.Model):
     """
@@ -79,6 +133,9 @@ class Spec(models.Model):
     """
     # NUEVO: Slug de la especificación (Ej: reacondicionado-256gb-oro)
     slug = models.SlugField(db_index=True) # modeltranslation creará slug_es, slug_en...
+
+    # Variante EN del slug (Ej: refurbished-256gb-gold). El `slug` actual queda como variante ES.
+    slug_en = models.SlugField(db_index=True, null=True, blank=True)
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specs')
     
@@ -113,6 +170,28 @@ class Spec(models.Model):
     def __str__(self):
         return f"{self.product.name} ({self.storage} - {self.color})"
 
+# --- CACHÉ DE PRECIOS DE LA SPEC POR MERCADO ---
+class SpecMarketStats(models.Model):
+    """
+    Fuente de verdad de los caches de precio de una Spec para un Market concreto.
+    Sustituye a los campos legacy de Spec (congelados tras el backfill).
+    """
+    spec = models.ForeignKey(Spec, on_delete=models.CASCADE, related_name='market_stats')
+    market = models.ForeignKey(Market, on_delete=models.PROTECT, related_name='+')
+
+    min_price_cached = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    lowest_ever_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    lowest_ever_date = models.DateTimeField(null=True, blank=True)
+    last_updated = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['spec', 'market'], name='unique_spec_market_stats')
+        ]
+
+    def __str__(self):
+        return f"{self.spec} @ {self.market.code}"
+
 # --- NIVEL 3: LA OFERTA COMERCIAL (El Mercado Real) ---
 class Offer(models.Model):
     """
@@ -128,7 +207,8 @@ class Offer(models.Model):
     
     condition = models.CharField(max_length=20, choices=Condition.choices)
     battery_new = models.BooleanField(default=False) # False=Standard, True=New
-    country = models.CharField(max_length=5, default='ES')
+    country = models.CharField(max_length=5, default='ES') # Campo heredado, se reemplaza por market
+    market = models.ForeignKey(Market, null=True, blank=True, on_delete=models.PROTECT, related_name='offers')
     url = models.URLField(max_length=2000, null=True, blank=True)
 
     # CACHÉ NIVEL 3: Datos listos para pintar en la lista de ofertas sin calcular nada
@@ -195,7 +275,8 @@ class Alert(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     
     # País obligatorio (String simple porque dijiste que era obligatorio uno)
-    country = models.CharField(max_length=5, default='ES')
+    country = models.CharField(max_length=5, default='ES') # Campo heredado, se reemplaza por market
+    market = models.ForeignKey(Market, null=True, blank=True, on_delete=models.PROTECT, related_name='alerts')
     
     # Precio Umbral (Obligatorio)
     price_threshold = models.DecimalField(max_digits=10, decimal_places=2)

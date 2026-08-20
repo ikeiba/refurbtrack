@@ -11,23 +11,31 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Info } from "lucide-react" // Icono de información
+import { parseLocale, getCurrency, getLanguage } from "@/lib/i18n"
+import { formatCurrency } from "@/lib/format"
+import { t } from "@/lib/translations"
 
 interface FamilyGridProps {
   products: ProductSummary[]
+  locale?: string
 }
 
-export function FamilyGrid({ products }: FamilyGridProps) {
+export function FamilyGrid({ products, locale }: FamilyGridProps) {
+  const resolvedLocale = parseLocale(locale)
+  const currency = getCurrency(resolvedLocale)
+  const language = getLanguage(resolvedLocale)
+
   return (
     <section className="container mx-auto px-4 py-12" id="products">
       <h2 className="text-3xl font-bold tracking-tight mb-8 text-center sm:text-left">
-        Elige tu modelo
+        {t("choose_your_model", language)}
       </h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.map((product) => {
           // Construimos la URL semántica hacia el hub del modelo.
           const defaultHref = product.category_slug && product.brand_slug
-            ? hubPath("es", product.category_slug, product.brand_slug, product.slug)
+            ? hubPath(resolvedLocale, product.category_slug, product.brand_slug, product.slug)
             : "#";
 
           return (
@@ -64,8 +72,8 @@ export function FamilyGrid({ products }: FamilyGridProps) {
                       {/* Precio Actual */}
                       <p className="text-sm font-bold text-emerald-600">
                         {product.min_price_cached 
-                          ? `Desde ${product.min_price_cached}€` 
-                          : "Sin Stock"}
+                          ? `${t("from", language)} ${formatCurrency(product.min_price_cached, currency, language)}` 
+                          : t("out_of_stock", language)}
                       </p>
 
                       {/* Mostrar precio tachado SOLO si existe y es mayor que el actual */}
@@ -73,14 +81,14 @@ export function FamilyGrid({ products }: FamilyGridProps) {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <span className="flex items-center gap-1 text-xs text-muted-foreground line-through ml-1 cursor-help decoration-muted-foreground/60 decoration-1">
-                              vs {product.market_price}€ new
+                              {t("vs_new", language, { price: formatCurrency(product.market_price, currency, language) })}
                               {/* Opcional: Icono info muy sutil */}
                               {/* <Info className="w-3 h-3 opacity-50" /> */}
                             </span>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="max-w-[250px] text-xs">
                             <p>
-                              Fuente de referencia: Back Market.
+                              {t("reference_source", language)}
                             </p>
                           </TooltipContent>
                         </Tooltip>

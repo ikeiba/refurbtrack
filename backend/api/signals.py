@@ -4,7 +4,8 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.conf import settings # Para el remitente del email
 from datetime import timedelta
-from .models import PriceHistory, Offer, Spec, Product, Alert
+from .models import PriceHistory, Offer, Spec, Product, Alert, SpecMarketStats
+from .services import recompute_market_stats, offer_market
 
 # --- NIVEL 1: De Histórico a Oferta ---
 @receiver(post_save, sender=PriceHistory)
@@ -59,79 +60,27 @@ def update_offer_from_history(sender, instance, created, **kwargs):
 
         offer.save()
 
-# --- NIVEL 2: De Oferta a Spec ---
+# --- NIVEL 2: De Oferta a SpecMarketStats ---
 @receiver(post_save, sender=Offer)
 def update_spec_min_price(sender, instance, **kwargs):
-    spec = instance.spec
-    
-    # Buscamos la oferta activa más barata AHORA MISMO
-    # Ordenamos por precio. Si hay empate, cogemos la más reciente (last_updated desc)
-    best_offer = spec.offers.filter(current_price__isnull=False).order_by('current_price', '-last_updated').first()
-    
-    current_min = best_offer.current_price if best_offer else None
-    current_date = best_offer.last_updated if best_offer else None
-    
-    # Récord Histórico de la Variante (buscamos entre las hijas)
-    historical_min_obj = spec.offers.filter(all_time_min_price__isnull=False).order_by('all_time_min_price').first()
-    
-    changes = False
+    """
+    Recalcula los caches de precio de la Spec SOLO para el mercado de la oferta
+    modificada. Escribe exclusivamente en SpecMarketStats (sin dual-writes a los
+    campos legacy de Spec).
+    """
+    market = offer_market(instance)
+    if market is None:
+        return
+    recompute_market_stats(instance.spec, market)
 
-    # Actualizamos caché actual (Precio y Fecha)
-    if spec.min_price_cached != current_min:
-        spec.min_price_cached = current_min
-        spec.last_updated = current_date # <--- Guardamos cuándo se vio este precio
-        changes = True
-    
-    # Si el precio es el mismo, pero la fecha es más nueva, actualizamos la fecha
-    if spec.min_price_cached == current_min and current_date and spec.last_updated != current_date:
-        spec.last_updated = current_date
-        changes = True
-
-    # Actualizamos récord histórico
-    if historical_min_obj:
-        if spec.lowest_ever_price is None or historical_min_obj.all_time_min_price < spec.lowest_ever_price:
-            spec.lowest_ever_price = historical_min_obj.all_time_min_price
-            spec.lowest_ever_date = historical_min_obj.all_time_min_date
-            changes = True
-            
-    if changes:
-        spec.save()
-
-# --- NIVEL 3: De Spec a Product ---
-@receiver(post_save, sender=Spec)
+# --- NIVEL 3: De SpecMarketStats a ProductMarketStats ---
+@receiver(post_save, sender=SpecMarketStats)
 def update_product_min_price(sender, instance, **kwargs):
-    product = instance.product
-    
-    # Buscamos la spec más barata
-    best_spec = product.specs.filter(min_price_cached__isnull=False).order_by('min_price_cached', '-last_updated').first()
-    
-    current_min = best_spec.min_price_cached if best_spec else None
-    current_date = best_spec.last_updated if best_spec else None
-    
-    # Histórico
-    historical_min_spec = product.specs.filter(lowest_ever_price__isnull=False).order_by('lowest_ever_price').first()
-    
-    changes = False
-
-    # Actualizamos caché actual
-    if product.min_price_cached != current_min:
-        product.min_price_cached = current_min
-        product.last_updated = current_date
-        changes = True
-
-    # Actualizamos fecha si es más reciente
-    if product.min_price_cached == current_min and current_date and product.last_updated != current_date:
-        product.last_updated = current_date
-        changes = True
-        
-    if historical_min_spec:
-        if product.lowest_ever_price is None or historical_min_spec.lowest_ever_price < product.lowest_ever_price:
-            product.lowest_ever_price = historical_min_spec.lowest_ever_price
-            product.lowest_ever_date = historical_min_spec.lowest_ever_date
-            changes = True
-
-    if changes:
-        product.save()
+    """
+    Recalcula los caches del Product SOLO para el mercado de la SpecMarketStats
+    modificada. Escribe exclusivamente en ProductMarketStats.
+    """
+    recompute_market_stats(instance.spec.product, instance.market)
 
 # --- NIVEL 4: SISTEMA DE ALERTAS ---
 '''

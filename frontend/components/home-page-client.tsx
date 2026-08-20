@@ -10,10 +10,13 @@ import { Toaster } from "@/components/ui/toaster"
 import { WhyRefurbished } from "@/components/why-refurbished"
 import { useRouter, useSearchParams, useParams } from "next/navigation"
 import type { ProductSummary, OfferSummary } from "@/lib/types"
+import { parseLocale, getLanguage } from "@/lib/i18n"
+import { getSpecSlug } from "@/lib/i18n"
 
 interface HomePageClientProps {
   initialProducts: ProductSummary[];
   initialHotOffers: OfferSummary[];
+  locale?: string;
 }
 
 // EL MICRO-COMPONENTE INVISIBLE: Su única misión es leer la URL
@@ -25,11 +28,12 @@ function SearchQuerySync({ onUpdate }: { onUpdate: (q: string) => void }) {
   return null
 }
 
-export default function HomePageClient({ initialProducts, initialHotOffers }: HomePageClientProps) {
+export default function HomePageClient({ initialProducts, initialHotOffers, locale }: HomePageClientProps) {
   const router = useRouter()
   // 2. ¡ELIMINADO useSearchParams de aquí! El padre ya no lo sabe.
   const params = useParams()
-  const lang = params?.lang || "es"
+  const resolvedLocale = parseLocale(locale ?? (params?.locale as string | undefined))
+  const resolvedLanguage = getLanguage(resolvedLocale)
   
   const [selectedCountry, setSelectedCountry] = useState("ES")
   
@@ -45,15 +49,15 @@ export default function HomePageClient({ initialProducts, initialHotOffers }: Ho
   const handleInstantSearch = (query: string) => {
     setSearchQuery(query)
     if (query.trim() === "") {
-      router.replace(`/${lang}`, { scroll: false })
+      router.replace(`/${resolvedLocale}`, { scroll: false })
     }
   }
 
   const handleSearchSubmit = (query: string) => {
     const trimmed = query.trim()
     const targetUrl = trimmed 
-      ? `/${lang}?q=${encodeURIComponent(trimmed)}` 
-      : `/${lang}`
+      ? `/${resolvedLocale}?q=${encodeURIComponent(trimmed)}` 
+      : `/${resolvedLocale}`
       
     router.replace(targetUrl, { scroll: false })
   }
@@ -82,18 +86,19 @@ export default function HomePageClient({ initialProducts, initialHotOffers }: Ho
             offers={initialHotOffers} 
             onOfferClick={(o) => {
               const batteryParam = o.battery_new ? 'new' : 'standard'
-              router.push(`/${lang}/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${o.spec_slug}?condition=${o.condition}&battery=${batteryParam}`)
+              const specSlug = getSpecSlug({ slug: o.spec_slug, slug_en: o.spec_slug_en }, resolvedLocale)
+              router.push(`/${resolvedLocale}/${o.category_slug}/${o.brand_slug}/${o.product_slug}/${specSlug}?condition=${o.condition}&battery=${batteryParam}`)
             }}
           />
        )}
 
       <div className="bg-muted/30 border-border min-h-[50vh] py-4">
-        <FamilyGrid products={filteredProducts} />
+        <FamilyGrid products={filteredProducts} locale={resolvedLocale} />
       </div>
 
       {!searchQuery && (
         <div className="mt-12">
-          <WhyRefurbished />
+          <WhyRefurbished language={resolvedLanguage} />
         </div>
       )}
 
