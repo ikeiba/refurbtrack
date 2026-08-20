@@ -44,8 +44,11 @@ if [ "$1" = "gunicorn" ] || { [ "$1" = "python" ] && [ "$2" = "manage.py" ] && [
     python manage.py collectstatic --noinput
 
     # C. Carga de datos iniciales
-    echo "    Loading initial data..."
-    python manage.py importar_variantes || echo "⚠️ Advertencia: Error al importar variantes o ya existen."
+    echo "    Loading initial data (Market: ES)..."
+    python manage.py importar_variantes --market=ES || echo "⚠️ Advertencia: Error en ES."
+
+    echo "    Loading initial data (Market: UK)..."
+    python manage.py importar_variantes --market=UK || echo "⚠️ Advertencia: Error en UK."
 
     # -> NUEVO: Configurar el reloj de Celery
     echo "    Seeding Celery Beat schedule..."
