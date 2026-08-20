@@ -1,7 +1,7 @@
 # RefurbTrack - Project Context & AI Guidelines
 
 ## 1. Project Overview
-RefurbTrack is a web application that tracks price drops and historical pricing for refurbished technology (smartphones, tablets, etc.), primarily integrating with Back Market.
+RefurbTrack is a multi-market web application that tracks price drops and historical pricing for refurbished technology (smartphones, tablets, etc.) integrating with Back Market. Currently supporting Spain (ES, EUR) and the United Kingdom (UK, GBP).
 
 ## 2. Architecture & Tech Stack
 This project follows a decoupled architecture using microservices via Docker.
@@ -34,6 +34,14 @@ This project follows a decoupled architecture using microservices via Docker.
 2.  **Isomorphic API Calls:** Always use the centralized `services/api.ts` utility to ensure requests are routed correctly depending on whether the code is executing on the server (Node.js/Docker) or the client (Browser).
 3.  **Strict Typing:** Use TypeScript interfaces/types for all API responses (e.g., `ProductSummary`, `AlertData`). Avoid `any`.
 
+### Internationalization (i18n) & Multi-Market Rules (CRITICAL)
+1. **Frontend UI vs Long Content:**
+   - **UI Text:** Short, structural texts (buttons, menus, short labels) MUST use the dictionary at `frontend/lib/translations.ts` via the `t()` function. Never hardcode strings in components.
+   - **Long Content:** Legal pages, blog posts, and long SEO paragraphs MUST NOT be added to `translations.ts`. Use the "Component-Splitting" or "Data-Splitting" pattern (e.g., `<PrivacyES />` vs `<PrivacyEN />`, or isolated data arrays in `lib/`).
+2. **Dynamic Routing:** All page routes live under `app/[locale]/`. Use `lib/format.ts` or `lib/blog.ts` to translate URL slugs when switching languages.
+3. **Backend Currency Isolation:** Never fallback to legacy ES-only fields (e.g., `lowest_ever_price` in EUR) when serving data for a non-ES market (e.g., UK in GBP). Cross-currency leakage is strictly prohibited.
+4. **Email Localization:** Django email templates must be market-aware (e.g., `alert_email_en.html`). Base URLs inside emails must include the correct `market.locale` prefix (e.g., `/en-gb/`).
+
 ## 5. Current Focus / Roadmap
 *   Refactoring existing serializers (like `AlertSerializer`) to use the Service Layer.
 *   Improving URL routing and SEO structures.
@@ -49,3 +57,6 @@ When generating code, proposing refactors, or debugging for this repository:
 ## 7. Domain Glossary (Mandatory)
 - **Refurbished:** Always use this term when referring to products. Never use synonyms like "used", "second-hand", "pre-owned".
 - **Scraper:** This is the canonical term for the module or service responsible for price data ingestion. Do not use terms like "crawler" or "spider".
+- **Market vs Locale:** 
+  - **Market** (`marketCode`): The commercial region used by the backend database and Scrapy (e.g., `ES`, `UK`). Determines currency (£ vs €) and price history.
+  - **Locale**: The routing prefix used by Next.js for language and regional formatting (e.g., `es-es`, `en-gb`).
