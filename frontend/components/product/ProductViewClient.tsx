@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect, Suspense, useCallback  } from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useParams, useSearchParams, usePathname } from "next/navigation"
 import { getOfferHistory } from "@/services/api"
 import { cn, getColorHex, CHART_COLORS } from "@/lib/utils"
@@ -18,17 +19,48 @@ import { Separator } from "@/components/ui/separator"
 import { Card } from "@/components/ui/card"
 import {
   Bell, TrendingDown, Calendar, ArrowUp, ArrowDown,
-  Activity, ExternalLink, Sparkles, Info, Table
+  Activity, ExternalLink, Sparkles, Info, Table, Plus
 } from "lucide-react"
-import PriceHistoryChart from "@/components/price-history-chart"
-import { ComparisonPopover } from "@/components/comparison-popover"   // FIX 4: restored
 import { HistoricalLowsCarousel } from "@/components/historical-lows-carousel"
-import { AlertModal } from "@/components/alert-modal"
 import type { Offer } from "@/lib/types"
 import Link from "next/link"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { hubPath } from "@/lib/urls"
 import { track } from "@/lib/analytics"
+
+// ─── CODE-SPLITTING (carga diferida de módulos pesados / solo-interacción) ──
+// 1. Recharts (~100KB gzip) sale del bundle inicial: se carga tras el primer paint.
+const PriceHistoryChart = dynamic(
+  () => import("@/components/price-history-chart"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground">
+        <TrendingDown className="w-10 h-10 mb-2 opacity-20 animate-pulse" />
+        <p className="text-sm">…</p>
+      </div>
+    ),
+  }
+)
+
+// 2. Modal de alerta: sólo se descarga al abrirlo por primera vez.
+const AlertModal = dynamic(
+  () => import("@/components/alert-modal").then((m) => m.AlertModal),
+  { ssr: false }
+)
+
+// 3. Popover de comparación: sólo se descarga al interactuar con él.
+const ComparisonPopover = dynamic(
+  () => import("@/components/comparison-popover").then((m) => m.ComparisonPopover),
+  {
+    ssr: false,
+    loading: () => (
+      <Button variant="outline" className="gap-2 border-dashed" disabled>
+        <Plus className="w-4 h-4" />
+      </Button>
+    ),
+  }
+)
 
 interface ProductViewClientProps {
   initialProduct: any;
@@ -672,7 +704,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
         </div>
       </div>
 
-      {activeOffer && (
+      {activeOffer && isAlertOpen && (
         <AlertModal
           isOpen={isAlertOpen}
           onClose={() => setIsAlertOpen(false)}

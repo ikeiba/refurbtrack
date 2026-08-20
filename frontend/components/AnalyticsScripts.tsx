@@ -45,7 +45,7 @@ function AnalyticsContent() {
           
           <Script
             id="clarity-script"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
             dangerouslySetInnerHTML={{
               __html: `
                 (function(c,l,a,r,i,t,y){
@@ -63,7 +63,7 @@ function AnalyticsContent() {
       {consent?.marketing && (
         <Script
           id="awin-master-tag"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           src="https://www.dwin2.com/pub.2838864.min.js"
           onLoad={() => {
             const awinWindow = window as any
