@@ -1,0 +1,25 @@
+name: Deploy RefurbTrack to VPS
+
+on:
+  push:
+    branches:
+      - main # Solo se ejecuta cuando hay cambios en main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy to VPS via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST_IP }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        # Aquí van exactamente los comandos que lanzarías tú a mano
+        script: |
+          cd ~/refurbtrack
+          git pull origin main
+          docker compose build
+          docker compose up -d --no-deps
+          docker image prune -f
