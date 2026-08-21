@@ -25,6 +25,18 @@ function cheapestOffer(spec: HubSpec) {
   )
 }
 
+function historyHref(
+  hub: ModelHub,
+  spec: HubSpec,
+  cheapest: HubSpec["offers"][number] | null,
+  resolvedLocale: string
+): string {
+  const base = specPath(resolvedLocale, hub.category_slug, hub.brand_slug, hub.slug, getSpecSlug(spec, resolvedLocale))
+  if (!cheapest) return base
+  const battery = cheapest.battery_new ? "new" : "standard"
+  return `${base}?condition=${cheapest.condition}&battery=${battery}`
+}
+
 export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
   const resolvedLocale = parseLocale(locale)
   const language = getLanguage(resolvedLocale)
@@ -116,7 +128,7 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
                       </td>
                       <td className="px-4 py-3">
                         <Link
-                          href={specPath(resolvedLocale, hub.category_slug, hub.brand_slug, hub.slug, getSpecSlug(spec, resolvedLocale))}
+                          href={historyHref(hub, spec, cheapest, resolvedLocale)}
                           className="text-emerald-600 hover:underline font-medium"
                         >
                           {t("view_history", language)}

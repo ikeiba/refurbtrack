@@ -309,7 +309,15 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
   }, [activeSpec, initialProduct.image])
 
   const colors   = Array.from(new Set(initialProduct.specs.map((s: any) => s.color))) as string[]
-  const storages = Array.from(new Set(initialProduct.specs.map((s: any) => s.storage))) as string[]
+  const storages = Array.from(new Set(initialProduct.specs.map((s: any) => s.storage)))
+    .sort((a, b) => {
+      const numA = parseInt(a, 10)
+      const numB = parseInt(b, 10)
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+      if (!isNaN(numA)) return -1
+      if (!isNaN(numB)) return 1
+      return a.localeCompare(b)
+    }) as string[]
 
   const getMinPriceForStorage = (storageSize: string) => {
     // Usamos initialProduct, que es la prop que viene del servidor
