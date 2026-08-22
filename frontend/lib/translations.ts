@@ -137,7 +137,7 @@ const ES: Record<string, string> = {
     "Consulta el historial de precios de iPhones reacondicionados en Back Market con gráficos interactivos. Crea alertas de precio y compra en el momento justo.",
   choose_your_model: "Elige tu modelo",
   out_of_stock: "Sin Stock",
-  vs_new: "vs {price} new",
+  vs_new: "vs {price} nuevo",
   reference_source: "Fuente de referencia: Back Market.",
   why_refurbished_title: "¿Por qué comprar reacondicionado?",
   why_refurbished_text:
