@@ -103,7 +103,6 @@ export default function DashboardClient({ initialData }: DashboardClientProps) {
         onCountryChange={setSelectedCountry}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
       <HeroSection onSearch={handleHeroSearch} onTrendingClick={handleTrendingClick} />

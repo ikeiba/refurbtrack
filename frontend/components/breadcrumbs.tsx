@@ -30,7 +30,7 @@ export function Breadcrumbs({ items, language = "es" }: { items: BreadcrumbItem[
                 <>
                   <Link
                     href={item.href}
-                    className="hover:text-foreground transition-colors capitalize"
+                    className="py-2 inline-flex items-center hover:text-foreground transition-colors capitalize"
                   >
                     {item.label}
                   </Link>

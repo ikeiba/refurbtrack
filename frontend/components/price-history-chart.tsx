@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import { parseLocale, getLanguage, getCurrency } from "@/lib/i18n"
 import { formatCurrency } from "@/lib/format"
 import { t } from "@/lib/translations"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface PricePoint {
   timestamp: string
@@ -37,6 +38,7 @@ interface PriceHistoryChartProps {
 }
 
 export default function PriceHistoryChart({ series, onRemoveSeries, locale }: PriceHistoryChartProps) {
+  const isMobile = useIsMobile()
   const language = getLanguage(locale)
   const currency = getCurrency(locale)
   const dateLocale = language === "en" ? enGB : es
@@ -136,10 +138,10 @@ export default function PriceHistoryChart({ series, onRemoveSeries, locale }: Pr
             {index !== 0 && onRemoveSeries && (
               <button 
                 onClick={() => onRemoveSeries(s.name)}
-                className="ml-1 hover:bg-black/10 rounded-full p-0.5 transition-colors"
+                className="ml-1 hover:bg-black/10 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
                 title={t("remove_from_comparison", language)}
               >
-                <X className="w-3 h-3" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -149,7 +151,7 @@ export default function PriceHistoryChart({ series, onRemoveSeries, locale }: Pr
       {/* 3. GRÁFICO */}
       <div className="flex-1 min-h-0"> {/* min-h-0 es clave para flexbox anidados */}
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={processedData} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+          <LineChart data={processedData} margin={{ top: 10, right: 10, bottom: 0, left: isMobile ? 0 : -20 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
             
             <XAxis

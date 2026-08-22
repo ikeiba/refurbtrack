@@ -340,7 +340,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-24 md:pb-20">
       {/* 3. INYECTAMOS LA SINCRONIZACIÓN SILENCIOSA */}
       <Suspense fallback={null}>
         <ProductParamsSync onSync={handleUrlSync} />
@@ -359,7 +359,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
         {/* BREADCRUMBS (Componente Reutilizable) */}
         <Breadcrumbs items={breadcrumbNodes} language={language} />
 
-        <div className="grid md:grid-cols-2 gap- items-start">
+        <div className="grid md:grid-cols-2 gap-8 items-start">
 
           {/* GALERÍA */}
           <div className="h-fit w-full max-w-[550px] mx-auto lg:ml-auto">
@@ -462,7 +462,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                       variant={selectedCondition === cond ? "default" : "outline"}
                       onClick={() => handleConditionChange(cond)}
                       disabled={!activeSpec.offers.some((o: any) => o.condition === cond)}
-                      className={cn("h-8 text-xs", selectedCondition === cond ? "bg-emerald-600 hover:bg-emerald-700" : "")}
+                      className={cn("h-11 text-sm", selectedCondition === cond ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                     >
                       {t(cond, language)}
                     </Button>
@@ -475,14 +475,14 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
                   <Button
                     variant={!selectedBattery ? "default" : "outline"}
                     onClick={() => handleBatteryChange(false)}
-                    className={cn("h-8 text-xs", !selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
+                    className={cn("h-11 text-sm", !selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                   >
                     {t("standard", language)}
                   </Button>
                   <Button
                     variant={selectedBattery ? "default" : "outline"}
                     onClick={() => handleBatteryChange(true)}
-                    className={cn("h-8 text-xs", selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
+                    className={cn("h-11 text-sm", selectedBattery ? "bg-emerald-600 hover:bg-emerald-700" : "")}
                   >
                     {t("new", language)}
                   </Button>
@@ -527,17 +527,19 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
             </div>
 
             {/* ALERTA */}
-            <Button
-              className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700"
-              size="lg"
-              disabled={!activeSpec}
-              onClick={() => {
-                track('alert_started', { model: initialProduct.name, storage: activeSpec.storage, color: activeSpec.color })
-                setIsAlertOpen(true)
-              }}
-            >
-              <Bell className="w-5 h-5" /> {t("alert", language)}
-            </Button>
+            <div className="sticky bottom-0 z-40 -mx-4 mt-4 border-t border-border bg-background/95 p-4 backdrop-blur md:static md:mx-0 md:mt-0 md:border-t-0 md:bg-transparent md:p-0">
+              <Button
+                className="w-full h-12 text-lg gap-2 bg-emerald-600 hover:bg-emerald-700"
+                size="lg"
+                disabled={!activeSpec}
+                onClick={() => {
+                  track('alert_started', { model: initialProduct.name, storage: activeSpec.storage, color: activeSpec.color })
+                  setIsAlertOpen(true)
+                }}
+              >
+                <Bell className="w-5 h-5" /> {t("alert", language)}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -614,7 +616,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
               <Button
                 variant={timeRange === '7' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-7 text-xs px-3 rounded-md transition-all"
+                className="h-10 text-sm px-4 rounded-md transition-all"
                 onClick={() => { setTimeRange('7'); track('filter_used', { filter: 'time_range', value: '7' }) }}
               >
                 7d
@@ -622,7 +624,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
               <Button
                 variant={timeRange === '30' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-7 text-xs px-3 rounded-md transition-all"
+                className="h-10 text-sm px-4 rounded-md transition-all"
                 onClick={() => { setTimeRange('30'); track('filter_used', { filter: 'time_range', value: '30' }) }}
               >
                 30d
@@ -630,7 +632,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
               <Button
                 variant={timeRange === '90' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-7 text-xs px-3 rounded-md transition-all"
+                className="h-10 text-sm px-4 rounded-md transition-all"
                 onClick={() => { setTimeRange('90'); track('filter_used', { filter: 'time_range', value: '90' }) }}
               >
                 90d
@@ -645,7 +647,7 @@ export default function ProductViewClient({ initialProduct, initialHotOffers, lo
           </div>
         </div>
 
-          <Card className="p-6 bg-card border shadow-sm h-[450px]">
+          <Card className="p-3 sm:p-6 bg-card border shadow-sm h-[320px] sm:h-[450px]">
             {chartData.length > 0 ? (
               // FIX 4: onRemoveSeries restored
               <PriceHistoryChart series={chartData} onRemoveSeries={handleRemoveSeries} locale={locale} />

@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { Search, Bell, User, Menu, Moon, Sun, LogOut, LayoutDashboard, LogIn, UserPlus } from "lucide-react"
+import { Search, Bell, User, Moon, Sun, LogOut, LayoutDashboard, LogIn, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -43,7 +44,6 @@ interface HeaderProps {
   searchQuery?: string
   onSearchChange?: (query: string) => void
   onSearchSubmit?: (query: string) => void
-  onMenuClick?: () => void
   showSearch?: boolean 
 }
 
@@ -53,7 +53,6 @@ export function Header({
   searchQuery = "", 
   onSearchChange, 
   onSearchSubmit,
-  onMenuClick,
   showSearch = true 
 }: HeaderProps) {
   
@@ -119,7 +118,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center gap-4 px-4 lg:px-6">
+      <div className="flex h-16 items-center gap-2 px-4 sm:gap-4 lg:px-6">
         
         {/* === ZONA IZQUIERDA === */}
 
@@ -150,7 +149,7 @@ export function Header({
                 <Input
                   type="search"
                   placeholder={t("search_placeholder", language)}
-                  className="w-full pl-9 focus-visible:ring-emerald-500"
+                  className="w-full h-10 md:h-9 pl-9 focus-visible:ring-emerald-500"
                   value={inputValue}
                   onChange={(e) => handleInputChange(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -168,7 +167,7 @@ export function Header({
           {/* Selector de País */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild id="country-menu-trigger">
-              <Button variant="outline" size="sm" className="gap-2 bg-transparent border-transparent hover:border-border">
+              <Button variant="outline" size="sm" className="gap-2 h-10 w-10 md:h-8 md:w-auto bg-transparent border-transparent hover:border-border">
                 <span className="text-base">{currentCountry?.flag}</span>
                 <span className="hidden sm:inline">{currentCountry?.code}</span>
               </Button>
@@ -184,7 +183,7 @@ export function Header({
           </DropdownMenu>
 
           {/* Tema Oscuro/Claro */}
-          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+          <Button variant="ghost" size="icon" className="h-10 w-10 md:size-9" onClick={toggleTheme}>
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             <span className="sr-only">{t("toggle_theme", language)}</span>
           </Button>
@@ -229,7 +228,7 @@ export function Header({
           {/* MENÚ DE USUARIO */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild id="user-menu-trigger">
-              <Button variant="ghost" size="icon" className={isAuthenticated ? "text-emerald-600" : ""}>
+              <Button variant="ghost" size="icon" className={cn("h-10 w-10 md:size-9", isAuthenticated ? "text-emerald-600" : "")}>
                 <User className="h-5 w-5" />
                 <span className="sr-only">{t("user_menu", language)}</span>
               </Button>
