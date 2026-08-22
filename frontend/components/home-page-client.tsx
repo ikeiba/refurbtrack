@@ -76,7 +76,6 @@ export default function HomePageClient({ initialProducts, initialHotOffers, loca
         searchQuery={searchQuery} 
         onSearchChange={handleInstantSearch} 
         onSearchSubmit={handleSearchSubmit}
-        onMenuClick={() => console.log("Menú click")} 
       />
       
       {!searchQuery && <HomeHero />}

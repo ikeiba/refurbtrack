@@ -68,8 +68,6 @@ function HomePageContent() {
         searchQuery={searchQuery} 
         onSearchChange={setSearchQuery} 
         
-        // Evitamos que explote si das click al menú en móvil
-        onMenuClick={() => console.log("Menú click")} 
       />
       
       {/* HERO (Solo mostrar si no se busca nada, queda mejor) */}

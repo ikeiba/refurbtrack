@@ -229,7 +229,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-h-[90vh] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl text-emerald-700">
             <Bell className="h-5 w-5" />
@@ -305,7 +305,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                     key={storage}
                     onClick={() => toggleSelection(selectedStorages, storage, setSelectedStorages)}
                     className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                      "rounded-full border px-4 py-2.5 text-sm font-medium transition-all",
                       selectedStorages.includes(storage)
                         ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                         : "border-border bg-transparent hover:border-emerald-600/50"
@@ -337,7 +337,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                     key={color}
                     onClick={() => toggleSelection(selectedColors, color, setSelectedColors)}
                     className={cn(
-                      "h-8 w-8 rounded-full border-2 transition-all hover:scale-110",
+                      "h-11 w-11 rounded-full border-2 transition-all hover:scale-110",
                       selectedColors.includes(color)
                         ? "border-emerald-600 ring-2 ring-emerald-600 ring-offset-2 ring-offset-background"
                         : "border-border opacity-60 hover:opacity-100"
@@ -372,7 +372,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                     key={cond}
                     onClick={() => toggleSelection(selectedConditions, cond, setSelectedConditions)}
                     className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                      "rounded-full border px-4 py-2.5 text-sm font-medium transition-all",
                       selectedConditions.includes(cond)
                         ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                         : "border-border bg-transparent hover:border-emerald-600/50"
@@ -402,7 +402,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                  <button
                     onClick={() => toggleSelection(selectedBattery, 'standard', setSelectedBattery)}
                     className={cn(
-                      "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                      "flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-all",
                       selectedBattery.includes('standard')
                         ? "border-emerald-600 bg-emerald-600 text-white"
                         : "border-border hover:bg-muted"
@@ -413,7 +413,7 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
                   <button
                     onClick={() => toggleSelection(selectedBattery, 'new', setSelectedBattery)}
                     className={cn(
-                      "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                      "flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-all",
                       selectedBattery.includes('new')
                         ? "border-emerald-600 bg-emerald-600 text-white"
                         : "border-border hover:bg-muted"
@@ -441,11 +441,11 @@ export function AlertModal({ isOpen, onClose, product, currentConfig }: AlertMod
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 bg-transparent" onClick={onClose}>{t("cancel", language)}</Button>
+            <Button variant="outline" className="flex-1 bg-transparent min-h-12 sm:min-h-0" onClick={onClose}>{t("cancel", language)}</Button>
             <Button 
               onClick={handleSubmit} 
               disabled={loading || !isFormValid()}
-              className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+              className="flex-1 min-h-12 sm:min-h-0 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Bell className="mr-2 h-4 w-4" />

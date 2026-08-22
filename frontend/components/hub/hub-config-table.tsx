@@ -72,13 +72,13 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
             {hub.name} {group.storage} GB
           </h3>
           <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-[560px] md:min-w-[760px] text-sm">
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">{t("configuration", language)}</th>
                   <th className="px-4 py-3 font-medium">{t("current_price_col", language)}</th>
-                  <th className="px-4 py-3 font-medium">{t("min_30d_col", language)}</th>
-                  <th className="px-4 py-3 font-medium">{t("avg_30d_col", language)}</th>
+                  <th className="px-4 py-3 font-medium hidden md:table-cell">{t("min_30d_col", language)}</th>
+                  <th className="px-4 py-3 font-medium hidden md:table-cell">{t("avg_30d_col", language)}</th>
                   <th className="px-4 py-3 font-medium">{t("condition_col", language)}</th>
                   <th className="px-4 py-3 font-medium">{t("alert_col", language)}</th>
                   <th className="px-4 py-3 font-medium">{t("backmarket_col", language)}</th>
@@ -96,14 +96,14 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
                       <td className="px-4 py-3 font-semibold text-emerald-700 dark:text-emerald-400">
                         {spec.current_price !== null ? formatCurrency(spec.current_price, currency, language) : "—"}
                       </td>
-                      <td className="px-4 py-3">{spec.min_price_30d !== null ? formatCurrency(spec.min_price_30d, currency, language) : "—"}</td>
-                      <td className="px-4 py-3">{spec.avg_price_30d !== null ? formatCurrency(spec.avg_price_30d, currency, language) : "—"}</td>
+                      <td className="px-4 py-3 hidden md:table-cell">{spec.min_price_30d !== null ? formatCurrency(spec.min_price_30d, currency, language) : "—"}</td>
+                      <td className="px-4 py-3 hidden md:table-cell">{spec.avg_price_30d !== null ? formatCurrency(spec.avg_price_30d, currency, language) : "—"}</td>
                       <td className="px-4 py-3">{cheapest ? t(cheapest.condition, language) : "—"}</td>
                       <td className="px-4 py-3">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1.5"
+                          className="gap-1.5 h-10 md:h-8"
                           onClick={() => setAlertSpec(spec)}
                           aria-label={t("create_alert_for", language, { name: `${hub.name} ${spec.storage} GB ${t(spec.color, language)}` })}
                         >
@@ -117,7 +117,7 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
                             href={spec.best_offer_url}
                             target="_blank"
                             rel="sponsored noopener"
-                            className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                            className="inline-flex items-center justify-center gap-1.5 h-10 md:h-8 px-3 rounded-md text-sm font-medium bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                           >
                             {t("see_offer", language)}
                             <ExternalLink className="h-3.5 w-3.5 opacity-70" />
@@ -129,7 +129,7 @@ export function HubConfigTable({ hub, locale }: HubConfigTableProps) {
                       <td className="px-4 py-3">
                         <Link
                           href={historyHref(hub, spec, cheapest, resolvedLocale)}
-                          className="text-emerald-600 hover:underline font-medium"
+                          className="text-emerald-600 hover:underline font-medium inline-flex items-center min-h-10"
                         >
                           {t("view_history", language)}
                         </Link>

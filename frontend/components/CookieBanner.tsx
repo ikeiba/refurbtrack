@@ -36,13 +36,13 @@ export function CookieBanner() {
               <Link href={`/${locale}/cookies`} className="underline font-semibold text-blue-600">{t("cookie_policy_link", language)}</Link>.
             </p>
             <div className="flex flex-wrap gap-2 shrink-0">
-              <button onClick={() => setShowConfig(true)} className="text-sm px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium">
+              <button onClick={() => setShowConfig(true)} className="w-full md:w-auto text-sm px-4 py-2 min-h-11 border border-gray-300 rounded-md hover:bg-gray-50 font-medium">
                 {t("configure", language)}
               </button>
-              <button onClick={rejectAll} className="text-sm px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium">
+              <button onClick={rejectAll} className="w-full md:w-auto text-sm px-4 py-2 min-h-11 border border-gray-300 rounded-md hover:bg-gray-50 font-medium">
                 {t("reject", language)}
               </button>
-              <button onClick={acceptAll} className="text-sm px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
+              <button onClick={acceptAll} className="w-full md:w-auto text-sm px-4 py-2 min-h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
                 {t("accept_all", language)}
               </button>
             </div>
@@ -87,7 +87,7 @@ export function CookieBanner() {
             </div>
 
             <div className="flex gap-2 justify-end mt-2">
-              <button onClick={handleSavePreferences} className="text-sm px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
+              <button onClick={handleSavePreferences} className="w-full md:w-auto text-sm px-4 py-2 min-h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
                 {t("save_preferences", language)}
               </button>
             </div>

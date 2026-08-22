@@ -49,6 +49,7 @@ export function ProductGallery({ images, onImageClick }: ProductGalleryProps) {
             <button
               key={idx}
               onClick={() => setSelectedIndex(idx)}
+              aria-label={`Thumbnail ${idx + 1}`}
               className={cn(
                 "relative aspect-square w-16 overflow-hidden rounded-lg border-2 transition-all bg-muted/30",
                 selectedIndex === idx 

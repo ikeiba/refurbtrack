@@ -214,7 +214,7 @@ export default function DashboardPage() {
                                 href={`/${locale}${alert.target_path}`}
                                 className="w-full sm:w-auto"
                             >
-                                <Button variant="outline" size="sm" className="w-full gap-2 text-xs h-9">
+                                <Button variant="outline" size="sm" className="w-full gap-2 text-xs h-10 md:h-9">
                                     <Activity className="h-3.5 w-3.5" />
                                     {t("history", language)}
                                 </Button>
@@ -229,7 +229,7 @@ export default function DashboardPage() {
                                 rel="sponsored noopener"
                                 className="w-full sm:w-auto"
                             >
-                                <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2 text-xs h-9">
+                                <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2 text-xs h-10 md:h-9">
                                 <ShoppingCart className="h-3.5 w-3.5" />
                                 {t("buy", language)}
                                 </Button>
@@ -239,7 +239,7 @@ export default function DashboardPage() {
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="text-muted-foreground hover:text-red-500 h-9 w-9"
+                                className="text-muted-foreground hover:text-red-500 h-10 w-10"
                                 onClick={() => handleDelete(alert.id)}
                                 disabled={deletingId === alert.id}
                             >

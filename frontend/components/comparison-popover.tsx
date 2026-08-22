@@ -118,7 +118,7 @@ export function ComparisonPopover({ onCompare }: ComparisonPopoverProps) {
           {t("add_comparison", language)}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 max-h-[90vh] overflow-y-auto" align="end">
+      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 max-h-[90vh] overflow-y-auto" align="end">
         <div className="grid gap-4">
           <div className="space-y-2">
             <h4 className="font-medium leading-none">{t("compare_prices", language)}</h4>

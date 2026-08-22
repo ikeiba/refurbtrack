@@ -19,7 +19,7 @@ export function HomeHero() {
       {/* 1. FONDO DIFUMINADO ANIMADO (Blobs) */}
       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-full z-0 pointer-events-none opacity-60 dark:opacity-30">
         {/* Mancha 1: Verde Esmeralda */}
-        <div className="absolute top-20 left-340 w-72 h-72 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob "></div>
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-72 h-72 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob "></div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
