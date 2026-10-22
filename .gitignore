@@ -6,3 +6,4 @@ docker-compose.override.yml
 __pycache__/
 *.diff
 db.sqlite3
+docs/plan-backend-audit.md
