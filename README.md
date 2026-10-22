@@ -1,195 +1,205 @@
+[English](README.md) | [Español](README.es.md)
 # RefurbTrack
 
-RefurbTrack es una aplicación web **multi-mercado** que rastrea bajadas de precio e histórico de precios de tecnología reacondicionada (smartphones, tablets, etc.), integrada principalmente con Back Market. Soporta actualmente España (`ES`, EUR) y Reino Unido (`UK`, GBP).
+RefurbTrack is a **multi-market** web application that tracks price drops and price history for refurbished technology (smartphones, tablets, etc.), primarily integrated with Back Market. It currently supports Spain (`ES`, EUR) and the United Kingdom (`UK`, GBP).
 
-Arquitectura desacoplada basada en microservicios vía Docker, con un scraper propio que ingiere datos de precios de forma periódica vía Celery Beat.
+It uses a decoupled microservices architecture powered by Docker, with a custom scraper that periodically ingests price data through Celery Beat.
 
-## Características
+## Features
 
-- **Historial de precios** por producto, variante, estado y batería (más de 1.000 combinaciones únicas).
-- **Alertas de precio** por email (creación, baja individual y baja total), con verificación segura tras cada scrape.
-- **Scraper de Back Market** con rotación de mercados (`ES`/`UK`), rate limiting respetuoso y verificación de alertas.
-- **SEO**: rutas semánticas por `categoría/marca/producto/variante`, hubs de modelo, sitemap dinámico y redirects 301 de rutas legacy.
-- **Internacionalización / multi-mercado**: locales `es-es` y `en-gb`, cada uno con su mercado (`ES` con EUR, `UK` con GBP), sin cruce de monedas entre mercados.
-- **Autenticación**: JWT (register/login/refresh), login con Google y recuperación de contraseña.
-- **Proxy inverso Nginx** con rate limiting, TLS (Cloudflare) y healthchecks.
+- **Price history** by product, variant, condition, and battery level (more than 1,000 unique combinations).
+- **Price alerts** by email (creation, individual unsubscribe, and unsubscribe from all alerts), with secure verification after each scrape.
+- **Back Market scraper** with market rotation (`ES`/`UK`), considerate rate limiting, and alert verification.
+- **SEO**: semantic routes by `category/brand/product/variant`, model hubs, a dynamic sitemap, and 301 redirects from legacy routes.
+- **Internationalization / multi-market support**: `es-es` and `en-gb` locales, each mapped to its market (`ES` with EUR, `UK` with GBP), with no currency crossover between markets.
+- **Authentication**: JWT (register/login/refresh), Google login, and password recovery.
+- **Nginx reverse proxy** with rate limiting, TLS (Cloudflare), and health checks.
 
-## Stack tecnológico
+## Technology stack
 
-| Capa          | Tecnología |
-|---------------|------------|
-| Frontend      | Next.js 16 (App Router), React 19, TailwindCSS 4, TypeScript, pnpm |
-| Backend       | Django 4.2, Django REST Framework, Python |
-| Scraper       | Scrapy + scrapy-impersonate + curl_cffi |
-| BBDD / Caché  | PostgreSQL, Redis |
-| Tareas        | Celery + Celery Beat (scheduler en DB) |
-| Infraestructura | Docker & Docker Compose, Nginx, Gunicorn |
+| **Layer**       | **Technology**                                                     |
+| --------------- | ------------------------------------------------------------------ |
+| Frontend        | Next.js 16 (App Router), React 19, TailwindCSS 4, TypeScript, pnpm |
+| Backend         | Django 4.2, Django REST Framework, Python                          |
+| Scraper         | Scrapy + scrapy-impersonate + curl_cffi                            |
+| Database / Cache| PostgreSQL, Redis                                                  |
+| Tasks           | Celery + Celery Beat (database scheduler)                          |
+| Infrastructure  | Docker & Docker Compose, Nginx, Gunicorn                           |
 
-## Estructura de carpetas
+## Directory structure
 
 ```
 proyecto_scraper/
 ├── backend/                 # Django
-│   ├── manage.py            # Ejecutor de comandos
-│   ├── entrypoint.sh        # Espera a la BBDD, migraciones, datos iniciales, superusuario
+│   ├── manage.py            # Command-line utility
+│   ├── entrypoint.sh        # Waits for the database, runs migrations, loads initial data, creates a superuser
 │   ├── requirements.txt
-│   ├── config/              # Configuración global (settings, urls, celery, wsgi/asgi)
-│   └── api/                 # La app: modelos, vistas, serializers, services
-│       ├── models.py        # Definición de tablas
-│       ├── views.py         # HTTP request/response (sin lógica de negocio)
-│       ├── serializers.py   # Validación y transformación a JSON
-│       ├── services.py      # Lógica de negocio (patrón Service Layer)
-│       ├── tasks.py         # Tareas Celery
+│   ├── config/              # Global configuration (settings, URLs, Celery, WSGI/ASGI)
+│   └── api/                 # Application: models, views, serializers, services
+│       ├── models.py        # Table definitions
+│       ├── views.py         # HTTP request/response handling (no business logic)
+│       ├── serializers.py   # Validation and JSON transformation
+│       ├── services.py      # Business logic (Service Layer pattern)
+│       ├── tasks.py         # Celery tasks
 │       ├── signals.py, insights.py, bot_detection.py
-│       └── urls.py          # Rutas de la API
+│       └── urls.py          # API routes
 ├── scraper/                 # Scrapy
-│   ├── launcher.py          # Lanzador de spiders (secuencial por mercado, paralelo por producto)
+│   ├── launcher.py          # Scraper launcher (sequential by market, parallel by product)
 │   └── scraper/
 │       ├── spiders/backmarket.py
 │       ├── pipelines.py
 │       ├── items.py
 │       ├── middlewares.py
 │       └── settings.py
-├── frontend/                # Next.js (App Router, TS)
-│   ├── app/                 # Rutas por locale: [locale]/[category]/[brand]/[product]/[spec]
-│   ├── components/          # Componentes Server/Client
-│   ├── services/            # api.ts (routing isomórfico), auth.ts
-│   └── lib/                 # i18n, types, seo, format, translations...
-├── nginx/conf.d/            # Proxy inverso, rate limiting, TLS
-├── local_ssl/               # Certificados falsos para desarrollo local
-├── docker-compose.yml       # Producción
-├── docker-compose.override.yml  # Desarrollo local (hot reload)
-└── Dockerfile               # Imagen Python del backend
+├── frontend/                # Next.js (App Router, TypeScript)
+│   ├── app/                 # Locale-based routes: [locale]/[category]/[brand]/[product]/[spec]
+│   ├── components/          # Server/Client Components
+│   ├── services/            # api.ts (isomorphic routing), auth.ts
+│   └── lib/                 # i18n, types, SEO, formatting, translations...
+├── nginx/conf.d/            # Reverse proxy, rate limiting, TLS
+├── local_ssl/               # Self-signed certificates for local development
+├── docker-compose.yml       # Production
+├── docker-compose.override.yml  # Local development (hot reload)
+└── Dockerfile               # Backend Python image
 ```
 
-## Servicios Docker
+## Docker services
 
-| Servicio         | Contenedor        | Función |
-|------------------|-------------------|---------|
-| `db`             | `postgres_db`     | PostgreSQL 15 |
-| `redis`          | `redis_cache`     | Broker de Celery |
-| `web`            | `django_backend`  | API Django (gunicorn en prod, runserver en dev) |
-| `celery_worker`  | `celery_worker`   | Ejecuta las tareas (scraper) |
-| `celery_beat`    | `celery_beat`     | Reloj que programa los scrapes |
-| `flower`         | `celery_flower`   | Monitor de Celery en `/monitor-flower` |
-| `frontend`       | `nextjs_frontend` | Next.js (dev: hot reload con pnpm) |
-| `nginx`          | `nginx_proxy`     | Único puerto expuesto a internet (80/443) |
+| **Service**     | **Container**     | **Purpose**                                      |
+| --------------- | ----------------- | ------------------------------------------------ |
+| `db`            | `postgres_db`     | PostgreSQL 15                                    |
+| `redis`         | `redis_cache`     | Celery broker                                    |
+| `web`            | `django_backend`   | Django API (Gunicorn in production, runserver in development) |
+| `celery_worker` | `celery_worker`   | Runs tasks (scraper)                             |
+| `celery_beat`   | `celery_beat`     | Scheduler that triggers scrapes                  |
+| `flower`        | `celery_flower`   | Celery monitoring at `/monitor-flower`           |
+| `frontend`      | `nextjs_frontend` | Next.js (hot reload with pnpm in development)    |
+| `nginx`         | `nginx_proxy`     | The only port exposed to the internet (80/443)   |
 
-## Puesta en marcha
+## Getting started
 
-### Requisitos
-- Docker y Docker Compose
-- `.env` en la raíz con las variables del proyecto (ver sección más abajo)
+### Requirements
 
-### Desarrollo local
-```bash
+- Docker and Docker Compose
+- A `.env` file in the project root containing the project environment variables (see the section below)
+
+### Local development
+
+```
 docker compose up -d
 ```
-El override de desarrollo monta el código como volúmenes (hot reload), inyecta certificados SSL falsos y usa `pnpm install` + `next dev --webpack` dentro del contenedor de frontend.
 
-### Producción
-```bash
+The development override mounts the source code as volumes (hot reload), injects self-signed SSL certificates, and runs `pnpm install` + `next dev --webpack` inside the frontend container.
+
+### Production
+
+```
 docker compose -f docker-compose.yml up -d --build
 ```
 
-### Entrada al sistema
-- Frontend: `http://localhost:3000`
-- API: `http://localhost:8000/api/` (vía Nginx: `https://refurbtrack.com/api/`)
-- Admin Django: `/07022019-manage/`
-- Monitor Flower: `/monitor-flower`
+### Accessing the application
 
-## Comandos
+- Frontend: `http://localhost:3000`
+- API: `http://localhost:8000/api/` (through Nginx: `https://refurbtrack.com/api/`)
+- Django admin: `/07022019-manage/`
+- Flower monitor: `/monitor-flower`
+
+## Commands
 
 ### Backend
-```bash
+
+```
 python manage.py runserver
 python manage.py makemigrations
 python manage.py migrate
-python manage.py importar_variantes   # Carga datos iniciales (productos/variantes)
-python manage.py seed_schedule        # Configura el schedule de Celery Beat
+python manage.py importar_variantes   # Load initial data (products/variants)
+python manage.py seed_schedule        # Configure the Celery Beat schedule
 python manage.py createsuperuser
 ```
-> El `entrypoint.sh` ya aplica migraciones, estáticos, datos iniciales, seed del schedule y crea el superusuario automáticamente a partir del `.env`.
+
+> `entrypoint.sh` already runs migrations, collects static files, loads initial data, seeds the schedule, and automatically creates the superuser using values from `.env`.
 
 ### Scraper
-```bash
-scrapy crawl backmarket -a product_id=1 -a market=ES   # Un producto en un mercado
-python launcher.py                                     # Lanza todos los productos por mercado (ES y UK)
+
+```
+scrapy crawl backmarket -a product_id=1 -a market=ES   # One product in one market
+python launcher.py                                     # Launches all products for each market (ES and UK)
 ```
 
 ### Frontend
-```bash
-npm run dev        # o: npx pnpm@9.15.4 install && npm run dev
+
+```
+npm run dev        # or: npx pnpm@9.15.4 install && npm run dev
 npm run build
 npm run lint
 ```
 
-## Variables de entorno clave
+## Key environment variables
 
-| Variable | Uso |
-|----------|-----|
-| `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` | Configuración Django |
-| `POSTGRES_*` | Credenciales y host de PostgreSQL |
-| `REDIS_URL` | URL de Redis para Celery |
-| `INTERNAL_API_URL` | URL del backend para SSR (dentro de Docker: `http://web:8000`) |
-| `NEXT_PUBLIC_API_URL` | URL del backend para el navegador (relativa: `/api`) |
-| `GOOGLE_CLIENT_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Login con Google |
-| `DJANGO_CORS_ALLOWED_ORIGINS` | Orígenes permitidos por CORS |
-| `RESEND_API_KEY`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Envío de emails (alertas, contacto) |
+| **Variable**                                                | **Purpose**                                                     |
+| ----------------------------------------------------------- | --------------------------------------------------------------- |
+| `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` | Django configuration                                            |
+| `POSTGRES_*`                                                | PostgreSQL credentials and host                                 |
+| `REDIS_URL`                                                 | Redis URL for Celery                                             |
+| `INTERNAL_API_URL`                                          | Backend URL for SSR (inside Docker: `http://web:8000`)           |
+| `NEXT_PUBLIC_API_URL`                                       | Backend URL for the browser (relative: `/api`)                  |
+| `GOOGLE_CLIENT_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`          | Google login                                                    |
+| `DJANGO_CORS_ALLOWED_ORIGINS`                               | Allowed CORS origins                                            |
+| `RESEND_API_KEY`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`  | Email delivery (alerts, contact form)                            |
 
-> **Quirk de red (importante):** el frontend vive en `nextjs_frontend` y el backend en `django_backend`. Las peticiones server-side (SSR) DEBEN usar `INTERNAL_API_URL` (`http://web:8000`), mientras que las client-side usan `NEXT_PUBLIC_API_URL`. El routing se resuelve de forma isomórfica en `frontend/services/api.ts`.
+> **Important networking detail:** the frontend runs in `nextjs_frontend` and the backend in `django_backend`. Server-side requests (SSR) **MUST** use `INTERNAL_API_URL` (`http://web:8000`), while client-side requests use `NEXT_PUBLIC_API_URL`. Routing is handled isomorphically in `frontend/services/api.ts`.
 
-> **WSL & pnpm:** el frontend depende de un `.npmrc` con `node-linker=hoisted` para evitar errores de symlink entre WSL y el filesystem Linux del contenedor. No modifiques este comportamiento.
+> **WSL & pnpm:** the frontend relies on an `.npmrc` file with `node-linker=hoisted` to prevent symlink errors between WSL and the container's Linux filesystem. Do not change this behavior.
 
-## API (resumen)
+## API overview
 
-- `GET /api/products/` — listado de productos (DRF router)
-- `GET /api/products/resolve/?slug=...` — resolver producto por slug (SEO)
-- `GET /api/products/model-hub/` — agregación SEO por modelo
-- `GET /api/offers/<id>/history/?days=30` — histórico de precios para gráfica
-- `GET /api/offers/featured/` — destacados para la landing de historial
-- `GET /api/offers/historical-lows/` — mínimos históricos
-- `GET /api/products/sitemap-data/`, `GET /api/products/top-specs/` — SEO/build
-- `GET/POST /api/alerts/`, `GET/DELETE /api/alerts/<id>/` — alertas de precio
-- `POST /api/alerts/unsubscribe/`, `/unsubscribe-all/` — baja de alertas
-- `POST /api/auth/register/`, `/login/`, `/refresh/` — autenticación JWT
-- `POST /api/auth/google/`, `/forgot-password/`, `/reset-password/` — Google y recuperación
-- `GET/POST /api/contact/` — formulario de contacto
-- `GET /api/health/` — healthcheck
-- `GET /api/out/<uuid>/` — redirect a la tienda (outbound)
+- `GET /api/products/` — list products (DRF router)
+- `GET /api/products/resolve/?slug=...` — resolve a product by slug (SEO)
+- `GET /api/products/model-hub/` — model-level SEO aggregation
+- `GET /api/offers/<id>/history/?days=30` — price history for charts
+- `GET /api/offers/featured/` — featured offers for the price-history landing page
+- `GET /api/offers/historical-lows/` — all-time low prices
+- `GET /api/products/sitemap-data/`, `GET /api/products/top-specs/` — SEO/build data
+- `GET/POST /api/alerts/`, `GET/DELETE /api/alerts/<id>/` — price alerts
+- `POST /api/alerts/unsubscribe/`, `/unsubscribe-all/` — unsubscribe from alerts
+- `POST /api/auth/register/`, `/login/`, `/refresh/` — JWT authentication
+- `POST /api/auth/google/`, `/forgot-password/`, `/reset-password/` — Google login and account recovery
+- `GET/POST /api/contact/` — contact form
+- `GET /api/health/` — health check
+- `GET /api/out/<uuid>/` — redirect to the store (outbound)
 
-## Internacionalización y multi-mercado
+## Internationalization and multi-market support
 
-El proyecto es multi-mercado y multi-idioma. Dos conceptos clave que **no deben confundirse**:
+The project supports multiple markets and languages. Two key concepts **must not be confused**:
 
-- **Market** (`marketCode`): región comercial del backend y del scraper (`ES`, `UK`). Determina la moneda (£/€) y el histórico de precios.
-- **Locale**: prefijo de ruta de Next.js para idioma y formato regional (`es-es`, `en-gb`). El mapeo vive en `frontend/lib/i18n.ts`.
+- **Market** (`marketCode`): the commercial region used by the backend and scraper (`ES`, `UK`). It determines the currency (£/€) and price history.
+- **Locale**: the Next.js route prefix for language and regional formatting (`es-es`, `en-gb`). The mapping is defined in `frontend/lib/i18n.ts`.
 
-Reglas críticas:
+Critical rules:
 
-- **UI corta** (botones, menús, etiquetas): usar el diccionario de `frontend/lib/translations.ts` vía `t()`. Nunca hardcodear strings en componentes.
-- **Contenido largo** (legal, blog, párrafos SEO): NO va en `translations.ts`. Usar patrones de *Component-Splitting* o *Data-Splitting* (p. ej. `<PrivacyES />` vs `<PrivacyEN />` o arrays de datos en `lib/`).
-- **Rutas dinámicas** bajo `app/[locale]/`, traduciendo slugs vía `lib/format.ts` o `lib/blog.ts`.
-- **Aislamiento de moneda**: nunca hacer fallback a campos legacy solo-ES (p. ej. `lowest_ever_price` en EUR) al servir datos para UK. Prohibido el cruce de monedas entre mercados.
-- **Emails localizados**: las plantillas de email de Django deben ser market-aware (p. ej. `alert_email_en.html`) y las URLs base deben incluir el prefijo `market.locale` correcto (p. ej. `/en-gb/`).
+- **Short UI text** (buttons, menus, labels): use the dictionary in `frontend/lib/translations.ts` via `t()`. Never hardcode strings in components.
+- **Long-form content** (legal content, blog posts, SEO paragraphs): do **NOT** put it in `translations.ts`. Use *Component-Splitting* or *Data-Splitting* patterns (e.g. `<PrivacyES />` vs. `<PrivacyEN />`, or data arrays in `lib/`).
+- **Dynamic routes** under `app/[locale]/` must translate slugs using `lib/format.ts` or `lib/blog.ts`.
+- **Currency isolation**: never fall back to legacy Spain-only fields (e.g. `lowest_ever_price` in EUR) when serving data for the UK. Currency crossover between markets is prohibited.
+- **Localized emails**: Django email templates must be market-aware (e.g. `alert_email_en.html`), and base URLs must include the correct `market.locale` prefix (e.g. `/en-gb/`).
 
-## Estándares de código
+## Coding standards
 
-Los estándares de arquitectura y el glosario de dominio están en [CONTEXT.md](./CONTEXT.md). Resumen:
+The architecture standards and domain glossary are documented in [CONTEXT.md](https://github.com/ikeiba/refurbtrack/blob/main/CONTEXT.md). Summary:
 
-- **Backend:** lógica de negocio en `services.py` (no en views/serializers), consultas agregadas en los modelos/managers, SRP en funciones.
-- **Frontend:** priorizar Server Components; `"use client"` solo en las hojas interactivas; llamadas isomórficas siempre a través de `services/api.ts`; tipado estricto (sin `any`).
-- **Glosario:** usar siempre *refurbished* (no used/second-hand/pre-owned), *scraper* (no crawler/spider) y distinguir claramente entre *market* (`ES`/`UK`, moneda e histórico) y *locale* (`es-es`/`en-gb`, idioma y rutas).
+- **Backend:** keep business logic in `services.py` (not in views/serializers), put aggregate queries in models/managers, and apply SRP to functions.
+- **Frontend:** prioritize Server Components; use `"use client"` only for interactive leaves; always make isomorphic calls through `services/api.ts`; use strict typing (no `any`).
+- **Glossary:** always use *refurbished* (not used/second-hand/pre-owned), *scraper* (not crawler/spider), and clearly distinguish *market* (`ES`/`UK`, currency and price history) from *locale* (`es-es`/`en-gb`, language and routes).
 
 ### Conventional Commits
 
 ```
-feat: nueva funcionalidad      --> feat(api): add price alert endpoint
+feat: new feature              --> feat(api): add price alert endpoint
 fix: bug                       --> fix(scraper): handle empty price field
-refactor: cambio interno       --> refactor(db): simplify price history schema
-perf: mejora de rendimiento
+refactor: internal change      --> refactor(db): simplify price history schema
+perf: performance improvement
 test: tests
-docs: documentación
-style: formato (espacios, lint…)
-chore: tareas auxiliares       --> chore: update requirements
+docs: documentation
+style: formatting (spaces, lint, etc.)
+chore: maintenance tasks       --> chore: update requirements
 ```
